@@ -1,0 +1,35 @@
+# TEMPPO Reservas on Netlify.
+#
+# Deployed as its own Netlify site; the marketing site at temppo.uy proxies
+# /reservas/* to it. Keeping them separate means the product and the marketing
+# page can build and release independently.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Prisma 7 uses a WASM query compiler rather than a native engine, so the
+  # function bundle stays small and portable.
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Scheduled reminders. Netlify has no vercel.json equivalent — the schedule
+# lives on the function itself (see netlify/functions/reminders.mts).
+[functions."reminders"]
+  schedule = "*/15 * * * *"
+
+[functions]
+  # Bundle the Prisma schema and WASM compiler alongside the server functions;
+  # they are read at runtime and are not picked up by static analysis.
+  included_files = [
+    "prisma/schema.prisma",
+    "src/generated/prisma/**",
+    "node_modules/.prisma/**",
+  ]
+
+# Long-running work needs more than the 10s default.
+[functions."___netlify-server-handler"]
+  timeout = 30

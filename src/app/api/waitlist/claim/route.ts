@@ -4,11 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { bookClass } from "@/lib/booking";
 import { offerNextSpot } from "@/lib/waitlist";
 import { recordAudit } from "@/lib/audit";
-import { routing } from "@/i18n/routing";
-
-function pathFor(locale: string, path: string) {
-  return locale === routing.defaultLocale ? path : `/${locale}${path}`;
-}
+import { routing, localePath } from "@/i18n/routing";
 
 /**
  * The link from a "a spot opened up" message. Claims the seat if the window is
@@ -20,7 +16,7 @@ export async function GET(request: NextRequest) {
   const locale = routing.locales.includes(requested as never) ? requested : routing.defaultLocale;
 
   const back = (status: string) =>
-    NextResponse.redirect(new URL(pathFor(locale, `/my?waitlist=${status}`), request.url));
+    NextResponse.redirect(new URL(localePath(locale, `/my?waitlist=${status}`), request.url));
 
   if (!token) return back("invalid");
 
@@ -44,9 +40,9 @@ export async function GET(request: NextRequest) {
   // Claiming requires being signed in as the student who was offered the spot.
   const user = await getCurrentUser();
   if (!user || user.studentProfile?.id !== entry.studentId) {
-    const next = pathFor(locale, `/api/waitlist/claim?token=${token}&locale=${locale}`);
+    const next = localePath(locale, `/api/waitlist/claim?token=${token}&locale=${locale}`);
     return NextResponse.redirect(
-      new URL(pathFor(locale, `/login?next=${encodeURIComponent(next)}`), request.url),
+      new URL(localePath(locale, `/login?next=${encodeURIComponent(next)}`), request.url),
     );
   }
 

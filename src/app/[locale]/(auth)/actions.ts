@@ -12,6 +12,7 @@ import { MAGIC_LINK_TTL_MINUTES } from "@/lib/auth/constants";
 import { uniqueSlug } from "@/lib/slug";
 import { notify } from "@/lib/notifications";
 import { recordAudit } from "@/lib/audit";
+import { localePath } from "@/i18n/routing";
 
 export type AuthState = { error?: string; sent?: boolean } | null;
 
@@ -23,10 +24,6 @@ async function requestMeta() {
     userAgent: h.get("user-agent"),
     ipAddress: h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
   };
-}
-
-function localePath(locale: string, path: string) {
-  return locale === "es" ? path : `/${locale}${path}`;
 }
 
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {

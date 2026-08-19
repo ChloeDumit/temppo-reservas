@@ -3,11 +3,7 @@ import { db } from "@/lib/db";
 import { hashToken } from "@/lib/auth/tokens";
 import { createSession } from "@/lib/auth/session";
 import { recordAudit } from "@/lib/audit";
-import { routing } from "@/i18n/routing";
-
-function pathFor(locale: string, path: string) {
-  return locale === routing.defaultLocale ? path : `/${locale}${path}`;
-}
+import { routing, localePath } from "@/i18n/routing";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
@@ -17,7 +13,7 @@ export async function GET(request: NextRequest) {
     : routing.defaultLocale;
 
   const fail = () =>
-    NextResponse.redirect(new URL(pathFor(locale, "/login?error=magic"), request.url));
+    NextResponse.redirect(new URL(localePath(locale, "/login?error=magic"), request.url));
 
   if (!token) return fail();
 
@@ -57,5 +53,5 @@ export async function GET(request: NextRequest) {
   });
 
   const destination = record.user.role === "STUDENT" ? "/my" : "/dashboard";
-  return NextResponse.redirect(new URL(pathFor(locale, destination), request.url));
+  return NextResponse.redirect(new URL(localePath(locale, destination), request.url));
 }

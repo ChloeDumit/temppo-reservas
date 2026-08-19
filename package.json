@@ -43,6 +43,8 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.0",
+    "@netlify/functions": "^6.0.0",
+    "@netlify/plugin-nextjs": "^5.15.13",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
@@ -52,6 +54,7 @@
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "dotenv": "^17.4.2",
+    "netlify-cli": "^27.1.2",
     "prisma": "^7.9.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",

@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { localePath } from "@/i18n/routing";
 import { formatDateTime } from "@/lib/dates";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,7 @@ export default async function LeadsPage({
   });
 
   const base = process.env.APP_URL || "http://localhost:3000";
-  const publicUrl = `${base}${locale === "es" ? "" : `/${locale}`}/t/${studio.slug}`;
+  const publicUrl = `${base}${localePath(locale, `/t/${studio.slug}`)}`;
 
   return (
     <>

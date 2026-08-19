@@ -27,6 +27,70 @@ The certificate does not cover the domain. This blocks more than polish:
 HTTPS → *Verify DNS configuration* → *Provision certificate*. It usually means
 the domain's DNS isn't fully pointed at Netlify yet.
 
+## All on Netlify (no Vercel)
+
+This works, and I verified it rather than assuming: `netlify build` + `netlify
+serve` run the whole app — React Server Components, Server Actions, Prisma
+against Postgres, the edge middleware, the PWA manifest and service worker. The
+public trial page rendered 13 class times straight out of the database from
+inside the Netlify function.
+
+Already committed for it:
+
+- `netlify.toml` — build config, the `@netlify/plugin-nextjs` runtime, a 30s
+  timeout for the server handler, and `included_files` so the Prisma schema
+  and WASM query compiler land in the function bundle.
+- `netlify/functions/reminders.mts` — a scheduled function on `*/15 * * * *`
+  that calls the app's own cron route. Netlify schedules functions, not routes,
+  so `vercel.json` has no effect here; this wrapper keeps one code path.
+
+### One change Netlify forced
+
+Locale URLs now always carry their prefix — `/es/dashboard`, not `/dashboard`.
+
+With the previous `localePrefix: "as-needed"`, next-intl served the default
+locale through an internal *rewrite*. Netlify's edge adapter converts that
+rewrite into a *redirect*, so `/` redirected to `/` forever. The same build
+under plain `next start` was fine, which is how I pinned it on Netlify rather
+than the app.
+
+Prefixing always removes the rewrite entirely. Links built outside the routed
+tree — magic links, check-in QR codes, waitlist claim links, Mercado Pago
+return URLs, the public trial link — now go through a single `localePath()`
+helper in `src/i18n/routing.ts` instead of six copies of the old rule.
+
+### Steps
+
+1. **Database.** Supabase or Neon, free tier. **Use the pooled connection
+   string** (Supabase: *Transaction* pooler, port 6543; Neon: the `-pooler`
+   host). Netlify Functions are Lambdas and scale to many concurrent
+   instances — a direct connection will exhaust Postgres. Then:
+   ```bash
+   DATABASE_URL="<prod-url>" npx prisma migrate deploy
+   ```
+2. **Push this repo** to GitHub.
+3. **New Netlify site** from that repo. Netlify reads `netlify.toml`; leave the
+   build command and publish directory alone.
+4. **Environment variables** — same table as below, but `NEXT_PUBLIC_BASE_PATH`
+   only if you keep the `/reservas` sub-path.
+5. **Proxy from the marketing site.** In the `temppo.uy` repo's `netlify.toml`:
+   ```toml
+   [[redirects]]
+     from = "/reservas/*"
+     to = "https://<reservas-site>.netlify.app/reservas/:splat"
+     status = 200
+     force = true
+   ```
+   Alternatively, skip the sub-path entirely and point a subdomain
+   (`reservas.temppo.uy`) at the second site — simpler, no `basePath`, no proxy
+   rule, and the free certificate covers it since you already have `*.temppo.uy`.
+
+### Netlify vs Vercel, honestly
+
+Both work. Vercel needs no locale change and no cron wrapper. Netlify keeps
+everything under one account and one bill, which is worth more than those two
+details. Nothing below is Vercel-specific except where noted.
+
 ## Architecture: why a proxy, not one deploy
 
 This app is not a static site. It needs a Node server (React Server Components,

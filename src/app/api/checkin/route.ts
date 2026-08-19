@@ -3,11 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { markAttendance } from "@/lib/booking";
 import { recordAudit } from "@/lib/audit";
-import { routing } from "@/i18n/routing";
-
-function pathFor(locale: string, path: string) {
-  return locale === routing.defaultLocale ? path : `/${locale}${path}`;
-}
+import { routing, localePath } from "@/i18n/routing";
 
 /**
  * Target of the QR on a student's booking. Scanning it from a signed-in staff
@@ -22,14 +18,14 @@ export async function GET(request: NextRequest) {
     const params = new URLSearchParams({ status });
     if (name) params.set("name", name);
     return NextResponse.redirect(
-      new URL(pathFor(locale, `/checkin?${params.toString()}`), request.url),
+      new URL(localePath(locale, `/checkin?${params.toString()}`), request.url),
     );
   };
 
   if (!user) {
     const next = `/api/checkin?token=${token ?? ""}`;
     return NextResponse.redirect(
-      new URL(pathFor(locale, `/login?next=${encodeURIComponent(next)}`), request.url),
+      new URL(localePath(locale, `/login?next=${encodeURIComponent(next)}`), request.url),
     );
   }
   if (!["OWNER", "ADMIN", "INSTRUCTOR"].includes(user.role)) return back("forbidden");

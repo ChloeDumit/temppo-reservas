@@ -59,3 +59,6 @@ next-env.d.ts
 /android/build
 /android/app/src/main/assets/public
 /native/www/*.js
+
+# Local Netlify folder
+.netlify

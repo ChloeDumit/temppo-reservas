@@ -8,6 +8,7 @@ import { assertUser } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { paymentProvider } from "@/lib/payments";
 import { generatePaymentCode } from "@/lib/payment-code";
+import { localePath } from "@/i18n/routing";
 
 export type BuyState = {
   error?: string;
@@ -139,7 +140,7 @@ export async function startCheckoutAction(formData: FormData) {
   if (!created) return;
 
   const base = process.env.APP_URL || "http://localhost:3000";
-  const prefix = user.studio.locale === "es" ? "" : `/${user.studio.locale}`;
+
 
   const session = await provider.createCheckout({
     studioId: user.studioId,
@@ -148,8 +149,8 @@ export async function startCheckoutAction(formData: FormData) {
     amountCents: created.payment.amountCents,
     currency: user.studio.currency,
     payerEmail: user.email,
-    successUrl: `${base}${prefix}/my?purchase=ok`,
-    failureUrl: `${base}${prefix}/buy?purchase=failed`,
+    successUrl: `${base}${localePath(user.studio.locale, "/my")}?purchase=ok`,
+    failureUrl: `${base}${localePath(user.studio.locale, "/buy")}?purchase=failed`,
     notificationUrl: `${base}/api/payments/webhook`,
   });
 
