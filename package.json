@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "seed": "tsx prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
@@ -15,7 +15,8 @@
     "native:android": "cap open android",
     "lan": "node scripts/lan.mjs",
     "tunnel": "node scripts/tunnel.mjs",
-    "scenario:waitlist": "tsx scripts/scenario-waitlist.ts"
+    "scenario:waitlist": "tsx scripts/scenario-waitlist.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
