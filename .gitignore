@@ -33,6 +33,7 @@ yarn-error.log*
 # env files — real values never get committed, the template always does
 .env*
 !.env.example
+!.env.production.template
 
 # vercel
 .vercel
