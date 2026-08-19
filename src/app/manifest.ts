@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { routing } from "@/i18n/routing";
 
 /**
  * Installable on iOS and Android straight from the browser — "Add to home
@@ -14,7 +15,10 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "TEMPPO",
     description:
       "Gestión de reservas, alumnos y pagos para estudios de pilates, yoga y fitness.",
-    start_url: `${base}/dashboard`,
+    // Locale-prefixed: routing always carries a prefix, so an unprefixed
+    // start_url would cost a redirect on every launch of the installed app.
+    // Staff land on the dashboard; students are forwarded to their own screen.
+    start_url: `${base}/${routing.defaultLocale}/dashboard`,
     scope: `${base}/`,
     display: "standalone",
     orientation: "portrait",
