@@ -1,0 +1,640 @@
+// TEMPPO Reservas — data model
+// Money is stored as integer cents everywhere to avoid float drift.
+// Every tenant-owned row carries studioId so multi-studio hosting works unchanged.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------- tenancy
+
+enum Plan {
+  TRIAL
+  ESSENTIAL
+  STUDIO
+  NETWORK
+}
+
+model Studio {
+  id       String @id @default(cuid())
+  name     String
+  slug     String @unique
+  timezone String @default("America/Montevideo")
+  currency String @default("UYU")
+  locale   String @default("es")
+
+  // Branding is available on every plan by design — never gate these.
+  /// Studio WhatsApp in international format, e.g. +59899123456.
+  /// Students send transfer receipts here; also used for the support link.
+  whatsappNumber String?
+
+  logoUrl     String?
+  accentColor String  @default("#C0563C")
+
+  plan        Plan      @default(TRIAL)
+  trialEndsAt DateTime?
+
+  // Studio-configurable booking rules
+  cancellationCutoffHours Int @default(6)
+  reminderHoursBefore     Int @default(12)
+  waitlistClaimWindowMins Int @default(15)
+  noShowLimit             Int @default(3) // 0 disables no-show restrictions
+  bookingOpensDaysAhead   Int @default(30)
+
+  onboardingCompletedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  locations         Location[]
+  users             User[]
+  classTemplates    ClassTemplate[]
+  classInstances    ClassInstance[]
+  bookings          Booking[]
+  waitlistEntries   WaitlistEntry[]
+  classPacks        ClassPack[]
+  studentPacks      StudentPack[]
+  payments          Payment[]
+  transactions      Transaction[]
+  notifications     NotificationLog[]
+  auditLogs         AuditLog[]
+  leads             Lead[]
+  recurringBookings RecurringBooking[]
+
+  @@index([slug])
+}
+
+model Location {
+  id       String  @id @default(cuid())
+  studioId String
+  studio   Studio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name     String
+  address  String?
+  timezone String?
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classTemplates ClassTemplate[]
+  classInstances ClassInstance[]
+
+  @@index([studioId])
+}
+
+// ------------------------------------------------------------------ people
+
+enum Role {
+  OWNER
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+model User {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  email         String    @unique
+  passwordHash  String?
+  name          String
+  phone         String?
+  role          Role      @default(STUDENT)
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  locale        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studentProfile     StudentProfile?
+  instructorProfile  InstructorProfile?
+  sessions           Session[]
+  verificationTokens VerificationToken[]
+  auditLogs          AuditLog[]          @relation("AuditActor")
+  approvedPayments   Payment[]           @relation("PaymentApprover")
+  pushSubscriptions  PushSubscription[]
+
+  @@index([studioId, role])
+}
+
+model StudentProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  birthDate        DateTime?
+  healthNotes      String?
+  emergencyContact String?
+  emergencyPhone   String?
+  notes            String?
+
+  // Rolling counter maintained on attendance marking; reset by admins.
+  noShowCount    Int     @default(0)
+  bookingBlocked Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings          Booking[]
+  waitlistEntries   WaitlistEntry[]
+  packs             StudentPack[]
+  payments          Payment[]
+  leads             Lead[]
+  recurringBookings RecurringBooking[]
+}
+
+model InstructorProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bio      String?
+  colorHex String? // used to tint the calendar
+
+  // Payroll: per-class rate wins when set, otherwise the hourly rate applies.
+  payPerClassCents Int?
+  payPerHourCents  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classTemplates ClassTemplate[]
+  classInstances ClassInstance[]
+}
+
+// ----------------------------------------------------------------- classes
+
+enum ClassStatus {
+  SCHEDULED
+  CANCELLED
+}
+
+// A recurring definition. One-off classes skip this and exist only as instances.
+model ClassTemplate {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  locationId   String?
+  location     Location?          @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  instructorId String?
+  instructor   InstructorProfile? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+
+  name         String
+  description  String?
+  colorHex     String  @default("#C0563C")
+  capacity     Int     @default(10)
+  durationMins Int     @default(60)
+
+  // Recurrence: which weekdays (0=Sunday..6=Saturday) and what wall-clock start.
+  weekdays  Int[]
+  startTime String // "HH:mm" in the studio timezone
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  instances         ClassInstance[]
+  recurringBookings RecurringBooking[]
+
+  @@index([studioId, isActive])
+}
+
+// A concrete, bookable occurrence on the calendar.
+model ClassInstance {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  templateId   String?
+  template     ClassTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  locationId   String?
+  location     Location?          @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  instructorId String?
+  instructor   InstructorProfile? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+
+  name     String
+  colorHex String      @default("#C0563C")
+  startsAt DateTime
+  endsAt   DateTime
+  capacity Int
+  status   ClassStatus @default(SCHEDULED)
+  notes    String?
+
+  allowTrialBooking Boolean   @default(true) // surfaces the class in the public lead-capture flow
+  remindersSentAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings        Booking[]
+  waitlistEntries WaitlistEntry[]
+  leads           Lead[]
+
+  @@unique([templateId, startsAt])
+  @@index([studioId, startsAt])
+}
+
+// ---------------------------------------------------------------- bookings
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  LATE_CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
+enum BookingSource {
+  STUDENT
+  ADMIN
+  WAITLIST
+  TRIAL
+  RECURRING
+}
+
+enum RecurringBookingStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+/// A standing weekly spot: "Ana has Monday 17:00 Reformer every week".
+/// Held against the recurring template, then materialised into a Booking on
+/// each occurrence, so a fixed spot occupies capacity before casual booking.
+model RecurringBooking {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  classTemplateId String
+  classTemplate   ClassTemplate  @relation(fields: [classTemplateId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  status    RecurringBookingStatus @default(ACTIVE)
+  startDate DateTime               @db.Date
+  endDate   DateTime?              @db.Date
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+
+  // One standing spot per student per weekly slot.
+  @@unique([classTemplateId, studentId])
+  @@index([studioId, status])
+}
+
+model Booking {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  classInstanceId String
+  classInstance   ClassInstance  @relation(fields: [classInstanceId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  status BookingStatus @default(BOOKED)
+  source BookingSource @default(STUDENT)
+
+  // Credit consumed for this booking, refunded on an in-window cancellation.
+  studentPackId String?
+  studentPack   StudentPack? @relation(fields: [studentPackId], references: [id], onDelete: SetNull)
+
+  // Set when this booking was generated by a standing weekly spot.
+  recurringBookingId String?
+  recurringBooking   RecurringBooking? @relation(fields: [recurringBookingId], references: [id], onDelete: SetNull)
+
+  checkInToken String    @unique @default(cuid()) // encoded into the QR
+  checkedInAt  DateTime?
+  cancelledAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // A student holds at most one booking row per class occurrence.
+  @@unique([classInstanceId, studentId])
+  @@index([studioId, status])
+  @@index([studentId])
+}
+
+enum WaitlistStatus {
+  WAITING
+  OFFERED
+  CLAIMED
+  EXPIRED
+  CANCELLED
+}
+
+model WaitlistEntry {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  classInstanceId String
+  classInstance   ClassInstance  @relation(fields: [classInstanceId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  position       Int
+  status         WaitlistStatus @default(WAITING)
+  offeredAt      DateTime?
+  offerExpiresAt DateTime?
+  claimToken     String?        @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classInstanceId, studentId])
+  @@index([classInstanceId, position])
+}
+
+// ---------------------------------------------------------- packs & money
+
+model ClassPack {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  name         String
+  description  String?
+  credits      Int // ignored when isUnlimited
+  isUnlimited  Boolean @default(false)
+  priceCents   Int
+  validityDays Int     @default(30)
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studentPacks StudentPack[]
+
+  @@index([studioId, isActive])
+}
+
+enum StudentPackStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXHAUSTED
+  EXPIRED
+  CANCELLED
+}
+
+model StudentPack {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  packId    String
+  pack      ClassPack      @relation(fields: [packId], references: [id])
+
+  creditsTotal Int
+  creditsUsed  Int               @default(0)
+  isUnlimited  Boolean           @default(false)
+  status       StudentPackStatus @default(PENDING_PAYMENT)
+  startsAt     DateTime          @default(now())
+  expiresAt    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+  payments Payment[]
+
+  @@index([studentId, status])
+}
+
+enum PaymentMethod {
+  MERCADO_PAGO
+  BANK_TRANSFER
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+model Payment {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  studentPackId String?
+  studentPack   StudentPack? @relation(fields: [studentPackId], references: [id], onDelete: SetNull)
+
+  amountCents Int
+  currency    String        @default("UYU")
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+
+  // Manual bank-transfer flow.
+  /// Short code the student quotes when sending the receipt over WhatsApp, so
+  /// staff can match an incoming message to the pending payment at a glance.
+  shortCode      String?
+  proofUrl       String?
+  reference      String?
+  approvedById   String?
+  approvedBy     User?     @relation("PaymentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt     DateTime?
+  rejectedReason String?
+
+  // Set by whichever payment provider handled it (provider-agnostic).
+  provider          String?
+  providerPaymentId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@index([studioId, status])
+  @@index([studentId])
+  @@index([studioId, shortCode])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Transaction {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  type        TransactionType
+  category    String
+  description String?
+  amountCents Int
+  occurredAt  DateTime        @default(now())
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studioId, occurredAt])
+}
+
+// ------------------------------------------------------- comms, audit, leads
+
+enum NotificationChannel {
+  WHATSAPP
+  EMAIL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model NotificationLog {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  channel   NotificationChannel
+  template  String
+  recipient String
+  status    NotificationStatus  @default(QUEUED)
+  error     String?
+  payload   Json?
+
+  // Loose references — a log row must survive deletion of what it refers to.
+  relatedType String?
+  relatedId   String?
+
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([studioId, createdAt])
+}
+
+model AuditLog {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  actorId    String?
+  actor      User?   @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String? // preserved even if the user row is later removed
+
+  action     String // e.g. "booking.cancel"
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([studioId, createdAt])
+  @@index([entityType, entityId])
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  BOOKED
+  CONVERTED
+  LOST
+}
+
+// Public "book a free trial" capture — deliberately no account required.
+model Lead {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  name    String
+  email   String
+  phone   String?
+  message String?
+  source  String? // e.g. "instagram"
+
+  classInstanceId String?
+  classInstance   ClassInstance? @relation(fields: [classInstanceId], references: [id], onDelete: SetNull)
+
+  status             LeadStatus      @default(NEW)
+  convertedStudentId String?
+  convertedStudent   StudentProfile? @relation(fields: [convertedStudentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studioId, status])
+}
+
+// -------------------------------------------------------------------- auth
+
+/// A browser or installed PWA that agreed to receive push notifications.
+/// One row per device — a student with a phone and a laptop has two.
+model PushSubscription {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Unique per browser install; the push service rejects duplicates.
+  endpoint  String  @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique // the raw token lives only in the cookie
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum VerificationPurpose {
+  MAGIC_LINK
+  PASSWORD_RESET
+  EMAIL_VERIFY
+}
+
+model VerificationToken {
+  id        String              @id @default(cuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String              @unique
+  purpose   VerificationPurpose
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  @@index([userId, purpose])
+}
