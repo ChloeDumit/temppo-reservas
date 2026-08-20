@@ -37,8 +37,8 @@ async function main() {
   await db.classInstance.deleteMany({ where: { studioId: studio.id, name: CLASS_NAME } });
 
   const student = async (email: string) => {
-    const user = await db.user.findUnique({
-      where: { email },
+    const user = await db.user.findFirst({
+      where: { studioId: studio.id, email },
       include: { studentProfile: true },
     });
     if (!user?.studentProfile) {

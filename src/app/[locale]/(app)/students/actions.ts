@@ -48,9 +48,11 @@ export async function saveStudentAction(
     });
     if (!profile) return { error: "notFound" };
 
-    // Email is unique across the platform; guard before we hit the constraint.
+    // Email is unique within the studio; guard before we hit the constraint.
+    // Someone already training elsewhere under this address is fine — only a
+    // second account in *this* studio is a clash.
     if (email !== profile.user.email) {
-      const clash = await db.user.findUnique({ where: { email } });
+      const clash = await db.user.findFirst({ where: { studioId: user.studioId, email } });
       if (clash) return { error: "emailTaken" };
     }
 
@@ -72,7 +74,11 @@ export async function saveStudentAction(
       metadata: { name },
     });
   } else {
-    if (await db.user.findUnique({ where: { email } })) return { error: "emailTaken" };
+    // Only blocks a duplicate inside this studio. A student who already has an
+    // account at another studio gets a second, independent one here.
+    if (await db.user.findFirst({ where: { studioId: user.studioId, email } })) {
+      return { error: "emailTaken" };
+    }
 
     const created = await db.user.create({
       data: {

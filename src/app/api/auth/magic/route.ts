@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashToken } from "@/lib/auth/tokens";
 import { createSession } from "@/lib/auth/session";
+import { createStudioChoice } from "@/lib/auth/studio-choice";
 import { recordAudit } from "@/lib/audit";
 import { routing, localePath } from "@/i18n/routing";
 
@@ -37,6 +38,20 @@ export async function GET(request: NextRequest) {
     where: { id: record.id },
     data: { usedAt: new Date() },
   });
+
+  // The click proves control of the address, which may cover an account at
+  // several studios. The token is only anchored to one of them, so expand.
+  const accounts = await db.user.findMany({
+    where: { email: record.user.email, isActive: true },
+    select: { id: true },
+  });
+
+  if (accounts.length > 1) {
+    const choice = await createStudioChoice(accounts.map((account) => account.id));
+    return NextResponse.redirect(
+      new URL(localePath(locale, `/login/studio?token=${choice}`), request.url),
+    );
+  }
 
   await createSession(record.userId, {
     userAgent: request.headers.get("user-agent"),

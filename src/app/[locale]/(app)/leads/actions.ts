@@ -16,8 +16,10 @@ export async function convertLeadAction(formData: FormData) {
   });
   if (!lead || lead.status === "CONVERTED") return;
 
-  const existing = await db.user.findUnique({
-    where: { email: lead.email },
+  // Scoped to this studio: the same address may already be a student at
+  // another one, which says nothing about whether they exist here.
+  const existing = await db.user.findFirst({
+    where: { studioId: user.studioId, email: lead.email },
     include: { studentProfile: true },
   });
 

@@ -151,7 +151,8 @@ export async function inviteMemberAction(
     return { error: parsed.error.issues[0]?.path[0] === "email" ? "invalidEmail" : "generic" };
   }
 
-  if (await db.user.findUnique({ where: { email: parsed.data.email } })) {
+  // Scoped to the studio: the same person may already be staff somewhere else.
+  if (await db.user.findFirst({ where: { studioId: user.studioId, email: parsed.data.email } })) {
     return { error: "emailTaken" };
   }
 

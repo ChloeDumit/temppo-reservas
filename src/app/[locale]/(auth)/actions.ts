@@ -8,6 +8,11 @@ import { db } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { generateToken, hashToken } from "@/lib/auth/tokens";
+import {
+  createStudioChoice,
+  resolveStudioChoice,
+  consumeStudioChoice,
+} from "@/lib/auth/studio-choice";
 import { MAGIC_LINK_TTL_MINUTES } from "@/lib/auth/constants";
 import { uniqueSlug } from "@/lib/slug";
 import { notify } from "@/lib/notifications";
@@ -34,11 +39,30 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 
   if (!email.success) return { error: "invalidCredentials" };
 
-  const user = await db.user.findUnique({ where: { email: email.data } });
-  if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
-    return { error: "invalidCredentials" };
+  // One email can hold an account at several studios, each with its own hash.
+  const candidates = await db.user.findMany({ where: { email: email.data } });
+
+  const verified = [];
+  for (const candidate of candidates) {
+    if (candidate.passwordHash && (await verifyPassword(password, candidate.passwordHash))) {
+      verified.push(candidate);
+    }
   }
-  if (!user.isActive) return { error: "accountInactive" };
+
+  if (verified.length === 0) return { error: "invalidCredentials" };
+
+  const usable = verified.filter((candidate) => candidate.isActive);
+  if (usable.length === 0) return { error: "accountInactive" };
+
+  // Proven, but ambiguous — let them say which studio they meant.
+  if (usable.length > 1) {
+    const choice = await createStudioChoice(usable.map((candidate) => candidate.id));
+    const params = new URLSearchParams({ token: choice });
+    if (requestedNext) params.set("next", requestedNext);
+    redirect(localePath(locale, `/login/studio?${params.toString()}`));
+  }
+
+  const user = usable[0];
 
   await createSession(user.id, await requestMeta());
   await recordAudit({
@@ -65,10 +89,13 @@ export async function magicLinkAction(_prev: AuthState, formData: FormData): Pro
   const parsed = emailSchema.safeParse(formData.get("email"));
   if (!parsed.success) return { error: "invalidEmail" };
 
-  const user = await db.user.findUnique({ where: { email: parsed.data } });
+  const accounts = await db.user.findMany({ where: { email: parsed.data, isActive: true } });
+  const user = accounts[0];
 
   // Always report success — otherwise this endpoint tells the world who has an account.
-  if (user?.isActive) {
+  if (user) {
+    // One link for the address. Which studio it opens is settled after the
+    // click, so a person at three studios still gets a single email.
     const token = generateToken();
     await db.verificationToken.create({
       data: {
@@ -121,10 +148,6 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   }
 
   const { studioName, name, email, password } = parsed.data;
-
-  if (await db.user.findUnique({ where: { email } })) {
-    return { error: "emailTaken" };
-  }
 
   const slug = await uniqueSlug(studioName, async (candidate) =>
     Boolean(await db.studio.findUnique({ where: { slug: candidate } })),
@@ -208,4 +231,42 @@ export async function logoutAction() {
   const locale = await getLocale();
   await destroySession();
   redirect(localePath(locale, "/login"));
+}
+
+/**
+ * Completes a login that matched accounts at more than one studio. The choice
+ * token carries the candidates, so this cannot be pointed at any other account
+ * even with a valid token and a guessed id.
+ */
+export async function chooseStudioAction(formData: FormData) {
+  const locale = await getLocale();
+  const token = String(formData.get("token") ?? "");
+  const userId = String(formData.get("userId") ?? "");
+  const requestedNext = String(formData.get("next") ?? "");
+
+  const resolved = await resolveStudioChoice(token);
+  if (!resolved) redirect(localePath(locale, "/login?error=magic"));
+
+  const chosen = resolved.users.find((candidate) => candidate.id === userId);
+  if (!chosen) redirect(localePath(locale, "/login?error=magic"));
+
+  await consumeStudioChoice(resolved.record.id);
+  await createSession(chosen.id, await requestMeta());
+
+  await recordAudit({
+    studioId: chosen.studioId,
+    actorId: chosen.id,
+    actorLabel: chosen.name,
+    action: "auth.studio_choice",
+    entityType: "User",
+    entityId: chosen.id,
+  });
+
+  const home = chosen.role === "STUDENT" ? "/my" : "/dashboard";
+  const destination =
+    requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : localePath(locale, home);
+
+  redirect(destination);
 }
