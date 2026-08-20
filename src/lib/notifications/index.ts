@@ -67,3 +67,27 @@ export async function notifyPreferred(
   }
   return notify("EMAIL", payload);
 }
+
+/**
+ * Fans a message out to everyone who runs the studio. Used for the things an
+ * owner has to act on — a new lead, a waitlist queue forming, a transfer
+ * waiting to be approved — none of which the student can chase on their behalf.
+ */
+export async function notifyOwners(
+  studioId: string,
+  payload: Omit<NotificationPayload, "studioId" | "to"> & { url?: string },
+): Promise<void> {
+  const owners = await db.user.findMany({
+    where: { studioId, role: { in: ["OWNER", "ADMIN"] }, isActive: true },
+  });
+
+  for (const owner of owners) {
+    await notifyPreferred({
+      ...payload,
+      studioId,
+      to: owner.email,
+      phone: owner.phone,
+      userId: owner.id,
+    });
+  }
+}

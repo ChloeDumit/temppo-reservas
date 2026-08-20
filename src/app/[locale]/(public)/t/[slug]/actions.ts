@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
-import { notify, notifyPreferred } from "@/lib/notifications";
+import { notify, notifyOwners } from "@/lib/notifications";
 
 export type LeadState = { error?: string; ok?: boolean } | null;
 
@@ -75,22 +75,14 @@ export async function submitLeadAction(
   });
 
   // Tell the studio, and confirm to the person who asked.
-  const owners = await db.user.findMany({
-    where: { studioId: studio.id, role: { in: ["OWNER", "ADMIN"] }, isActive: true },
+  await notifyOwners(studio.id, {
+    url: "/students",
+    template: "lead_new",
+    subject: `${studio.name} — nueva clase de prueba`,
+    body: `${parsed.data.name} pidió una clase de prueba.\nEmail: ${parsed.data.email}${parsed.data.phone ? `\nTel: ${parsed.data.phone}` : ""}${parsed.data.message ? `\n\n"${parsed.data.message}"` : ""}`,
+    relatedType: "Lead",
+    relatedId: lead.id,
   });
-
-  for (const owner of owners) {
-    await notifyPreferred({
-      studioId: studio.id,
-      to: owner.email,
-      phone: owner.phone,
-      template: "lead_new",
-      subject: `${studio.name} — nueva clase de prueba`,
-      body: `${parsed.data.name} pidió una clase de prueba.\nEmail: ${parsed.data.email}${parsed.data.phone ? `\nTel: ${parsed.data.phone}` : ""}${parsed.data.message ? `\n\n"${parsed.data.message}"` : ""}`,
-      relatedType: "Lead",
-      relatedId: lead.id,
-    });
-  }
 
   await notify("EMAIL", {
     studioId: studio.id,

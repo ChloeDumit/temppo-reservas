@@ -171,6 +171,36 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     metadata: { studioName, slug },
   });
 
+  const base = process.env.APP_URL || "http://localhost:3000";
+
+  await notify("EMAIL", {
+    studioId: user.studioId,
+    to: user.email,
+    template: "welcome",
+    subject: `${studioName} — TEMPPO Reservas`,
+    body:
+      locale === "en"
+        ? `Hi ${name}, ${studioName} is ready on TEMPPO Reservas.\n\nYour trial runs until ${trialEndsAt.toLocaleDateString("en")}. Start by adding your classes and packs:\n${base}${localePath(locale, "/dashboard")}\n\nYour public booking page is ${base}${localePath(locale, `/t/${slug}`)} — share it wherever your students find you.`
+        : `Hola ${name}, ${studioName} ya está listo en TEMPPO Reservas.\n\nTu prueba va hasta el ${trialEndsAt.toLocaleDateString("es")}. Empezá cargando tus clases y packs:\n${base}${localePath(locale, "/dashboard")}\n\nTu página pública de reservas es ${base}${localePath(locale, `/t/${slug}`)} — compartila donde te encuentren tus alumnas.`,
+    relatedType: "Studio",
+    relatedId: user.studioId,
+  });
+
+  // Platform-level heads-up: there is no super-admin in the schema, so signups
+  // are invisible unless they are pushed somewhere off the tenant.
+  const opsEmail = process.env.OPS_EMAIL;
+  if (opsEmail) {
+    await notify("EMAIL", {
+      studioId: user.studioId,
+      to: opsEmail,
+      template: "signup_ops",
+      subject: `Nueva cuenta — ${studioName}`,
+      body: `${name} <${email}> creó ${studioName}.\n\nSlug: ${slug}\nIdioma: ${locale}\nPrueba hasta: ${trialEndsAt.toISOString().slice(0, 10)}`,
+      relatedType: "Studio",
+      relatedId: user.studioId,
+    });
+  }
+
   redirect(localePath(locale, "/dashboard"));
 }
 

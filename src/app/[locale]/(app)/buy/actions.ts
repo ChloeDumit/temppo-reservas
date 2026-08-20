@@ -8,6 +8,8 @@ import { assertUser } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { paymentProvider } from "@/lib/payments";
 import { generatePaymentCode } from "@/lib/payment-code";
+import { notifyOwners } from "@/lib/notifications";
+import { formatMoney } from "@/lib/money";
 import { localePath } from "@/i18n/routing";
 
 export type BuyState = {
@@ -115,6 +117,26 @@ export async function submitTransferAction(
     entityType: "Payment",
     entityId: created.payment.id,
     metadata: { packId: parsed.data.packId, amountCents: created.payment.amountCents },
+  });
+
+  // Nothing credits the student until an owner approves this by hand, so the
+  // payment sitting in the queue is useless unless somebody is told it landed.
+  const amount = formatMoney(
+    created.payment.amountCents,
+    user.studio.currency,
+    user.studio.locale,
+  );
+
+  await notifyOwners(user.studioId, {
+    url: "/payments",
+    template: "payment_submitted",
+    subject: `${user.studio.name} — pago para aprobar`,
+    body:
+      user.studio.locale === "en"
+        ? `${user.name} submitted a bank transfer for ${created.pack.name} (${amount}). Code: ${shortCode}.${parsed.data.reference ? `\nReference: ${parsed.data.reference}` : ""}${proofUrl ? `\nProof: ${proofUrl}` : ""}\n\nApprove it in Payments to activate their pack.`
+        : `${user.name} envió una transferencia por ${created.pack.name} (${amount}). Código: ${shortCode}.${parsed.data.reference ? `\nReferencia: ${parsed.data.reference}` : ""}${proofUrl ? `\nComprobante: ${proofUrl}` : ""}\n\nAprobalo en Pagos para activarle el pack.`,
+    relatedType: "Payment",
+    relatedId: created.payment.id,
   });
 
   revalidatePath("/[locale]/(app)/buy", "page");

@@ -6,7 +6,11 @@
 # into 404s. See DEPLOY.md.
 
 [build]
-  command = "npm run build"
+  # Migrations run before the build so the database schema never lags behind
+  # the code that queries it. Without this, adding a column ships fine and then
+  # every query touching it throws in production while working locally.
+  # Kept here rather than in `npm run build` so a local build cannot migrate.
+  command = "npx prisma migrate deploy && npm run build"
   publish = ".next"
 
 [build.environment]
