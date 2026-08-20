@@ -10,6 +10,10 @@
   # the code that queries it. Without this, adding a column ships fine and then
   # every query touching it throws in production while working locally.
   # Kept here rather than in `npm run build` so a local build cannot migrate.
+  #
+  # Needs DIRECT_URL set in the site environment: migrations take a session
+  # advisory lock, which a transaction-mode pooler cannot hold, so running them
+  # over DATABASE_URL fails with P1002.
   command = "npx prisma migrate deploy && npm run build"
   publish = ".next"
 
