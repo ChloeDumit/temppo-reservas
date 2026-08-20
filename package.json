@@ -17,7 +17,9 @@
     "tunnel": "node scripts/tunnel.mjs",
     "scenario:waitlist": "tsx scripts/scenario-waitlist.ts",
     "postinstall": "prisma generate",
-    "icons": "node scripts/icons.mjs"
+    "icons": "node scripts/icons.mjs",
+    "demo:video": "node scripts/demo-video.mjs",
+    "demo:encode": "node scripts/demo-encode.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
@@ -56,6 +58,7 @@
     "@types/web-push": "^3.6.4",
     "dotenv": "^17.4.2",
     "netlify-cli": "^27.1.2",
+    "playwright": "^1.62.1",
     "prisma": "^7.9.1",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",

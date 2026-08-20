@@ -63,3 +63,6 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# generated demo assets — rebuild with npm run demo:video && npm run demo:encode
+/demo/
