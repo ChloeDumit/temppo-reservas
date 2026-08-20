@@ -14,6 +14,5 @@ export async function qrSvg(value: string, size = 160) {
 
 export function checkInUrl(token: string) {
   const base = process.env.APP_URL || "http://localhost:3000";
-  const path = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  return `${base}${path}/api/checkin?token=${token}`;
+  return `${base}/api/checkin?token=${token}`;
 }

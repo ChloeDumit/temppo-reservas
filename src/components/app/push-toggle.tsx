@@ -16,15 +16,8 @@ function urlBase64ToUint8Array(base64: string) {
 
 type State = "loading" | "unsupported" | "denied" | "off" | "on" | "working";
 
-export function PushToggle({
-  publicKey,
-  basePath = "",
-}: {
-  publicKey: string;
-  /** Deployment sub-path, so the worker registers under the right scope. */
-  basePath?: string;
-}) {
-  const swUrl = `${basePath}/sw.js`;
+export function PushToggle({ publicKey }: { publicKey: string }) {
+  const swUrl = "/sw.js";
   const t = useTranslations("push");
   const [state, setState] = useState<State>("loading");
 

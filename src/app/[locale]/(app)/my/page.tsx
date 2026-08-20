@@ -80,10 +80,7 @@ export default async function MyClassesPage({
         <PushCardBody className="space-y-2">
           <p className="text-sm font-medium text-ink">{tpush("title")}</p>
           <p className="text-xs text-muted">{tpush("hint")}</p>
-          <PushToggle
-            publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""}
-            basePath={process.env.NEXT_PUBLIC_BASE_PATH ?? ""}
-          />
+          <PushToggle publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
         </PushCardBody>
       </PushCard>
 

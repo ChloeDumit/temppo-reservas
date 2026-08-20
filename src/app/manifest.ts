@@ -6,10 +6,6 @@ import { routing } from "@/i18n/routing";
  * screen" gives a standalone, chrome-less app pointing at the studio dashboard.
  */
 export default function manifest(): MetadataRoute.Manifest {
-  // Everything the manifest points at must carry the deployment's sub-path,
-  // otherwise an installed PWA launches at the wrong origin path.
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
-
   return {
     name: "TEMPPO Reservas",
     short_name: "TEMPPO",
@@ -18,8 +14,8 @@ export default function manifest(): MetadataRoute.Manifest {
     // Locale-prefixed: routing always carries a prefix, so an unprefixed
     // start_url would cost a redirect on every launch of the installed app.
     // Staff land on the dashboard; students are forwarded to their own screen.
-    start_url: `${base}/${routing.defaultLocale}/dashboard`,
-    scope: `${base}/`,
+    start_url: `/${routing.defaultLocale}/dashboard`,
+    scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#fbf8f5",
@@ -27,9 +23,9 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "es",
     categories: ["business", "productivity", "health"],
     icons: [
-      { src: `${base}/icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: `${base}/icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: `${base}/icon-maskable.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

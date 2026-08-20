@@ -16,8 +16,7 @@ export default async () => {
     return new Response("not configured", { status: 500 });
   }
 
-  const path = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  const url = `${base}${path}/api/cron/reminders`;
+  const url = `${base}/api/cron/reminders`;
 
   try {
     const res = await fetch(url, {

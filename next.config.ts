@@ -3,17 +3,17 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-/**
- * The app is served from a sub-path in production (temppo.uy/reservas) while
- * running at the root in development. Set BASE_PATH in the deploy environment;
- * Next then prefixes every route, asset and Server Action URL for us.
- */
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+/*
+  The app is served from the root of its own domain (reservas.temppo.uy).
 
+  There is deliberately no basePath here. Serving from temppo.uy/reservas was
+  tried and dropped — the bare prefix never resolved without a trailing slash,
+  and the proxy in front of it turned the app's redirects into 404s. Because
+  NEXT_PUBLIC_* values are inlined at build time, a stale prefix also survived
+  an env-var change and kept 404ing until the site was rebuilt. Keeping the
+  option around invited that failure back, so it is gone.
+*/
 const nextConfig: NextConfig = {
-  basePath: basePath || undefined,
-  // Assets must resolve through the same prefix when proxied behind Netlify.
-  assetPrefix: basePath || undefined,
   /**
    * Hosts allowed to pull dev assets (JS chunks, HMR) from `next dev`.
    *
