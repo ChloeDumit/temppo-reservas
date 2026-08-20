@@ -34,7 +34,7 @@ model Studio {
   whatsappNumber String?
 
   logoUrl     String?
-  accentColor String  @default("#C0563C")
+  accentColor String  @default("#E07A5F")
 
   plan        Plan      @default(TRIAL)
   trialEndsAt DateTime?

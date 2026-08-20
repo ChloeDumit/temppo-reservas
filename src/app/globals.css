@@ -2,12 +2,12 @@
 
 /*
   TEMPPO Reservas design tokens.
-  Warm, paper-like neutrals with a terracotta accent — deliberately away from
-  the blue/green palette every other fitness product reaches for.
+  Warm, paper-like neutrals on the temppo.uy brand orange — deliberately away
+  from the blue/green palette every other fitness product reaches for.
   --accent is re-declared per studio at runtime from Studio.accentColor.
 */
 @theme {
-  --color-paper: #fbf8f5;
+  --color-paper: #faf7f4;
   --color-surface: #ffffff;
   --color-sunken: #f4efe9;
   --color-ink: #1c1917;
@@ -16,10 +16,11 @@
   --color-line: #e8e1d9;
   --color-line-strong: #d6ccc0;
 
-  --color-accent: #c0563c;
-  --color-accent-hover: #a8462f;
-  --color-accent-soft: #f7e7e1;
-  --color-accent-ink: #7a2f1d;
+  /* Matches temppo.uy: orange / orange-dark / orange-tint / brown. */
+  --color-accent: #e07a5f;
+  --color-accent-hover: #c85c35;
+  --color-accent-soft: #fdf1eb;
+  --color-accent-ink: #3d2010;
 
   --color-positive: #2f6b4f;
   --color-positive-soft: #e3f0e8;
@@ -30,6 +31,8 @@
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), Georgia, serif;
+
+  --font-brand: var(--font-brand-face), ui-rounded, system-ui, sans-serif;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.75rem;

@@ -8,6 +8,7 @@ import { Icon } from "./icon";
 import { Sheet } from "@/components/ui/sheet";
 import { LocaleSwitch } from "./locale-switch";
 import { LogoutButton } from "./logout-button";
+import { ReplayTourButton } from "./guided-tour";
 import type { NavItem } from "./nav-items";
 
 function isActive(pathname: string, href: string) {
@@ -75,6 +76,7 @@ export function MobileTabBar({
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
+                data-tour={`tab:${item.href}`}
                 className={cn(
                   "pressable flex flex-1 flex-col items-center gap-1 pt-2.5 text-[10px] font-medium",
                   active ? "text-accent" : "text-muted",
@@ -96,6 +98,7 @@ export function MobileTabBar({
             type="button"
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
+            data-tour="tab:more"
             className={cn(
               "pressable flex flex-1 flex-col items-center gap-1 pt-2.5 text-[10px] font-medium",
               overflowActive ? "text-accent" : "text-muted",
@@ -147,7 +150,11 @@ export function MobileTabBar({
           <p className="mt-1 text-xs text-muted">{user.roleLabel}</p>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="mt-3 border-t border-line pt-3">
+          <ReplayTourButton label={t("replayTour")} />
+        </div>
+
+        <div className="mt-1 flex items-center justify-between gap-3">
           <LocaleSwitch />
           <LogoutButton />
         </div>

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { Fraunces, Karla } from "next/font/google";
+import { Fraunces, Karla, Fredoka } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -11,6 +11,14 @@ const display = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
   weight: ["600", "700"],
+  display: "swap",
+});
+
+/* The wordmark keeps temppo.uy's own typeface; the interface does not. */
+const brand = Fredoka({
+  subsets: ["latin"],
+  weight: ["500"],
+  variable: "--font-brand-face",
   display: "swap",
 });
 
@@ -64,7 +72,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className={`${display.variable} ${body.variable}`}>
+    <html lang={locale} className={`${display.variable} ${body.variable} ${brand.variable}`}>
       <body className="accent-scope min-h-dvh">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

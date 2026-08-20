@@ -33,7 +33,7 @@ async function main() {
       timezone: TZ,
       currency: "UYU",
       locale: "es",
-      accentColor: "#C0563C",
+      accentColor: "#E07A5F",
       // Where students send transfer receipts.
       whatsappNumber: "+59899111222",
       plan: "TRIAL",
@@ -65,7 +65,7 @@ async function main() {
 
   const instructorUsers = await Promise.all(
     [
-      { email: "sofia@anima.uy", name: "Sofía Méndez", color: "#C0563C", rate: 90000 },
+      { email: "sofia@anima.uy", name: "Sofía Méndez", color: "#E07A5F", rate: 90000 },
       { email: "martin@anima.uy", name: "Martín Rodríguez", color: "#3F6C8F", rate: 85000 },
     ].map((data) =>
       db.user.create({
@@ -165,7 +165,7 @@ async function main() {
         locationId: location.id,
         instructorId: sofia.id,
         name: "Pilates Reformer",
-        colorHex: "#C0563C",
+        colorHex: "#E07A5F",
         capacity: 6,
         durationMins: 55,
         weekdays: [1, 3, 5],

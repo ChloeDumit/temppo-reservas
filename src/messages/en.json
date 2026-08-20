@@ -45,7 +45,8 @@
     "reports": "Reports",
     "more": "More",
     "account": "Account",
-    "availability": "Spots"
+    "availability": "Spots",
+    "replayTour": "Replay the tour"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -483,5 +484,61 @@
     "iosStep2": "Scroll down and choose \"Add to Home Screen\".",
     "iosStep3": "Tap \"Add\". That is it — you now have it as an app.",
     "iosNote": "On iPhone this only works from Safari. If you are in another browser, open this page in Safari first."
+  },
+  "tour": {
+    "label": "Guided tour",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Get started",
+    "skip": "Skip the tour",
+    "replay": "Replay the tour",
+    "welcomeStaff": {
+      "title": "Welcome to TEMPPO!",
+      "body": "A 30-second look at where everything lives. Skip it whenever you like."
+    },
+    "schedule": {
+      "title": "Your schedule",
+      "body": "Every class this week, with spots and instructor. Tap a class to see who is coming, add students, or mark attendance."
+    },
+    "spots": {
+      "title": "Standing spots",
+      "body": "Who holds a place every week. See at a glance which times still have room — no spreadsheet needed."
+    },
+    "checkin": {
+      "title": "Check-in",
+      "body": "Scan a student QR code as they arrive and attendance is recorded instantly."
+    },
+    "more": {
+      "title": "Everything else",
+      "body": "Students, packs, payments, reports and settings live here. Logging out is in this menu too."
+    },
+    "done": {
+      "title": "All set",
+      "body": "That is it. You can replay this any time from the menu at the bottom."
+    },
+    "welcomeStudent": {
+      "title": "Hi there!",
+      "body": "A quick look at how to book your classes."
+    },
+    "myClasses": {
+      "title": "My classes",
+      "body": "Your upcoming classes and the QR code to get into the studio. Cancel from here too."
+    },
+    "book": {
+      "title": "Book",
+      "body": "Pick a day and time. If a class is full you join the waitlist, and we tell you the moment a spot opens."
+    },
+    "buy": {
+      "title": "Buy",
+      "body": "Class packs. Pay online, or by transfer and send the receipt over WhatsApp."
+    },
+    "account": {
+      "title": "Your account",
+      "body": "Turn on notifications for class reminders and freed-up spots. Log out from here as well."
+    },
+    "doneStudent": {
+      "title": "Off you go!",
+      "body": "That is everything. Book your first class whenever you are ready."
+    }
   }
 }

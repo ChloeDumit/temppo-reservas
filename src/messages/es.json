@@ -45,7 +45,8 @@
     "reports": "Reportes",
     "more": "Más",
     "account": "Cuenta",
-    "availability": "Cupos"
+    "availability": "Cupos",
+    "replayTour": "Ver el recorrido"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -483,5 +484,61 @@
     "iosStep2": "Bajá y elegí «Agregar a pantalla de inicio».",
     "iosStep3": "Tocá «Agregar». Listo: ya la tenés como app.",
     "iosNote": "En iPhone esto solo funciona desde Safari. Si estás en otro navegador, abrí esta página en Safari primero."
+  },
+  "tour": {
+    "label": "Recorrido guiado",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "finish": "Empezar",
+    "skip": "Saltear el recorrido",
+    "replay": "Ver el recorrido",
+    "welcomeStaff": {
+      "title": "¡Bienvenida a TEMPPO!",
+      "body": "Te muestro en 30 segundos dónde está cada cosa. Podés saltearlo cuando quieras."
+    },
+    "schedule": {
+      "title": "Tu agenda",
+      "body": "Todas las clases de la semana, con cupos y profesor. Tocá una clase para ver quién viene, agregar alumnos o pasar lista."
+    },
+    "spots": {
+      "title": "Cupos fijos",
+      "body": "Quién tiene lugar reservado todas las semanas. De un vistazo ves qué horarios tienen lugar libre, sin abrir un Excel."
+    },
+    "checkin": {
+      "title": "Ingreso",
+      "body": "Escaneá el código QR del alumno cuando llega y queda registrada la asistencia al instante."
+    },
+    "more": {
+      "title": "Todo lo demás",
+      "body": "Alumnos, packs, pagos, reportes y ajustes viven acá. También cerrás sesión desde este menú."
+    },
+    "done": {
+      "title": "Listo",
+      "body": "Eso es todo. Si querés volver a verlo, está en el menú, abajo de todo."
+    },
+    "welcomeStudent": {
+      "title": "¡Hola!",
+      "body": "Te muestro rapidito cómo reservar tus clases."
+    },
+    "myClasses": {
+      "title": "Mis clases",
+      "body": "Tus próximas clases y el código QR para entrar al estudio. También cancelás desde acá."
+    },
+    "book": {
+      "title": "Reservar",
+      "body": "Elegí día y horario. Si la clase está llena, te anotás en la lista de espera y te avisamos si se libera un lugar."
+    },
+    "buy": {
+      "title": "Comprar",
+      "body": "Packs de clases. Pagás online o por transferencia, mandando el comprobante por WhatsApp."
+    },
+    "account": {
+      "title": "Tu cuenta",
+      "body": "Activá las notificaciones para enterarte de tus clases y cuando se libera un lugar. También cerrás sesión acá."
+    },
+    "doneStudent": {
+      "title": "¡A moverse!",
+      "body": "Ya está. Reservá tu primera clase cuando quieras."
+    }
   }
 }

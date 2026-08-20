@@ -9,6 +9,7 @@ import { LocaleSwitch } from "@/components/app/locale-switch";
 import { LogoutButton } from "@/components/app/logout-button";
 import { navFor, splitNav } from "@/components/app/nav-items";
 import { InstallPrompt } from "@/components/app/install-prompt";
+import { GuidedTour } from "@/components/app/guided-tour";
 
 export default async function AppLayout({
   children,
@@ -82,6 +83,9 @@ export default async function AppLayout({
           {children}
         </main>
       </div>
+
+      {/* Runs once on first sign-in; replayable from the account sheet. */}
+      <GuidedTour role={user.role} autoStart />
 
       <MobileTabBar
         primary={primary}

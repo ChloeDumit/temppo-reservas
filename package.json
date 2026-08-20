@@ -16,7 +16,8 @@
     "lan": "node scripts/lan.mjs",
     "tunnel": "node scripts/tunnel.mjs",
     "scenario:waitlist": "tsx scripts/scenario-waitlist.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
@@ -56,6 +57,7 @@
     "dotenv": "^17.4.2",
     "netlify-cli": "^27.1.2",
     "prisma": "^7.9.1",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5",
