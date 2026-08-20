@@ -25,7 +25,8 @@
     "noResults": "Sin resultados",
     "required": "Este campo es obligatorio",
     "name": "Nombre",
-    "description": "Descripción"
+    "description": "Descripción",
+    "done": "Listo"
   },
   "nav": {
     "dashboard": "Panel",
@@ -190,7 +191,12 @@
     "deactivate": "Desactivar",
     "reactivate": "Reactivar",
     "assignPack": "Asignar pack",
-    "birthdayToday": "¡Cumple años hoy!"
+    "birthdayToday": "¡Cumple años hoy!",
+    "tempPasswordTitle": "Contraseña temporal",
+    "tempPasswordHint": "Pasásela al alumno. Se la va a cambiar la primera vez que entre.",
+    "tempPasswordOnce": "Anotala ahora: no se vuelve a mostrar.",
+    "newPasswordIssued": "Nueva contraseña temporal",
+    "resetPassword": "Generar contraseña temporal"
   },
   "packs": {
     "title": "Packs de clases",
@@ -561,5 +567,15 @@
       "title": "¡A moverse!",
       "body": "Ya está. Reservá tu primera clase cuando quieras."
     }
+  },
+  "password": {
+    "title": "Elegí tu contraseña",
+    "subtitle": "Hola {name}, creá una contraseña para entrar de ahora en más.",
+    "newPassword": "Nueva contraseña",
+    "confirm": "Repetila",
+    "hint": "Mínimo 8 caracteres.",
+    "save": "Guardar y entrar",
+    "passwordShort": "Usá al menos 8 caracteres.",
+    "passwordMismatch": "Las contraseñas no coinciden."
   }
 }

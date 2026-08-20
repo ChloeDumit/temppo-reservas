@@ -19,6 +19,13 @@ export async function requireUser(): Promise<SessionUser> {
   */
   if (user.studio.suspendedAt && !user.isPlatformAdmin) redirect("/suspended");
 
+  /*
+    Someone holding a temporary password gets no further than the password
+    screen. Checked on every request rather than at login, so a session opened
+    with a shared password cannot wander off into the app.
+  */
+  if (user.mustChangePassword) redirect("/password");
+
   return user;
 }
 

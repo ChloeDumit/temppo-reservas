@@ -5,8 +5,15 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { assertStaff, assertAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
+import { hashPassword } from "@/lib/auth/password";
+import { generateTempPassword } from "@/lib/auth/temp-password";
 
-export type ActionState = { error?: string; ok?: boolean } | null;
+export type ActionState = {
+  error?: string;
+  ok?: boolean;
+  /** Present only when an account was just created. Shown once, never stored. */
+  tempPassword?: string;
+} | null;
 
 const studentSchema = z.object({
   id: z.string().optional(),
@@ -40,6 +47,8 @@ export async function saveStudentAction(
     emergencyPhone: emergencyPhone || null,
     notes: notes || null,
   };
+
+  let issued: string | undefined;
 
   if (id) {
     const profile = await db.studentProfile.findFirst({
@@ -80,6 +89,15 @@ export async function saveStudentAction(
       return { error: "emailTaken" };
     }
 
+    /*
+      Issued here rather than left blank so staff can get someone signed in
+      from the front desk. It is shown to staff exactly once, in the response
+      below, and the student is held at the password screen until they replace
+      it — so a password read aloud never becomes a permanent one.
+    */
+    const tempPassword = generateTempPassword();
+    issued = tempPassword;
+
     const created = await db.user.create({
       data: {
         studioId: user.studioId,
@@ -87,6 +105,8 @@ export async function saveStudentAction(
         name,
         phone: phone || null,
         role: "STUDENT",
+        passwordHash: await hashPassword(tempPassword),
+        mustChangePassword: true,
         studentProfile: { create: profileData },
       },
       include: { studentProfile: true },
@@ -104,7 +124,9 @@ export async function saveStudentAction(
   }
 
   revalidatePath("/[locale]/(app)/students", "page");
-  return { ok: true };
+  // The plaintext never touches the database or a log — this response is the
+  // only place it exists.
+  return { ok: true, tempPassword: issued };
 }
 
 export async function toggleBlockAction(formData: FormData) {

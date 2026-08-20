@@ -25,7 +25,8 @@
     "noResults": "No results",
     "required": "This field is required",
     "name": "Name",
-    "description": "Description"
+    "description": "Description",
+    "done": "Done"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -190,7 +191,12 @@
     "deactivate": "Deactivate",
     "reactivate": "Reactivate",
     "assignPack": "Assign pack",
-    "birthdayToday": "Birthday today!"
+    "birthdayToday": "Birthday today!",
+    "tempPasswordTitle": "Temporary password",
+    "tempPasswordHint": "Give this to the student. They will change it the first time they sign in.",
+    "tempPasswordOnce": "Write it down now — it is not shown again.",
+    "newPasswordIssued": "New temporary password",
+    "resetPassword": "Issue a temporary password"
   },
   "packs": {
     "title": "Class packs",
@@ -561,5 +567,15 @@
       "title": "Off you go!",
       "body": "That is everything. Book your first class whenever you are ready."
     }
+  },
+  "password": {
+    "title": "Choose your password",
+    "subtitle": "Hi {name}, set a password to sign in from now on.",
+    "newPassword": "New password",
+    "confirm": "Repeat it",
+    "hint": "At least 8 characters.",
+    "save": "Save and continue",
+    "passwordShort": "Use at least 8 characters.",
+    "passwordMismatch": "The passwords do not match."
   }
 }

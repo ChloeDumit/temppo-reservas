@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { Button } from "@/components/ui/button";
 import { useSheetClose } from "@/components/app/sheet-form";
 import { saveStudentAction, type ActionState } from "./actions";
 
@@ -28,9 +29,37 @@ export function StudentForm({ values }: { values: StudentValues }) {
   const closeSheet = useSheetClose();
   const [state, submit] = useActionState<ActionState, FormData>(async (prev, formData) => {
     const result = await saveStudentAction(prev, formData);
-    if (result?.ok) closeSheet();
+    // Stay open when a password was issued — closing would destroy the only
+    // copy of it. Edits with nothing to hand over still close as before.
+    if (result?.ok && !result.tempPassword) closeSheet();
     return result;
   }, null);
+
+  if (state?.ok && state.tempPassword) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-[var(--radius-lg)] bg-positive-soft px-4 py-3 text-sm text-positive">
+          {t("created")}
+        </div>
+
+        <div className="rounded-[var(--radius-lg)] border border-line bg-sunken px-4 py-4 text-center">
+          <p className="text-xs uppercase tracking-wide text-muted">{t("tempPasswordTitle")}</p>
+          <p className="mt-1.5 font-display text-3xl font-bold tracking-wider text-accent">
+            {state.tempPassword}
+          </p>
+          <p className="mt-2 text-xs text-muted">{t("tempPasswordHint")}</p>
+        </div>
+
+        <p className="rounded-md bg-caution-soft px-3 py-2 text-xs text-caution">
+          {t("tempPasswordOnce")}
+        </p>
+
+        <Button type="button" variant="secondary" className="w-full" onClick={closeSheet}>
+          {tc("done")}
+        </Button>
+      </div>
+    );
+  }
 
   const message = state?.error
     ? state.error === "emailTaken"

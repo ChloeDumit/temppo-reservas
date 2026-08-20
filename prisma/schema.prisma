@@ -105,17 +105,21 @@ model User {
   studioId String
   studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
 
-  email         String
-  passwordHash  String?
-  name          String
-  phone         String?
-  role          Role      @default(STUDENT)
-  isActive      Boolean   @default(true)
-  emailVerified DateTime?
+  email              String
+  passwordHash       String?
+  name               String
+  phone              String?
+  role               Role      @default(STUDENT)
+  isActive           Boolean   @default(true)
+  emailVerified      DateTime?
   /// Stamped the first time the guided tour opens. Kept on the account rather
   /// than in localStorage so it survives a new device, a cleared browser or
   /// a private window — the tour is meant to appear once, not once per store.
-  tourSeenAt    DateTime?
+  /// Set when staff hand out a temporary password. The account works, but is
+  /// held at the password screen until the person picks their own.
+  mustChangePassword Boolean   @default(false)
+
+  tourSeenAt DateTime?
 
   /// Platform operator, not a studio role. Grants access to /admin across
   /// every studio. Deliberately a flag rather than a Role: Role describes what
