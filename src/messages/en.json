@@ -92,7 +92,19 @@
     "setupClass": "Create your first class",
     "setupPack": "Define a class pack",
     "setupStudent": "Add your first student",
-    "setupDone": "All set!"
+    "setupDone": "All set!",
+    "todayIs": "Today",
+    "nextUp": "Next class",
+    "happeningNow": "Now",
+    "noClassesTodayCalm": "A quiet day. No classes scheduled.",
+    "classesToday": "{count} classes today",
+    "oneClassToday": "1 class today",
+    "restOfDay": "Rest of the day",
+    "needsAttention": "Needs a look",
+    "allClear": "All caught up",
+    "studentsShort": "Students",
+    "balanceShort": "This month",
+    "seeAll": "See all"
   },
   "schedule": {
     "title": "Schedule",
@@ -294,7 +306,11 @@
     "noPast": "You haven't attended any classes yet.",
     "checkInCode": "Check-in code",
     "attended": "Attended",
-    "noShow": "No-show"
+    "noShow": "No-show",
+    "nextClassHero": "Your next class",
+    "noneUpcomingCalm": "You have no classes booked yet.",
+    "bookFirst": "Book my first class",
+    "creditsRing": "classes"
   },
   "marketing": {
     "tagline": "Booking management for studios that want to grow without friction.",
@@ -307,7 +323,9 @@
     "feature2Body": "When someone cancels, the next student is notified and claims the spot.",
     "feature3Title": "Payments without the back-and-forth",
     "feature3Body": "Packs, bank transfers with proof upload, and Mercado Pago.",
-    "trialNote": "One month free. No card."
+    "trialNote": "One month free. No card.",
+    "videoTitle": "See how it works",
+    "videoAlt": "TEMPPO Reservas demo"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",

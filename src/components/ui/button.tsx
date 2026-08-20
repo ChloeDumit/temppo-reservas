@@ -5,11 +5,13 @@ import { cn } from "@/lib/cn";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
+/* Pill shape throughout: softer than a rounded rectangle, and it reads as a
+   control rather than a panel. */
 const base =
-  "pressable inline-flex items-center justify-center gap-2 rounded-md font-medium disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
+  "pressable inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] font-medium disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-white active:bg-accent-hover sm:hover:bg-accent-hover",
+  primary: "bg-accent text-white shadow-[0_2px_10px_rgba(224,122,95,0.28)] active:bg-accent-hover sm:hover:bg-accent-hover",
   secondary:
     "bg-surface text-ink border border-line-strong active:bg-sunken sm:hover:bg-sunken",
   ghost: "text-ink-soft active:bg-sunken active:text-ink sm:hover:bg-sunken sm:hover:text-ink",

@@ -141,7 +141,7 @@ export function GuidedTour({ role, autoStart }: { role: Role; autoStart: boolean
 
       <div
         className={cn(
-          "absolute inset-x-4 mx-auto max-w-sm rounded-[--radius-sheet] bg-surface p-5 shadow-2xl",
+          "absolute inset-x-4 mx-auto max-w-sm rounded-[var(--radius-sheet)] bg-surface p-5 shadow-2xl",
           targetIsLow ? "bottom-auto" : "bottom-[max(1.5rem,env(safe-area-inset-bottom))]",
         )}
         style={

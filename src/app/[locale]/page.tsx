@@ -48,6 +48,31 @@ export default async function LandingPage({
           </div>
         </section>
 
+        {/* The product doing its job, before any feature list. */}
+        <section className="border-b border-line py-14 sm:py-20">
+          <div className="grid items-center gap-10 sm:grid-cols-[1fr_auto]">
+            <div>
+              <h2 className="text-2xl sm:text-3xl">{t("videoTitle")}</h2>
+              <p className="mt-3 max-w-md text-ink-soft">{t("subtitle")}</p>
+            </div>
+
+            <div className="mx-auto w-full max-w-[260px] sm:mx-0">
+              <div className="overflow-hidden rounded-[2rem] border-8 border-ink bg-ink shadow-lift">
+                <video
+                  className="block h-auto w-full"
+                  src="/temppo-reservas-demo-web.mp4"
+                  poster="/temppo-reservas-poster.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label={t("videoAlt")}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
         <section className="grid gap-px overflow-hidden border-b border-line bg-line sm:grid-cols-3">
           {features.map((feature) => (
             <div key={feature.title} className="bg-paper px-1 py-10 sm:px-6">

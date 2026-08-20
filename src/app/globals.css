@@ -7,14 +7,22 @@
   --accent is re-declared per studio at runtime from Studio.accentColor.
 */
 @theme {
+  /*
+    Surfaces are layered rather than flat: paper is the room, blush is a warm
+    wash used for the parts of a screen that carry the day's news, surface is
+    the card sitting on top. The reference is a studio at 8am — oak, linen,
+    terracotta, morning light — not a gym and not a SaaS dashboard.
+  */
   --color-paper: #faf7f4;
+  --color-blush: #f8efe9;
   --color-surface: #ffffff;
   --color-sunken: #f4efe9;
+
   --color-ink: #1c1917;
   --color-ink-soft: #57534e;
   --color-muted: #8a827a;
-  --color-line: #e8e1d9;
-  --color-line-strong: #d6ccc0;
+  --color-line: #ece5dd;
+  --color-line-strong: #d9cfc3;
 
   /* Matches temppo.uy: orange / orange-dark / orange-tint / brown. */
   --color-accent: #e07a5f;
@@ -22,23 +30,37 @@
   --color-accent-soft: #fdf1eb;
   --color-accent-ink: #3d2010;
 
-  --color-positive: #2f6b4f;
-  --color-positive-soft: #e3f0e8;
+  /* Sage reads calm next to the terracotta — clay and eucalyptus, not neon. */
+  --color-positive: #4a7c62;
+  --color-positive-soft: #e6efe9;
   --color-caution: #9a6b1f;
   --color-caution-soft: #fbeed6;
   --color-critical: #a3352b;
   --color-critical-soft: #fae4e1;
+
+  /*
+    Shadows are warm and wide rather than grey and tight, so cards feel lit
+    from above in a warm room instead of stamped onto the page.
+  */
+  --shadow-soft: 0 1px 2px rgba(87, 62, 45, 0.04), 0 4px 16px rgba(87, 62, 45, 0.05);
+  --shadow-lift: 0 2px 4px rgba(87, 62, 45, 0.05), 0 12px 32px rgba(87, 62, 45, 0.08);
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), Georgia, serif;
 
   --font-brand: var(--font-brand-face), ui-rounded, system-ui, sans-serif;
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --radius-sheet: 1.5rem;
+  /*
+    Radius varies by role rather than sitting at one value everywhere: chips
+    and buttons are fully round, cards are generously soft, inputs stay
+    tighter so a field still reads as a field.
+  */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-sheet: 1.75rem;
+  --radius-pill: 999px;
 
   /* Native-feeling easing. Spring for things that pop, expo for surfaces. */
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -96,15 +118,38 @@
 @layer utilities {
   /* Studios override the accent; every accent utility reads through it. */
   .accent-scope {
-    --color-accent: var(--studio-accent, #c0563c);
-    --color-accent-hover: var(--studio-accent-hover, #a8462f);
-    --color-accent-soft: var(--studio-accent-soft, #f7e7e1);
+    --color-accent: var(--studio-accent, #e07a5f);
+    --color-accent-hover: var(--studio-accent-hover, #c85c35);
+    --color-accent-soft: var(--studio-accent-soft, #fdf1eb);
   }
 
+  /*
+    Cards sit on the page with a warm lift rather than a hard outline. The
+    border is barely there — it only stops white-on-white from dissolving.
+  */
   .card {
     background-color: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Carries the day's news: warmer ground, no outline, more presence. */
+  .card-feature {
+    background-color: var(--color-blush);
+    border: 1px solid transparent;
+    border-radius: var(--radius-xl);
+  }
+
+  /*
+    Occupancy ring. Communicates 4-of-6 as a shape you read at a glance
+    rather than a fraction you have to parse.
+  */
+  .ring-meter {
+    background: conic-gradient(
+      var(--color-accent) calc(var(--pct) * 1%),
+      var(--color-sunken) 0
+    );
   }
 
   /* Keeps long tables usable on a phone without breaking the page layout. */

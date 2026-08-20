@@ -7,7 +7,7 @@ import type {
 import { cn } from "@/lib/cn";
 
 const control =
-  "w-full rounded-md border border-line-strong bg-surface px-3 py-2.5 text-ink placeholder:text-muted transition-colors focus:border-accent sm:py-2";
+  "w-full rounded-[var(--radius-md)] border border-line-strong bg-surface px-3 py-2.5 text-ink placeholder:text-muted transition-colors focus:border-accent sm:py-2";
 
 export function Field({
   label,

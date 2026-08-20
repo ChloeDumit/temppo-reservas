@@ -92,7 +92,19 @@
     "setupClass": "Creá tu primera clase",
     "setupPack": "Definí un pack de clases",
     "setupStudent": "Sumá tu primer alumno",
-    "setupDone": "¡Todo listo!"
+    "setupDone": "¡Todo listo!",
+    "todayIs": "Hoy",
+    "nextUp": "Próxima clase",
+    "happeningNow": "Ahora",
+    "noClassesTodayCalm": "Día libre. No hay clases agendadas.",
+    "classesToday": "{count} clases hoy",
+    "oneClassToday": "1 clase hoy",
+    "restOfDay": "Resto del día",
+    "needsAttention": "Para revisar",
+    "allClear": "Todo al día",
+    "studentsShort": "Alumnos",
+    "balanceShort": "Balance del mes",
+    "seeAll": "Ver todo"
   },
   "schedule": {
     "title": "Agenda",
@@ -294,7 +306,11 @@
     "noPast": "Todavía no asististe a ninguna clase.",
     "checkInCode": "Código de ingreso",
     "attended": "Asististe",
-    "noShow": "Ausente"
+    "noShow": "Ausente",
+    "nextClassHero": "Tu próxima clase",
+    "noneUpcomingCalm": "No tenés clases reservadas todavía.",
+    "bookFirst": "Reservar mi primera clase",
+    "creditsRing": "clases"
   },
   "marketing": {
     "tagline": "Gestión de reservas para estudios que quieren crecer sin fricción.",
@@ -307,7 +323,9 @@
     "feature2Body": "Si alguien cancela, el siguiente recibe el aviso y confirma su lugar.",
     "feature3Title": "Cobros sin vueltas",
     "feature3Body": "Packs, transferencias con comprobante y Mercado Pago.",
-    "trialNote": "Un mes gratis. Sin tarjeta."
+    "trialNote": "Un mes gratis. Sin tarjeta.",
+    "videoTitle": "Mirá cómo funciona",
+    "videoAlt": "Demostración de TEMPPO Reservas"
   },
   "errors": {
     "generic": "Algo salió mal. Intentá de nuevo.",

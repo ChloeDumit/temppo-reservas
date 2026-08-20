@@ -5,11 +5,10 @@ import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
 import { addDays, formatTime, startOfDayInZone, startOfMonthInZone } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Stat } from "@/components/ui/stat";
+import { Card } from "@/components/ui/card";
+import { RingMeter } from "@/components/ui/meter";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader, EmptyState } from "@/components/ui/page-header";
-import { buttonClass } from "@/components/ui/button";
+import { EmptyState, SectionLabel } from "@/components/ui/page-header";
 
 export default async function DashboardPage({
   params,
@@ -88,85 +87,120 @@ export default async function DashboardPage({
 
   const money = (cents: number) => formatMoney(cents, studio.currency, locale);
 
+  // Split today into what is still ahead and what has already run.
+  const remaining = todayClasses.filter((k) => k.startsAt.getTime() >= now.getTime());
+  const current =
+    todayClasses.find(
+      (k) => k.startsAt <= now && new Date(k.startsAt.getTime() + 90 * 60_000) > now,
+    ) ?? null;
+  const focus = current ?? remaining[0] ?? null;
+  const laterToday = remaining.filter((k) => k.id !== focus?.id);
+
+  const todayLabel = new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: studio.timezone,
+  }).format(now);
+
+  const attention = [
+    pendingPayments > 0 && {
+      label: t("pendingPayments"),
+      value: pendingPayments,
+      href: "/payments",
+    },
+    ...setupSteps.filter((step) => !step.done).map((step) => ({
+      label: step.label,
+      value: null as number | null,
+      href: step.href,
+    })),
+  ].filter(Boolean) as { label: string; value: number | null; href: string }[];
+
   return (
     <>
-      <PageHeader title={t("greeting", { name: user.name.split(" ")[0] })} />
-
-      {studio.plan === "TRIAL" && trialDaysLeft !== null && (
-        <p className="mb-5 rounded-lg bg-accent-soft px-4 py-2.5 text-sm text-accent-ink">
-          {t("trialBanner", { days: trialDaysLeft })}
+      {/*
+        The day comes first. A studio owner opening this between classes wants
+        one question answered — what is happening now — not a wall of metrics.
+      */}
+      <section className="card-feature mb-4 px-5 py-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink/60">
+          {todayLabel}
         </p>
-      )}
+        <h1 className="mt-1 text-[26px] leading-tight text-ink sm:text-3xl">
+          {t("greeting", { name: user.name.split(" ")[0] })}
+        </h1>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label={t("todayClasses")} value={todayClasses.length} />
-        <Stat label={t("activeStudents")} value={activeStudents} />
-        <Stat
-          label={t("pendingPayments")}
-          value={pendingPayments}
-          tone={pendingPayments > 0 ? "accent" : undefined}
-          href={
-            pendingPayments > 0 ? (
-              <Link
-                href="/payments"
-                className="mt-1 inline-block text-xs text-accent underline underline-offset-4"
-              >
-                {t("reviewPayments")}
-              </Link>
-            ) : undefined
-          }
-        />
-        <Stat
-          label={t("monthBalance")}
-          value={money(net)}
-          tone={net >= 0 ? "positive" : "critical"}
-          hint={`${t("income")} ${money(income)} · ${t("expenses")} ${money(expenses)}`}
-        />
-      </div>
+        {focus ? (
+          <Link
+            href={`/schedule/${focus.id}`}
+            className="pressable mt-4 flex items-center gap-4 rounded-[var(--radius-lg)] bg-surface px-4 py-3.5 shadow-soft"
+          >
+            <span
+              className="h-11 w-1.5 shrink-0 rounded-full"
+              style={{ backgroundColor: focus.colorHex }}
+              aria-hidden
+            />
+            <span className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-accent">
+                {current ? t("happeningNow") : t("nextUp")}
+              </span>
+              <span className="mt-0.5 flex flex-wrap items-baseline gap-x-2">
+                <span className="font-display text-2xl font-semibold tabular-nums text-ink">
+                  {formatTime(focus.startsAt, studio.timezone, locale)}
+                </span>
+                <span className="truncate text-[15px] text-ink">{focus.name}</span>
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-muted">
+                {focus.instructor?.user.name ?? ts("unassigned")}
+              </span>
+            </span>
+            <RingMeter filled={focus._count.bookings} total={focus.capacity} size={48} />
+          </Link>
+        ) : (
+          <p className="mt-4 rounded-[var(--radius-lg)] bg-surface px-4 py-4 text-sm text-muted shadow-soft">
+            {t("noClassesTodayCalm")}
+          </p>
+        )}
 
-      {setupIncomplete && (
-        <Card className="mt-5">
-          <CardHeader title={t("setupTitle")} />
-          <CardBody className="space-y-2">
-            {setupSteps.map((step) => (
+        <p className="mt-3 text-xs text-accent-ink/70">
+          {todayClasses.length === 1
+            ? t("oneClassToday")
+            : t("classesToday", { count: todayClasses.length })}
+          {studio.plan === "TRIAL" && trialDaysLeft !== null
+            ? ` · ${t("trialBanner", { days: trialDaysLeft })}`
+            : ""}
+        </p>
+      </section>
+
+      {/* Only appears when something actually needs doing. */}
+      {attention.length > 0 && (
+        <section className="mb-4">
+          <SectionLabel>{t("needsAttention")}</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {attention.map((item) => (
               <Link
-                key={step.label}
-                href={step.href}
-                className="flex items-center gap-3 rounded-md px-2 py-2 text-sm hover:bg-sunken"
+                key={item.label}
+                href={item.href}
+                className="pressable inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-accent/25 bg-accent-soft px-3.5 py-2 text-sm text-accent-ink"
               >
-                <span
-                  className={
-                    step.done
-                      ? "flex size-5 items-center justify-center rounded-full bg-positive-soft text-positive"
-                      : "size-5 rounded-full border border-line-strong"
-                  }
-                >
-                  {step.done ? "✓" : ""}
-                </span>
-                <span className={step.done ? "text-muted line-through" : "text-ink"}>
-                  {step.label}
-                </span>
+                {item.value !== null && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-semibold tabular-nums text-white">
+                    {item.value}
+                  </span>
+                )}
+                {item.label}
               </Link>
             ))}
-          </CardBody>
-        </Card>
+          </div>
+        </section>
       )}
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader
-            title={t("todayClasses")}
-            action={
-              <Link href="/schedule" className={buttonClass("secondary", "sm")}>
-                {ts("title")}
-              </Link>
-            }
-          />
-          {todayClasses.length === 0 ? (
-            <EmptyState message={t("noClassesToday")} />
-          ) : (
+      {laterToday.length > 0 && (
+        <section className="mb-4">
+          <SectionLabel>{t("restOfDay")}</SectionLabel>
+          <Card>
             <ul className="divide-y divide-line">
-              {todayClasses.map((klass) => (
+              {laterToday.map((klass) => (
                 <ClassRow
                   key={klass.id}
                   klass={klass}
@@ -176,11 +210,33 @@ export default async function DashboardPage({
                 />
               ))}
             </ul>
-          )}
-        </Card>
+          </Card>
+        </section>
+      )}
 
+      {/* Numbers live below the fold: useful, but not the daily question. */}
+      <section className="mb-4 grid grid-cols-2 gap-3">
+        <Link href="/students" className="pressable card px-4 py-3.5">
+          <p className="text-[11px] uppercase tracking-wider text-muted">{t("studentsShort")}</p>
+          <p className="mt-1 font-display text-2xl font-semibold tabular-nums text-ink">
+            {activeStudents}
+          </p>
+        </Link>
+        <Link href="/reports" className="pressable card px-4 py-3.5">
+          <p className="text-[11px] uppercase tracking-wider text-muted">{t("balanceShort")}</p>
+          <p
+            className={`mt-1 font-display text-2xl font-semibold tabular-nums ${
+              net >= 0 ? "text-positive" : "text-critical"
+            }`}
+          >
+            {money(net)}
+          </p>
+        </Link>
+      </section>
+
+      <section>
+        <SectionLabel>{t("upcoming")}</SectionLabel>
         <Card>
-          <CardHeader title={t("upcoming")} />
           {upcoming.length === 0 ? (
             <EmptyState message={ts("noClassesWeek")} />
           ) : (
@@ -198,7 +254,7 @@ export default async function DashboardPage({
             </ul>
           )}
         </Card>
-      </div>
+      </section>
     </>
   );
 }

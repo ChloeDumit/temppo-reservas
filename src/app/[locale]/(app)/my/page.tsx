@@ -3,10 +3,11 @@ import { Link } from "@/i18n/navigation";
 import { requireStudentProfile } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { creditsRemaining } from "@/lib/booking";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader, EmptyState } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/page-header";
+import { RingMeter } from "@/components/ui/meter";
 import { buttonClass } from "@/components/ui/button";
 import { CancelBookingButton } from "../book/book-button";
 import { BookingQr } from "@/components/app/booking-qr";
@@ -63,27 +64,85 @@ export default async function MyClassesPage({
 
   const cutoffMs = studio.cancellationCutoffHours * 3_600_000;
 
+  // The hero shows the soonest booking; the list below keeps the full picture.
+  const nextBooking = upcoming[0] ?? null;
+  const packTotal = packs.reduce((sum, p) => sum + (p.isUnlimited ? 0 : p.creditsTotal), 0);
+
   return (
     <>
-      <PageHeader
-        title={t("myClasses")}
-        description={credits === null ? t("creditsUnlimited") : t("creditsLeft", { count: credits })}
-        action={
-          <Link href="/book" className={buttonClass("primary", "sm")}>
-            {t("book")}
-          </Link>
-        }
-      />
+      {/*
+        One question first: when is my next class. Everything else — credits,
+        notifications, history — sits underneath it.
+      */}
+      <section className="card-feature mb-4 px-5 py-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink/60">
+              {t("nextClassHero")}
+            </p>
+            <h1 className="mt-1 text-[26px] leading-tight text-ink sm:text-3xl">{t("myClasses")}</h1>
+          </div>
 
-      {/* Opt-in lives here because this is the screen students actually open. */}
-      <PushCard className="mb-4">
-        <PushCardBody className="space-y-2">
-          <p className="text-sm font-medium text-ink">{tpush("title")}</p>
-          <p className="text-xs text-muted">{tpush("hint")}</p>
-          <PushToggle publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
-        </PushCardBody>
-      </PushCard>
+          {/*
+            Credits as a ring that drains: a full ring means a full pack, and
+            it empties as classes are used. Showing classes *used* instead
+            would read as "none left" on a brand new pack.
+          */}
+          {credits !== null && packTotal > 0 && (
+            <span className="flex shrink-0 flex-col items-center">
+              <RingMeter
+                filled={credits}
+                total={packTotal}
+                size={54}
+                label={t("creditsLeft", { count: credits })}
+              />
+              <span className="mt-1 text-[10px] uppercase tracking-wider text-accent-ink/60">
+                {t("creditsRing")}
+              </span>
+            </span>
+          )}
+          {credits === null && (
+            <span className="shrink-0 rounded-[var(--radius-pill)] bg-accent px-3 py-1.5 text-xs font-semibold text-white">
+              {t("creditsUnlimited")}
+            </span>
+          )}
+        </div>
 
+        {nextBooking ? (
+          <div className="mt-4 rounded-[var(--radius-lg)] bg-surface px-4 py-4 shadow-soft">
+            <div className="flex items-start gap-3">
+              <span
+                className="h-11 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: nextBooking.classInstance.colorHex }}
+                aria-hidden
+              />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-display text-2xl font-semibold tabular-nums text-ink">
+                    {formatTime(nextBooking.classInstance.startsAt, studio.timezone, locale)}
+                  </span>
+                  <span className="truncate text-[15px] text-ink">
+                    {nextBooking.classInstance.name}
+                  </span>
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted">
+                  {formatDate(nextBooking.classInstance.startsAt, studio.timezone, locale)}
+                  {nextBooking.classInstance.instructor
+                    ? ` · ${nextBooking.classInstance.instructor.user.name}`
+                    : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-[var(--radius-lg)] bg-surface px-4 py-5 text-center shadow-soft">
+            <p className="text-sm text-muted">{t("noneUpcomingCalm")}</p>
+            <Link href="/book" className={buttonClass("primary", "sm", "mt-3")}>
+              {t("bookFirst")}
+            </Link>
+          </div>
+        )}
+      </section>
       {packs.length > 0 && (
         <Card className="mb-4">
           <CardHeader title={ts("activePacks")} />
@@ -167,6 +226,14 @@ export default async function MyClassesPage({
         )}
       </Card>
 
+      {/* Sits below the daily question — useful, but not why they opened the app. */}
+      <PushCard className="mb-4">
+        <PushCardBody className="space-y-2">
+          <p className="text-sm font-medium text-ink">{tpush("title")}</p>
+          <p className="text-xs text-muted">{tpush("hint")}</p>
+          <PushToggle publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
+        </PushCardBody>
+      </PushCard>
       <Card>
         <CardHeader title={t("past")} />
         {past.length === 0 ? (

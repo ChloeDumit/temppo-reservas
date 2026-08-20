@@ -88,7 +88,7 @@ export function Sheet({
         aria-label={title}
         className={cn(
           "sheet-enter relative flex max-h-[92dvh] w-full flex-col bg-surface shadow-2xl",
-          "rounded-t-[--radius-sheet] sm:max-w-lg sm:rounded-[--radius-lg]",
+          "rounded-t-[var(--radius-sheet)] sm:max-w-lg sm:rounded-[var(--radius-lg)]",
         )}
         style={dragY ? { transform: `translateY(${dragY}px)`, transition: "none" } : undefined}
       >
