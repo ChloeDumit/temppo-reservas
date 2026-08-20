@@ -10,6 +10,15 @@ export const ADMIN_ROLES: Role[] = ["OWNER", "ADMIN"];
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  /*
+    A suspended studio loses access to the app without losing its data.
+    Enforced here rather than at login so an existing session is cut off too,
+    and platform admins are exempt so the console cannot lock its own
+    operator out of the studio they belong to.
+  */
+  if (user.studio.suspendedAt && !user.isPlatformAdmin) redirect("/suspended");
+
   return user;
 }
 
@@ -67,5 +76,26 @@ export async function assertStaff(): Promise<SessionUser> {
 export async function assertUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
+  return user;
+}
+
+/**
+ * Platform operator access — the /admin console, which spans every studio.
+ *
+ * Deliberately strict: this is not a studio role, so being an OWNER grants
+ * nothing here. Unauthorised users are sent to their own home rather than
+ * shown a 403, which would confirm the console exists.
+ */
+export async function requirePlatformAdmin(): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!user.isPlatformAdmin) redirect(homePathFor(user.role));
+  return user;
+}
+
+/** For server actions: throws instead of redirecting. */
+export async function assertPlatformAdmin(): Promise<SessionUser> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("UNAUTHENTICATED");
+  if (!user.isPlatformAdmin) throw new Error("FORBIDDEN");
   return user;
 }

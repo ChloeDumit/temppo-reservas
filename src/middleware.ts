@@ -8,7 +8,7 @@ const intlMiddleware = createIntlMiddleware(routing);
 // Segments that require a session. The cookie is only checked for presence here —
 // middleware runs on the edge and cannot reach the database. Real authorization
 // happens in the server components behind these routes.
-const PROTECTED = ["/dashboard", "/schedule", "/students", "/packs", "/payments", "/settings", "/classes", "/my", "/checkin", "/buy", "/leads", "/reports", "/availability"];
+const PROTECTED = ["/dashboard", "/schedule", "/students", "/packs", "/payments", "/settings", "/classes", "/my", "/checkin", "/buy", "/leads", "/reports", "/availability", "/admin", "/suspended"];
 
 /** Splits "/es/schedule" into its locale and the route beneath it. */
 function splitLocale(pathname: string) {

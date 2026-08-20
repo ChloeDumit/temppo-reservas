@@ -57,6 +57,8 @@
     "magicLink": "Email me a login link",
     "magicLinkSent": "We sent a login link to your email.",
     "magicLinkExpired": "That link expired or was already used. Request a new one.",
+    "chooseStudioTitle": "Which studio are you signing in to?",
+    "chooseStudioSubtitle": "Your email has an account at more than one studio.",
     "orDivider": "or",
     "invalidCredentials": "Wrong email or password.",
     "accountInactive": "Your account is disabled. Contact the studio.",
@@ -334,7 +336,8 @@
     "invalidEmail": "Enter a valid email.",
     "passwordTooShort": "Password must be at least 8 characters.",
     "capacityTooLow": "Capacity must be at least 1.",
-    "priceInvalid": "Enter a valid price."
+    "priceInvalid": "Enter a valid price.",
+    "studioSuspended": "This account is suspended. Get in touch to reactivate it."
   },
   "checkin": {
     "title": "Check-in",

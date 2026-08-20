@@ -57,6 +57,8 @@
     "magicLink": "Enviarme un enlace de acceso",
     "magicLinkSent": "Te enviamos un enlace de acceso a tu email.",
     "magicLinkExpired": "El enlace expiró o ya fue usado. Pedí uno nuevo.",
+    "chooseStudioTitle": "¿A qué estudio querés entrar?",
+    "chooseStudioSubtitle": "Tu email tiene cuenta en más de un estudio.",
     "orDivider": "o",
     "invalidCredentials": "Email o contraseña incorrectos.",
     "accountInactive": "Tu cuenta está desactivada. Contactá al estudio.",
@@ -334,7 +336,8 @@
     "invalidEmail": "Ingresá un email válido.",
     "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
     "capacityTooLow": "El cupo debe ser al menos 1.",
-    "priceInvalid": "Ingresá un precio válido."
+    "priceInvalid": "Ingresá un precio válido.",
+    "studioSuspended": "Esta cuenta está suspendida. Escribinos para reactivarla."
   },
   "checkin": {
     "title": "Ingreso",

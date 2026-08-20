@@ -46,6 +46,11 @@ model Studio {
   noShowLimit             Int @default(3) // 0 disables no-show restrictions
   bookingOpensDaysAhead   Int @default(30)
 
+  /// Set by a platform admin to cut off access without deleting anything.
+  /// Login is refused while this is set.
+  suspendedAt     DateTime?
+  suspendedReason String?
+
   onboardingCompletedAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -111,7 +116,12 @@ model User {
   /// than in localStorage so it survives a new device, a cleared browser or
   /// a private window — the tour is meant to appear once, not once per store.
   tourSeenAt    DateTime?
-  locale        String?
+
+  /// Platform operator, not a studio role. Grants access to /admin across
+  /// every studio. Deliberately a flag rather than a Role: Role describes what
+  /// someone does inside their studio, and this cuts across all of them.
+  isPlatformAdmin Boolean @default(false)
+  locale          String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
