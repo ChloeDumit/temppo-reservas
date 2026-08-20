@@ -107,6 +107,10 @@ model User {
   role          Role      @default(STUDENT)
   isActive      Boolean   @default(true)
   emailVerified DateTime?
+  /// Stamped the first time the guided tour opens. Kept on the account rather
+  /// than in localStorage so it survives a new device, a cleared browser or
+  /// a private window — the tour is meant to appear once, not once per store.
+  tourSeenAt    DateTime?
   locale        String?
 
   createdAt DateTime @default(now())

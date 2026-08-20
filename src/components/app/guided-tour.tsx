@@ -7,8 +7,26 @@ import type { Role } from "@/generated/prisma/enums";
 import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 import { Mascot } from "@/components/brand";
+import { markTourSeenAction } from "@/app/[locale]/(app)/tour-actions";
 
 const SEEN_KEY = "temppo:tour-seen";
+
+/** Storage throws in private windows; a missing guard must never break the app. */
+function readSeen() {
+  try {
+    return Boolean(localStorage.getItem(SEEN_KEY));
+  } catch {
+    return false;
+  }
+}
+
+function writeSeen() {
+  try {
+    localStorage.setItem(SEEN_KEY, String(Date.now()));
+  } catch {
+    // Storage unavailable — the account record still carries the flag.
+  }
+}
 
 type Step = {
   /** Message key under the `tour` namespace. */
@@ -44,7 +62,14 @@ type Rect = { top: number; left: number; width: number; height: number };
  * are told maps onto what they are looking at. Steps whose target is missing
  * for this role are dropped rather than pointing at nothing.
  */
-export function GuidedTour({ role, autoStart }: { role: Role; autoStart: boolean }) {
+export function GuidedTour({
+  role,
+  alreadySeen,
+}: {
+  role: Role;
+  /** From the account record — the durable answer to "has this run before". */
+  alreadySeen: boolean;
+}) {
   const t = useTranslations("tour");
   const [index, setIndex] = useState(0);
   const [running, setRunning] = useState(false);
@@ -54,12 +79,18 @@ export function GuidedTour({ role, autoStart }: { role: Role; autoStart: boolean
   const step = steps[index];
 
   useEffect(() => {
-    if (!autoStart) return;
-    if (localStorage.getItem(SEEN_KEY)) return;
+    if (alreadySeen || readSeen()) return;
+
     // Let the tab bar paint before measuring it.
-    const timer = setTimeout(() => setRunning(true), 600);
+    const timer = setTimeout(() => {
+      setRunning(true);
+      // Stamp on open, so abandoning it halfway does not bring it back.
+      writeSeen();
+      void markTourSeenAction();
+    }, 600);
+
     return () => clearTimeout(timer);
-  }, [autoStart]);
+  }, [alreadySeen]);
 
   // Listen for a manual restart from the account sheet.
   useEffect(() => {
@@ -107,7 +138,7 @@ export function GuidedTour({ role, autoStart }: { role: Role; autoStart: boolean
   if (!running || typeof document === "undefined") return null;
 
   const finish = () => {
-    localStorage.setItem(SEEN_KEY, String(Date.now()));
+    writeSeen();
     setRunning(false);
     setIndex(0);
   };

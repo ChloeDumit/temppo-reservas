@@ -85,7 +85,7 @@ export default async function AppLayout({
       </div>
 
       {/* Runs once on first sign-in; replayable from the account sheet. */}
-      <GuidedTour role={user.role} autoStart />
+      <GuidedTour role={user.role} alreadySeen={Boolean(user.tourSeenAt)} />
 
       <MobileTabBar
         primary={primary}
