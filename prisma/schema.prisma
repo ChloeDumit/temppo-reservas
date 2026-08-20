@@ -100,7 +100,7 @@ model User {
   studioId String
   studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
 
-  email         String    @unique
+  email         String
   passwordHash  String?
   name          String
   phone         String?
@@ -124,7 +124,12 @@ model User {
   approvedPayments   Payment[]           @relation("PaymentApprover")
   pushSubscriptions  PushSubscription[]
 
+  // The same person can train at several studios, so identity is scoped to
+  // the studio rather than global. One row per person per studio, which is
+  // also what makes their history (packs, no-shows, notes) studio-local.
+  @@unique([studioId, email])
   @@index([studioId, role])
+  @@index([email])
 }
 
 model StudentProfile {
@@ -628,6 +633,7 @@ enum VerificationPurpose {
   MAGIC_LINK
   PASSWORD_RESET
   EMAIL_VERIFY
+  STUDIO_CHOICE
 }
 
 model VerificationToken {
@@ -636,6 +642,9 @@ model VerificationToken {
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   tokenHash String              @unique
   purpose   VerificationPurpose
+  /// STUDIO_CHOICE only: { userIds: [...] } — the accounts already proven to
+  /// this visitor, so the picker cannot be used to reach any other account.
+  payload   Json?
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime            @default(now())
