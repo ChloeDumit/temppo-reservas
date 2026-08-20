@@ -59,6 +59,39 @@ tree — magic links, check-in QR codes, waitlist claim links, Mercado Pago
 return URLs, the public trial link — now go through a single `localePath()`
 helper in `src/i18n/routing.ts` instead of six copies of the old rule.
 
+### Use a subdomain, not a sub-path
+
+The app lives at **`reservas.temppo.uy`**, as its own Netlify site. The
+marketing site at `temppo.uy` is left alone.
+
+Serving it from `temppo.uy/reservas` was tried and abandoned. Two things make a
+proxied sub-path a poor fit here:
+
+- Next's `basePath` root only resolves **with** a trailing slash. `/reservas/`
+  worked; bare `/reservas` — the URL anyone actually types — returned 404.
+- Netlify's proxy did not pass the app's redirects through. Measured against
+  the live deployment, every origin `200` came back as `200`, but origin `307`
+  came back as `404`. This app redirects constantly by design — locale
+  prefixing, auth guards, students being forwarded from `/dashboard` to `/my`,
+  magic links, waitlist claims — so a proxy that drops 3xx breaks sign-in
+  itself, not just the landing page.
+
+On a subdomain none of that exists: no proxy, no `basePath`, no trailing-slash
+case. Verified against a production build with `NEXT_PUBLIC_BASE_PATH` empty —
+`/` → `/es`, `/login` → `/es/login`, `/dashboard` → `/es/login?next=…` with the
+locale kept, manifest and service worker both served.
+
+If you still want `temppo.uy/reservas` to work as an entry point, make it a
+plain redirect rather than a proxy:
+
+```toml
+[[redirects]]
+  from = "/reservas/*"
+  to = "https://reservas.temppo.uy/:splat"
+  status = 301
+  force = true
+```
+
 ### Steps
 
 1. **Database.** Supabase or Neon, free tier. **Use the pooled connection
@@ -71,19 +104,16 @@ helper in `src/i18n/routing.ts` instead of six copies of the old rule.
 2. **Push this repo** to GitHub.
 3. **New Netlify site** from that repo. Netlify reads `netlify.toml`; leave the
    build command and publish directory alone.
-4. **Environment variables** — same table as below, but `NEXT_PUBLIC_BASE_PATH`
-   only if you keep the `/reservas` sub-path.
-5. **Proxy from the marketing site.** In the `temppo.uy` repo's `netlify.toml`:
-   ```toml
-   [[redirects]]
-     from = "/reservas/*"
-     to = "https://<reservas-site>.netlify.app/reservas/:splat"
-     status = 200
-     force = true
-   ```
-   Alternatively, skip the sub-path entirely and point a subdomain
-   (`reservas.temppo.uy`) at the second site — simpler, no `basePath`, no proxy
-   rule, and the free certificate covers it since you already have `*.temppo.uy`.
+4. **Custom domain.** On that Netlify site: Domain management → add
+   `reservas.temppo.uy`. Then add the DNS record it asks for — a `CNAME` from
+   `reservas` to `<site>.netlify.app`. Netlify issues the certificate free and
+   automatically once DNS resolves.
+5. **Environment variables** — see `.env.production.template`. The two that
+   must agree: `APP_URL="https://reservas.temppo.uy"` and
+   `NEXT_PUBLIC_BASE_PATH=""`. If `APP_URL` is wrong, magic links, QR check-in
+   codes and waitlist claim links all point at a host that does not exist.
+6. **Remove any old `/reservas` proxy rules** from the `temppo.uy` repo. Leaving
+   a `status = 200` proxy in place will keep intercepting the path.
 
 ### Netlify vs Vercel, honestly
 

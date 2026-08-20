@@ -1,8 +1,9 @@
 # TEMPPO Reservas on Netlify.
 #
-# Deployed as its own Netlify site; the marketing site at temppo.uy proxies
-# /reservas/* to it. Keeping them separate means the product and the marketing
-# page can build and release independently.
+# Its own Netlify site, served at reservas.temppo.uy. The marketing site at
+# temppo.uy is a separate deploy and is not involved — proxying the app from a
+# sub-path was tried and dropped, because the proxy turned the app's redirects
+# into 404s. See DEPLOY.md.
 
 [build]
   command = "npm run build"
