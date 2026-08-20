@@ -19,7 +19,8 @@
     "postinstall": "prisma generate",
     "icons": "node scripts/icons.mjs",
     "demo:video": "node scripts/demo-video.mjs",
-    "demo:encode": "node scripts/demo-encode.mjs"
+    "demo:encode": "node scripts/demo-encode.mjs",
+    "seed:soco": "tsx prisma/seed-soco.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
