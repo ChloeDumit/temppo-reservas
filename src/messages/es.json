@@ -471,5 +471,17 @@
     "waMessage": "Hola! Te paso el comprobante de mi pago.\n\nCódigo: {code}\nPack: {pack}\nMonto: {amount}\nNombre: {name}",
     "pendingWithCode": "Pago pendiente · código {code}",
     "copyCode": "Copiar código"
+  },
+  "install": {
+    "title": "Instalá la app",
+    "body": "Accedé más rápido desde tu pantalla de inicio, sin pasar por el navegador.",
+    "install": "Instalar",
+    "how": "Cómo instalarla",
+    "later": "Ahora no",
+    "iosTitle": "Agregar a inicio",
+    "iosStep1": "Tocá el botón Compartir, abajo en la barra de Safari.",
+    "iosStep2": "Bajá y elegí «Agregar a pantalla de inicio».",
+    "iosStep3": "Tocá «Agregar». Listo: ya la tenés como app.",
+    "iosNote": "En iPhone esto solo funciona desde Safari. Si estás en otro navegador, abrí esta página en Safari primero."
   }
 }

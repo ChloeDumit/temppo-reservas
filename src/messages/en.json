@@ -471,5 +471,17 @@
     "waMessage": "Hi! Here is the receipt for my payment.\n\nCode: {code}\nPack: {pack}\nAmount: {amount}\nName: {name}",
     "pendingWithCode": "Payment pending · code {code}",
     "copyCode": "Copy code"
+  },
+  "install": {
+    "title": "Install the app",
+    "body": "Get in faster from your home screen, without going through the browser.",
+    "install": "Install",
+    "how": "How to install",
+    "later": "Not now",
+    "iosTitle": "Add to home screen",
+    "iosStep1": "Tap the Share button in the Safari bar below.",
+    "iosStep2": "Scroll down and choose \"Add to Home Screen\".",
+    "iosStep3": "Tap \"Add\". That is it — you now have it as an app.",
+    "iosNote": "On iPhone this only works from Safari. If you are in another browser, open this page in Safari first."
   }
 }

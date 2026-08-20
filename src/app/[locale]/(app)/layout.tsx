@@ -8,6 +8,7 @@ import { SidebarNav, MobileTabBar } from "@/components/app/sidebar-nav";
 import { LocaleSwitch } from "@/components/app/locale-switch";
 import { LogoutButton } from "@/components/app/logout-button";
 import { navFor, splitNav } from "@/components/app/nav-items";
+import { InstallPrompt } from "@/components/app/install-prompt";
 
 export default async function AppLayout({
   children,
@@ -76,6 +77,8 @@ export default async function AppLayout({
         </aside>
 
         <main className="min-w-0 flex-1 px-4 pb-tabbar pt-5 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
+          {/* Dismissible, and hides itself once the app is installed. */}
+          <InstallPrompt />
           {children}
         </main>
       </div>

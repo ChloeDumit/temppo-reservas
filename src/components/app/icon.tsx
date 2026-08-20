@@ -17,6 +17,9 @@ const PATHS: Record<string, string> = {
   scan: "M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16",
   spark: "M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8",
   chart: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+  share: "M12 16V4M12 4 8 8M12 4l4 4M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4",
+  download: "M12 4v10M12 14l-4-4M12 14l4-4M4 18h16",
+  phone: "M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 19h2",
   more: "M5 12h.01M12 12h.01M19 12h.01",
   chevronDown: "M6 9l6 6 6-6",
 };
