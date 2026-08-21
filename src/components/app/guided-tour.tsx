@@ -371,7 +371,22 @@ export function GuidedTour({
   const targetIsLow = rect ? rect.top > window.innerHeight / 2 : false;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={t("label")}>
+    /*
+      Click-through by default. This layer spans the screen so the dimming can,
+      and it used to swallow every tap with it — including taps on the very tab
+      it was pointing at. "Here is your agenda" that does nothing when you touch
+      it teaches the wrong thing about the app.
+
+      Only the card below takes pointer events back, so the spotlight is a place
+      you can actually reach. A step with nothing to highlight keeps its own
+      blocking layer: there, the card is the only thing to do.
+    */
+    <div
+      className="pointer-events-none fixed inset-0 z-[60]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("label")}
+    >
       {/*
         The dim layer is the spotlight: a transparent box over the target with
         an enormous shadow, which darkens everything except the cut-out.
@@ -388,12 +403,12 @@ export function GuidedTour({
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-ink/72" />
+        <div className="pointer-events-auto absolute inset-0 bg-ink/72" />
       )}
 
       <div
         className={cn(
-          "absolute inset-x-4 mx-auto max-w-sm rounded-[var(--radius-sheet)] bg-surface p-5 shadow-2xl",
+          "pointer-events-auto absolute inset-x-4 mx-auto max-w-sm rounded-[var(--radius-sheet)] bg-surface p-5 shadow-2xl",
           targetIsLow ? "bottom-auto" : "bottom-[max(1.5rem,env(safe-area-inset-bottom))]",
         )}
         style={targetIsLow && rect ? { top: Math.max(16, rect.top - 280) } : undefined}
