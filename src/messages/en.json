@@ -494,7 +494,11 @@
     "futureBookings": "Future bookings affected: {count}",
     "legendFixed": "Standing",
     "legendFree": "Free",
-    "viewSchedule": "View schedule"
+    "viewSchedule": "View schedule",
+    "whichDays": "Which days?",
+    "whichDaysHint": "This class repeats on several days. Pick only the ones they attend.",
+    "noWeekdays": "Pick at least one day.",
+    "spotDays": "Days"
   },
   "push": {
     "title": "Notifications",

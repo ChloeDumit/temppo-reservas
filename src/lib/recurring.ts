@@ -18,7 +18,7 @@ type StudioLike = {
 export async function syncRecurringBookings(studio: StudioLike, now = new Date()) {
   const standing = await db.recurringBooking.findMany({
     where: { studioId: studio.id, status: "ACTIVE" },
-    include: { classTemplate: { select: { id: true, capacity: true } } },
+    include: { classTemplate: { select: { id: true, capacity: true, weekdays: true } } },
   });
   if (standing.length === 0) return 0;
 
@@ -56,6 +56,11 @@ export async function syncRecurringBookings(studio: StudioLike, now = new Date()
   });
   const alreadyBooked = new Set(existing.map((b) => `${b.classInstanceId}:${b.studentId}`));
 
+  // Fallback days per template, for spots predating per-day scoping.
+  const templateDays = new Map<string, number[]>(
+    standing.map((spot) => [spot.classTemplateId, spot.classTemplate.weekdays]),
+  );
+
   const byTemplate = new Map<string, typeof standing>();
   for (const spot of standing) {
     const list = byTemplate.get(spot.classTemplateId) ?? [];
@@ -86,8 +91,13 @@ export async function syncRecurringBookings(studio: StudioLike, now = new Date()
         A class running Mon/Wed/Fri is one template, but a student may hold
         only Monday and Wednesday. Without this the spot claimed every day the
         template ran, booking people into classes they never asked for.
+
+        A spot with no days recorded falls back to the template's own days,
+        which is what every spot meant before they could be chosen. This runs
+        on the dashboard, so it must never be the thing that throws.
       */
-      if (!spot.weekdays.includes(weekday)) continue;
+      const days = spot.weekdays?.length ? spot.weekdays : (templateDays.get(instance.templateId) ?? []);
+      if (!days.includes(weekday)) continue;
 
       // Respect the window the standing spot is valid for.
       if (dayKey < dateKeyInZone(spot.startDate, "UTC")) continue;
@@ -120,6 +130,8 @@ export type SlotAvailability = {
   name: string;
   colorHex: string;
   weekday: number;
+  /** All weekdays the underlying class runs on, for the assign form. */
+  templateWeekdays: number[];
   startTime: string;
   durationMins: number;
   capacity: number;
@@ -159,7 +171,9 @@ export async function weeklyAvailability(studioId: string): Promise<SlotAvailabi
       // template's spots under every day would report Monday as full because
       // of people who only ever come on Friday.
       const fixed = template.recurringBookings
-        .filter((booking) => booking.weekdays.includes(weekday))
+        .filter((booking) =>
+          (booking.weekdays?.length ? booking.weekdays : template.weekdays).includes(weekday),
+        )
         .map((booking) => ({
           id: booking.id,
           studentId: booking.studentId,
@@ -174,6 +188,7 @@ export async function weeklyAvailability(studioId: string): Promise<SlotAvailabi
         name: template.name,
         colorHex: template.colorHex,
         weekday,
+        templateWeekdays: [...template.weekdays].sort((a, b) => a - b),
         startTime: template.startTime,
         durationMins: template.durationMins,
         capacity: template.capacity,

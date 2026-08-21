@@ -494,7 +494,11 @@
     "futureBookings": "Reservas futuras afectadas: {count}",
     "legendFixed": "Fijo",
     "legendFree": "Libre",
-    "viewSchedule": "Ver agenda"
+    "viewSchedule": "Ver agenda",
+    "whichDays": "¿Qué días?",
+    "whichDaysHint": "Esta clase se repite varios días. Elegí solo los que le corresponden.",
+    "noWeekdays": "Elegí al menos un día.",
+    "spotDays": "Días"
   },
   "push": {
     "title": "Notificaciones",

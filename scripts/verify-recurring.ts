@@ -16,6 +16,8 @@ const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
+const TZ = "America/Montevideo";
+
 let passed = 0;
 let failed = 0;
 function check(label: string, actual: unknown, expected: unknown) {
@@ -35,7 +37,7 @@ async function main() {
     data: {
       name: "Recurring Scratch",
       slug: "recurring-scratch",
-      timezone: "America/Montevideo",
+      timezone: TZ,
       bookingOpensDaysAhead: 30,
       noShowLimit: 0,
     },
@@ -74,17 +76,39 @@ async function main() {
     },
   });
 
-  // Three future occurrences of that slot.
-  const base = Date.now() + 2 * 86_400_000;
+  /*
+    Occurrences must fall on the weekdays the template actually runs, because a
+    standing spot is now scoped to specific days. Arbitrary dates would simply
+    be skipped — correctly — and the fixture would prove nothing.
+  */
+  const weekdayIn = (date: Date) =>
+    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(
+      new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: TZ }).format(date),
+    );
+
+  /** The next `count` dates falling on one of `days`, starting tomorrow. */
+  function upcomingOn(days: number[], count: number) {
+    const found: Date[] = [];
+    const cursor = new Date(Date.now() + 86_400_000);
+    while (found.length < count) {
+      if (days.includes(weekdayIn(cursor))) found.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return found;
+  }
+
+  // Mondays and Wednesdays, so per-day scoping is observable.
+  const dates = upcomingOn([1, 3], 3);
+
   const instances = await Promise.all(
-    [0, 7, 14].map((offset) =>
+    dates.map((startsAt) =>
       db.classInstance.create({
         data: {
           studioId: studio.id,
           templateId: template.id,
           name: "Reformer",
-          startsAt: new Date(base + offset * 86_400_000),
-          endsAt: new Date(base + offset * 86_400_000 + 55 * 60_000),
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + 55 * 60_000),
           capacity: 2,
         },
       }),
@@ -98,6 +122,7 @@ async function main() {
       studioId: studio.id,
       classTemplateId: template.id,
       studentId: ana.id,
+      weekdays: [1, 3],
       status: "ACTIVE",
       startDate: new Date("2026-01-01T00:00:00Z"),
     },
@@ -121,6 +146,7 @@ async function main() {
       studioId: studio.id,
       classTemplateId: template.id,
       studentId: beto.id,
+      weekdays: [1, 3],
       status: "ACTIVE",
       startDate: new Date("2026-01-01T00:00:00Z"),
     },
@@ -206,6 +232,58 @@ async function main() {
 
   const noRevive = await syncRecurringBookings(studio);
   check("a cancelled spot is not re-created", noRevive, 0);
+
+  console.log("\nA spot on only some of the class days");
+
+  // caro takes the same Mon/Wed class, but only ever comes on Monday.
+  await db.recurringBooking.deleteMany({ where: { studioId: studio.id } });
+  await db.booking.deleteMany({ where: { studioId: studio.id } });
+
+  await db.recurringBooking.create({
+    data: {
+      studioId: studio.id,
+      classTemplateId: template.id,
+      studentId: caro.id,
+      weekdays: [1],
+      status: "ACTIVE",
+      startDate: new Date("2026-01-01T00:00:00Z"),
+    },
+  });
+
+  await syncRecurringBookings(studio);
+
+  const caroBookings = await db.booking.findMany({
+    where: { studentId: caro.id, status: "BOOKED" },
+    include: { classInstance: { select: { startsAt: true } } },
+  });
+
+  const bookedWeekdays = [
+    ...new Set(
+      caroBookings.map((b) =>
+        Number(
+          new Intl.DateTimeFormat("en-US", {
+            weekday: "short",
+            timeZone: studio.timezone,
+          })
+            .format(b.classInstance.startsAt)
+            .replace(/Sun|Mon|Tue|Wed|Thu|Fri|Sat/, (d) =>
+              String(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(d)),
+            ),
+        ),
+      ),
+    ),
+  ];
+
+  check("books only the chosen weekday", bookedWeekdays, [1]);
+  check("and not the other day the class runs", bookedWeekdays.includes(3), false);
+
+  const slotsByDay = await weeklyAvailability(studio.id);
+  const monday = slotsByDay.find((s) => s.weekday === 1)!;
+  const wednesday = slotsByDay.find((s) => s.weekday === 3)!;
+
+  check("Monday shows the spot", monday.fixed.length, 1);
+  check("Wednesday does not", wednesday.fixed.length, 0);
+  check("Wednesday keeps its free seats", wednesday.freeSpots, 2);
 
   await db.studio.delete({ where: { id: studio.id } });
   console.log(`\n${passed} passed, ${failed} failed\n`);

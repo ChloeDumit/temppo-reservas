@@ -11,10 +11,18 @@ export function AssignStandingSpotForm({
   classTemplateId,
   students,
   today,
+  weekdays,
+  defaultWeekday,
+  weekdayLabels,
 }: {
   classTemplateId: string;
   students: { id: string; name: string }[];
   today: string;
+  /** Every weekday this class runs on. */
+  weekdays: number[];
+  /** The day whose card was tapped — ticked by default. */
+  defaultWeekday: number;
+  weekdayLabels: string[];
 }) {
   const t = useTranslations("availability");
   const tc = useTranslations("common");
@@ -32,12 +40,40 @@ export function AssignStandingSpotForm({
       ? t("slotFull")
       : state.error === "alreadyFixed"
         ? t("alreadyFixed")
+        : state.error === "noWeekdays"
+          ? t("noWeekdays")
         : te("generic")
     : undefined;
 
   return (
     <form action={submit} className="space-y-4">
       <input type="hidden" name="classTemplateId" value={classTemplateId} />
+
+      {/*
+        A class running Mon/Wed/Fri is one template, but a student may hold
+        only some of those days. Only shown when there is a choice to make.
+      */}
+      {weekdays.length > 1 && (
+        <Field label={t("whichDays")} hint={t("whichDaysHint")}>
+          <div className="flex flex-wrap gap-2">
+            {weekdays.map((day) => (
+              <label
+                key={day}
+                className="pressable inline-flex cursor-pointer items-center gap-2 rounded-[var(--radius-pill)] border border-line-strong px-3.5 py-2 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent-ink"
+              >
+                <input
+                  type="checkbox"
+                  name="weekdays"
+                  value={day}
+                  defaultChecked={day === defaultWeekday}
+                  className="size-4 accent-[var(--color-accent)]"
+                />
+                {weekdayLabels[day]}
+              </label>
+            ))}
+          </div>
+        </Field>
+      )}
 
       <Field label={t("student")}>
         <Select name="studentId" required defaultValue="">

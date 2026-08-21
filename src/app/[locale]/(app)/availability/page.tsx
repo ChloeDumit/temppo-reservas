@@ -208,6 +208,9 @@ export default async function AvailabilityPage({
                               classTemplateId={slot.templateId}
                               students={studentOptions}
                               today={today}
+                              weekdays={slot.templateWeekdays}
+                              defaultWeekday={weekday}
+                              weekdayLabels={dayNames}
                             />
                           </SheetForm>
                         )}
