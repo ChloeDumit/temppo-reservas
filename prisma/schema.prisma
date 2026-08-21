@@ -42,7 +42,7 @@ model Studio {
   // Studio-configurable booking rules
   cancellationCutoffHours Int @default(6)
   reminderHoursBefore     Int @default(12)
-  waitlistClaimWindowMins Int @default(15)
+  waitlistClaimWindowMins Int @default(120)
   noShowLimit             Int @default(3) // 0 disables no-show restrictions
   bookingOpensDaysAhead   Int @default(30)
 
@@ -105,8 +105,14 @@ model User {
   studioId String
   studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
 
-  email              String
+  /// Optional: an older student may have no email at all. Staff still need one
+  /// — they sign in with a password or a magic link.
+  email              String?
   passwordHash       String?
+  /// National ID (cédula). The sign-in handle for a student with no email.
+  documentId         String?
+  /// Short PIN backing a documentId sign-in. Hashed like a password.
+  pinHash            String?
   name               String
   phone              String?
   role               Role      @default(STUDENT)
@@ -142,8 +148,10 @@ model User {
   // the studio rather than global. One row per person per studio, which is
   // also what makes their history (packs, no-shows, notes) studio-local.
   @@unique([studioId, email])
+  @@unique([studioId, documentId])
   @@index([studioId, role])
   @@index([email])
+  @@index([documentId])
 }
 
 model StudentProfile {
@@ -302,6 +310,11 @@ model RecurringBooking {
   classTemplate   ClassTemplate  @relation(fields: [classTemplateId], references: [id], onDelete: Cascade)
   studentId       String
   student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  /// Which of the template's weekdays this spot actually covers.
+  /// A class running Mon/Wed/Fri is one template, but a student may hold only
+  /// Monday and Wednesday — so the days live on the spot, not the template.
+  weekdays Int[]
 
   status    RecurringBookingStatus @default(ACTIVE)
   startDate DateTime               @db.Date

@@ -7,6 +7,7 @@ import { assertStaff, assertAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { hashPassword } from "@/lib/auth/password";
 import { generateTempPassword } from "@/lib/auth/temp-password";
+import { normalizeDocumentId, PIN_MIN_LENGTH, PIN_MAX_LENGTH } from "@/lib/auth/document";
 
 export type ActionState = {
   error?: string;
@@ -18,7 +19,10 @@ export type ActionState = {
 const studentSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2).max(80),
-  email: z.string().trim().toLowerCase().email(),
+  // Optional now: an older student may have no email and sign in by cédula.
+  email: z.union([z.string().trim().toLowerCase().email(), z.literal("")]).optional(),
+  documentId: z.string().trim().max(30).optional(),
+  pin: z.string().trim().max(PIN_MAX_LENGTH).optional(),
   phone: z.string().trim().max(30).optional(),
   birthDate: z.string().optional(),
   healthNotes: z.string().trim().max(1000).optional(),
@@ -37,8 +41,25 @@ export async function saveStudentAction(
     return { error: parsed.error.issues[0]?.path[0] === "email" ? "invalidEmail" : "generic" };
   }
 
-  const { id, name, email, phone, birthDate, healthNotes, emergencyContact, emergencyPhone, notes } =
+  const { id, name, phone, birthDate, healthNotes, emergencyContact, emergencyPhone, notes } =
     parsed.data;
+
+  // Cross-field rules, kept out of zod so each one gets its own message.
+  const email = parsed.data.email?.trim() ? parsed.data.email.trim() : null;
+  const documentId = parsed.data.documentId?.trim()
+    ? normalizeDocumentId(parsed.data.documentId)
+    : null;
+  const pin = parsed.data.pin?.trim() || null;
+
+  // Without one of the two there is no way to tell this person apart, and no
+  // way for them to ever sign in.
+  if (!email && !documentId) return { error: "needHandle" };
+  if (pin && (pin.length < PIN_MIN_LENGTH || pin.length > PIN_MAX_LENGTH)) {
+    return { error: "invalidPin" };
+  }
+  // Email accounts get a temporary password instead; a cédula-only account has
+  // nothing to sign in with unless a PIN is set here and now.
+  if (!id && !email && !pin) return { error: "pinRequired" };
 
   const profileData = {
     birthDate: birthDate ? new Date(`${birthDate}T00:00:00Z`) : null,
@@ -57,19 +78,32 @@ export async function saveStudentAction(
     });
     if (!profile) return { error: "notFound" };
 
-    // Email is unique within the studio; guard before we hit the constraint.
-    // Someone already training elsewhere under this address is fine — only a
-    // second account in *this* studio is a clash.
-    if (email !== profile.user.email) {
+    // Both handles are unique within the studio; guard before hitting the
+    // constraint. Someone already training elsewhere under the same address or
+    // cédula is fine — only a second account in *this* studio is a clash.
+    if (email && email !== profile.user.email) {
       const clash = await db.user.findFirst({ where: { studioId: user.studioId, email } });
       if (clash) return { error: "emailTaken" };
+    }
+    if (documentId && documentId !== profile.user.documentId) {
+      const clash = await db.user.findFirst({ where: { studioId: user.studioId, documentId } });
+      if (clash) return { error: "documentTaken" };
     }
 
     await db.studentProfile.update({
       where: { id },
       data: {
         ...profileData,
-        user: { update: { name, email, phone: phone || null } },
+        user: {
+          update: {
+            name,
+            email,
+            documentId,
+            phone: phone || null,
+            // Blank leaves the existing PIN alone; filling it in resets one.
+            ...(pin ? { pinHash: await hashPassword(pin) } : {}),
+          },
+        },
       },
     });
 
@@ -85,8 +119,14 @@ export async function saveStudentAction(
   } else {
     // Only blocks a duplicate inside this studio. A student who already has an
     // account at another studio gets a second, independent one here.
-    if (await db.user.findFirst({ where: { studioId: user.studioId, email } })) {
+    if (email && (await db.user.findFirst({ where: { studioId: user.studioId, email } }))) {
       return { error: "emailTaken" };
+    }
+    if (
+      documentId &&
+      (await db.user.findFirst({ where: { studioId: user.studioId, documentId } }))
+    ) {
+      return { error: "documentTaken" };
     }
 
     /*
@@ -95,18 +135,23 @@ export async function saveStudentAction(
       below, and the student is held at the password screen until they replace
       it — so a password read aloud never becomes a permanent one.
     */
-    const tempPassword = generateTempPassword();
-    issued = tempPassword;
+    // Only worth issuing when there is an email to sign in with; a cédula-only
+    // account uses its PIN instead.
+    const tempPassword = email ? generateTempPassword() : null;
+    issued = tempPassword ?? undefined;
 
     const created = await db.user.create({
       data: {
         studioId: user.studioId,
         email,
+        documentId,
         name,
         phone: phone || null,
         role: "STUDENT",
-        passwordHash: await hashPassword(tempPassword),
-        mustChangePassword: true,
+        ...(tempPassword
+          ? { passwordHash: await hashPassword(tempPassword), mustChangePassword: true }
+          : {}),
+        ...(pin ? { pinHash: await hashPassword(pin) } : {}),
         studentProfile: { create: profileData },
       },
       include: { studentProfile: true },

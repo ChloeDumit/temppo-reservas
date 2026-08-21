@@ -15,6 +15,14 @@ export async function notify(
   channel: "EMAIL" | "WHATSAPP",
   payload: NotificationPayload,
 ): Promise<boolean> {
+  // A student with no email (and no phone) simply has no address on this
+  // channel. Nothing to send and nothing to log against — but say so, or the
+  // message vanishes with no trace at all.
+  if (!payload.to) {
+    console.warn(`[notify] no ${channel} address for template ${payload.template}`);
+    return false;
+  }
+
   const transport = channel === "WHATSAPP" ? whatsappTransport : emailTransport;
   const result = await transport.send(payload);
 

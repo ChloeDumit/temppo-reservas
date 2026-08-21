@@ -56,7 +56,7 @@ export function MobileTabBar({
 }: {
   primary: NavItem[];
   overflow: NavItem[];
-  user: { name: string; email: string; roleLabel: string };
+  user: { name: string; email: string | null; roleLabel: string };
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -146,7 +146,7 @@ export function MobileTabBar({
 
         <div className={cn("rounded-lg bg-sunken px-4 py-3.5", hasOverflow && "mt-5")}>
           <p className="truncate text-sm font-medium text-ink">{user.name}</p>
-          <p className="truncate text-xs text-muted">{user.email}</p>
+          {user.email && <p className="truncate text-xs text-muted">{user.email}</p>}
           <p className="mt-1 text-xs text-muted">{user.roleLabel}</p>
         </div>
 

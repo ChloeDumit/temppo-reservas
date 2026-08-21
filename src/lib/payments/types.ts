@@ -8,6 +8,7 @@ export type CheckoutRequest = {
   title: string;
   amountCents: number;
   currency: string;
+  /** Providers require one; a student with no email pays in person instead. */
   payerEmail: string;
   /** Where the provider sends the payer back to. */
   successUrl: string;

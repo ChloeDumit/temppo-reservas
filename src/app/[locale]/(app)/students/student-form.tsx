@@ -12,6 +12,7 @@ export type StudentValues = {
   id?: string;
   name: string;
   email: string;
+  documentId: string;
   phone: string;
   birthDate: string;
   healthNotes: string;
@@ -61,13 +62,28 @@ export function StudentForm({ values }: { values: StudentValues }) {
     );
   }
 
-  const message = state?.error
-    ? state.error === "emailTaken"
+  const errorKey = state?.error;
+  // Only the address-shaped problems belong under the email field; the cédula
+  // and PIN ones sit under their own.
+  const message =
+    errorKey === "emailTaken"
       ? ta("emailTaken")
-      : state.error === "invalidEmail"
+      : errorKey === "invalidEmail"
         ? te("invalidEmail")
-        : te("generic")
-    : undefined;
+        : errorKey === "needHandle"
+          ? t("needHandle")
+          : errorKey && !["documentTaken", "invalidPin", "pinRequired"].includes(errorKey)
+            ? te("generic")
+            : undefined;
+
+  const documentMessage =
+    errorKey === "documentTaken"
+      ? t("documentTaken")
+      : errorKey === "invalidPin"
+        ? t("invalidPin")
+        : errorKey === "pinRequired"
+          ? t("pinRequired")
+          : undefined;
 
   return (
     <form action={submit} className="space-y-4">
@@ -77,8 +93,20 @@ export function StudentForm({ values }: { values: StudentValues }) {
         <Field label={t("name")}>
           <Input name="name" required maxLength={80} defaultValue={values.name} />
         </Field>
-        <Field label={t("email")} error={message}>
-          <Input name="email" type="email" required defaultValue={values.email} />
+        <Field label={t("email")} hint={t("emailOptionalHint")} error={message}>
+          <Input name="email" type="email" defaultValue={values.email} />
+        </Field>
+        <Field label={t("documentId")} hint={t("documentIdHint")} error={documentMessage}>
+          <Input
+            name="documentId"
+            inputMode="numeric"
+            maxLength={30}
+            defaultValue={values.documentId}
+            placeholder="1.234.567-8"
+          />
+        </Field>
+        <Field label={t("pin")} hint={values.id ? t("pinEditHint") : t("pinHint")}>
+          <Input name="pin" inputMode="numeric" maxLength={8} autoComplete="off" />
         </Field>
         <Field label={t("phone")} hint="+598…">
           <Input name="phone" type="tel" maxLength={30} defaultValue={values.phone} />

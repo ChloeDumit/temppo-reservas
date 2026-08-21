@@ -238,7 +238,8 @@ export default async function StudentDetailPage({
           values={{
             id: student.id,
             name: student.user.name,
-            email: student.user.email,
+            email: student.user.email ?? "",
+            documentId: student.user.documentId ?? "",
             phone: student.user.phone ?? "",
             birthDate: student.birthDate?.toISOString().slice(0, 10) ?? "",
             healthNotes: student.healthNotes ?? "",

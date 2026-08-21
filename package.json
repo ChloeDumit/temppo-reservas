@@ -9,7 +9,7 @@
     "seed": "tsx prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "verify": "tsx scripts/verify-booking.ts && tsx scripts/verify-waitlist.ts && tsx scripts/verify-recurring.ts && tsx scripts/verify-payments.ts && tsx scripts/verify-platform-admin.ts && tsx scripts/verify-temp-password.ts && tsx scripts/verify-tour.ts && tsx scripts/verify-emails.ts && tsx scripts/verify-reports.ts",
+    "verify": "tsx scripts/verify-booking.ts && tsx scripts/verify-waitlist.ts && tsx scripts/verify-recurring.ts && tsx scripts/verify-payments.ts && tsx scripts/verify-platform-admin.ts && tsx scripts/verify-temp-password.ts && tsx scripts/verify-tour.ts && tsx scripts/verify-emails.ts && tsx scripts/verify-reports.ts && tsx scripts/verify-multi-studio.ts && tsx scripts/verify-document-login.ts",
     "native:sync": "cap sync",
     "native:ios": "cap open ios",
     "native:android": "cap open android",

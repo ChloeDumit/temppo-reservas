@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth/session";
+import { createSession } from "@/lib/auth/session";
 import { bookClass } from "@/lib/booking";
 import { offerNextSpot } from "@/lib/waitlist";
 import { recordAudit } from "@/lib/audit";
@@ -37,15 +37,6 @@ export async function GET(request: NextRequest) {
     return back("expired");
   }
 
-  // Claiming requires being signed in as the student who was offered the spot.
-  const user = await getCurrentUser();
-  if (!user || user.studentProfile?.id !== entry.studentId) {
-    const next = localePath(locale, `/api/waitlist/claim?token=${token}&locale=${locale}`);
-    return NextResponse.redirect(
-      new URL(localePath(locale, `/login?next=${encodeURIComponent(next)}`), request.url),
-    );
-  }
-
   const result = await bookClass({
     studio: entry.studio,
     studentId: entry.studentId,
@@ -71,10 +62,19 @@ export async function GET(request: NextRequest) {
     data: { status: "CLAIMED", claimToken: null },
   });
 
+  // The token is single-use, unguessable and was sent to this student — the
+  // same proof a magic link carries, so it signs them in too. Requiring a
+  // separate login here meant a second email inside a 15-minute window, which
+  // is how most offers quietly expired.
+  await createSession(entry.student.userId, {
+    userAgent: request.headers.get("user-agent"),
+    ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+  });
+
   await recordAudit({
     studioId: entry.studioId,
-    actorId: user.id,
-    actorLabel: user.name,
+    actorId: entry.student.userId,
+    actorLabel: entry.student.user.name,
     action: "waitlist.claim",
     entityType: "WaitlistEntry",
     entityId: entry.id,

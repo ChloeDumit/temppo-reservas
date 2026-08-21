@@ -152,6 +152,10 @@ export async function startCheckoutAction(formData: FormData) {
   const provider = paymentProvider();
   if (!provider.isConfigured()) return;
 
+  // Mercado Pago requires a payer email. Someone signed in with a cédula may
+  // not have one — they pay by transfer or in person instead.
+  if (!user.email) return;
+
   const created = await createPendingPurchase({
     studioId: user.studioId,
     studentId: user.studentProfile.id,

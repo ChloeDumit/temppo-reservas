@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { dateKeyInZone } from "@/lib/dates";
+import { dateKeyInZone, weekdayInZone } from "@/lib/dates";
 
 type StudioLike = {
   id: string;
@@ -77,9 +77,18 @@ export async function syncRecurringBookings(studio: StudioLike, now = new Date()
     if (!spots) continue;
 
     const dayKey = dateKeyInZone(instance.startsAt, studio.timezone);
+    // Which weekday this occurrence falls on, in the studio's own timezone.
+    const weekday = weekdayInZone(instance.startsAt, studio.timezone);
     let seats = takenBy.get(instance.id) ?? 0;
 
     for (const spot of spots) {
+      /*
+        A class running Mon/Wed/Fri is one template, but a student may hold
+        only Monday and Wednesday. Without this the spot claimed every day the
+        template ran, booking people into classes they never asked for.
+      */
+      if (!spot.weekdays.includes(weekday)) continue;
+
       // Respect the window the standing spot is valid for.
       if (dayKey < dateKeyInZone(spot.startDate, "UTC")) continue;
       if (spot.endDate && dayKey > dateKeyInZone(spot.endDate, "UTC")) continue;
@@ -146,12 +155,17 @@ export async function weeklyAvailability(studioId: string): Promise<SlotAvailabi
   for (const template of templates) {
     // A template can run on several weekdays; each is its own slot to a studio.
     for (const weekday of [...template.weekdays].sort((a, b) => a - b)) {
-      const fixed = template.recurringBookings.map((booking) => ({
-        id: booking.id,
-        studentId: booking.studentId,
-        studentName: booking.student.user.name,
-        status: booking.status,
-      }));
+      // Only the spots that actually cover this weekday. Listing all of the
+      // template's spots under every day would report Monday as full because
+      // of people who only ever come on Friday.
+      const fixed = template.recurringBookings
+        .filter((booking) => booking.weekdays.includes(weekday))
+        .map((booking) => ({
+          id: booking.id,
+          studentId: booking.studentId,
+          studentName: booking.student.user.name,
+          status: booking.status,
+        }));
 
       const active = fixed.filter((f) => f.status === "ACTIVE").length;
 

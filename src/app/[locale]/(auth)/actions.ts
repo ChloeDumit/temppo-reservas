@@ -15,6 +15,7 @@ import {
 } from "@/lib/auth/studio-choice";
 import { MAGIC_LINK_TTL_MINUTES } from "@/lib/auth/constants";
 import { uniqueSlug } from "@/lib/slug";
+import { normalizeDocumentId, PIN_MIN_LENGTH, PIN_MAX_LENGTH } from "@/lib/auth/document";
 import { notify } from "@/lib/notifications";
 import { recordAudit } from "@/lib/audit";
 import { localePath } from "@/i18n/routing";
@@ -263,6 +264,74 @@ export async function chooseStudioAction(formData: FormData) {
   });
 
   const home = chosen.role === "STUDENT" ? "/my" : "/dashboard";
+  const destination =
+    requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : localePath(locale, home);
+
+  redirect(destination);
+}
+
+const documentSchema = z.object({
+  documentId: z.string().trim().min(3).max(30),
+  pin: z.string().trim().min(PIN_MIN_LENGTH).max(PIN_MAX_LENGTH),
+});
+
+/**
+ * Sign-in for students who have no email — a cédula and a PIN the studio sets.
+ *
+ * Deliberately weaker than the other paths: a document number is semi-public,
+ * so this only ever reaches accounts the studio has explicitly given a PIN.
+ */
+export async function documentLoginAction(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const locale = await getLocale();
+  const parsed = documentSchema.safeParse({
+    documentId: formData.get("documentId"),
+    pin: formData.get("pin"),
+  });
+  if (!parsed.success) return { error: "invalidDocument" };
+
+  const requestedNext = String(formData.get("next") ?? "");
+  const documentId = normalizeDocumentId(parsed.data.documentId);
+
+  // Same person, possibly at more than one studio — same shape as email login.
+  const candidates = await db.user.findMany({ where: { documentId } });
+
+  const verified = [];
+  for (const candidate of candidates) {
+    if (candidate.pinHash && (await verifyPassword(parsed.data.pin, candidate.pinHash))) {
+      verified.push(candidate);
+    }
+  }
+
+  if (verified.length === 0) return { error: "invalidDocument" };
+
+  const usable = verified.filter((candidate) => candidate.isActive);
+  if (usable.length === 0) return { error: "accountInactive" };
+
+  if (usable.length > 1) {
+    const choice = await createStudioChoice(usable.map((candidate) => candidate.id));
+    const params = new URLSearchParams({ token: choice });
+    if (requestedNext) params.set("next", requestedNext);
+    redirect(localePath(locale, `/login/studio?${params.toString()}`));
+  }
+
+  const user = usable[0];
+
+  await createSession(user.id, await requestMeta());
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "auth.document_login",
+    entityType: "User",
+    entityId: user.id,
+  });
+
+  const home = user.role === "STUDENT" ? "/my" : "/dashboard";
   const destination =
     requestedNext.startsWith("/") && !requestedNext.startsWith("//")
       ? requestedNext

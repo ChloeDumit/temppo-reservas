@@ -1,6 +1,7 @@
 export type NotificationPayload = {
   studioId: string;
-  to: string;
+  /** Null when the person has no address on this channel — the send is skipped. */
+  to: string | null;
   subject?: string;
   body: string;
   template: string;

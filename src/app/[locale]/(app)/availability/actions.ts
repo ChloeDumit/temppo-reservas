@@ -24,6 +24,13 @@ const assignSchema = z.object({
   note: z.string().trim().max(200).optional(),
 });
 
+/** Weekday checkboxes arrive as repeated form fields. */
+function parseWeekdays(formData: FormData) {
+  return [...new Set(formData.getAll("weekdays").map((v) => Number(v)))]
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+    .sort((a, b) => a - b);
+}
+
 /** Gives a student the same slot every week from `startDate` onward. */
 export async function assignStandingSpotAction(
   _prev: ActionState,
@@ -38,10 +45,18 @@ export async function assignStandingSpotAction(
   const template = await db.classTemplate.findFirst({
     where: { id: classTemplateId, studioId: user.studioId },
     include: {
-      _count: { select: { recurringBookings: { where: { status: "ACTIVE" } } } },
+      recurringBookings: { where: { status: "ACTIVE" }, select: { id: true, weekdays: true } },
     },
   });
   if (!template) return { error: "notFound" };
+
+  // Default to the whole template when nothing is ticked, which is what a
+  // studio means by "every week" for a single-day class.
+  const requested = parseWeekdays(formData);
+  const weekdays = (requested.length > 0 ? requested : template.weekdays).filter((d) =>
+    template.weekdays.includes(d),
+  );
+  if (weekdays.length === 0) return { error: "noWeekdays" };
 
   const student = await db.studentProfile.findFirst({
     where: { id: studentId, user: { studioId: user.studioId } },
@@ -53,10 +68,21 @@ export async function assignStandingSpotAction(
   });
   if (existing && existing.status !== "CANCELLED") return { error: "alreadyFixed" };
 
-  // A standing spot permanently occupies a seat, so it can't oversubscribe.
-  if (template._count.recurringBookings >= template.capacity) return { error: "slotFull" };
+  /*
+    Capacity is per weekday, not per template: Monday can be full while Friday
+    still has room, and counting across the whole template would refuse a spot
+    on a day that is empty.
+  */
+  const full = weekdays.filter(
+    (day) =>
+      template.recurringBookings.filter(
+        (booking) => booking.id !== existing?.id && booking.weekdays.includes(day),
+      ).length >= template.capacity,
+  );
+  if (full.length > 0) return { error: "slotFull" };
 
   const data = {
+    weekdays,
     status: "ACTIVE" as const,
     startDate: new Date(`${startDate}T00:00:00Z`),
     endDate: endDate ? new Date(`${endDate}T00:00:00Z`) : null,
@@ -79,7 +105,7 @@ export async function assignStandingSpotAction(
     action: "recurring_booking.assign",
     entityType: "RecurringBooking",
     entityId: spot.id,
-    metadata: { classTemplateId, studentId, startDate },
+    metadata: { classTemplateId, studentId, startDate, weekdays },
   });
 
   revalidateAll();

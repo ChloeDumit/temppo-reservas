@@ -14,6 +14,7 @@ import { StudentForm } from "./student-form";
 const EMPTY = {
   name: "",
   email: "",
+  documentId: "",
   phone: "",
   birthDate: "",
   healthNotes: "",
