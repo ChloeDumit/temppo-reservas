@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ADMIN_ROLES, requireStaff } from "@/lib/auth/guards";
-import { billingWarning, subscriptionFor } from "@/lib/billing";
+import { BILLING_UI_ENABLED, billingWarning, subscriptionFor } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
 import { addDays, formatTime, startOfDayInZone, startOfMonthInZone } from "@/lib/dates";
@@ -168,8 +168,12 @@ export default async function DashboardPage({
     A warning here never gates anything — a studio behind on its bill keeps
     working, and cutting one off stays a deliberate call from the console.
   */
+  // Silent while billing is unannounced — a banner pointing at a hidden tab is
+  // worse than no banner at all.
   const billing =
-    user.role === "OWNER" ? billingWarning(studio, await subscriptionFor(studio.id), now) : null;
+    BILLING_UI_ENABLED && user.role === "OWNER"
+      ? billingWarning(studio, await subscriptionFor(studio.id), now)
+      : null;
 
   return (
     <>

@@ -1,4 +1,5 @@
 import type { Role } from "@/generated/prisma/enums";
+import { BILLING_UI_ENABLED } from "@/lib/billing/plans";
 
 export type NavItem = {
   href: string;
@@ -38,11 +39,20 @@ const STUDENT_NAV: NavItem[] = [
   { href: "/buy", label: "buy", icon: "ticket" },
 ];
 
+/*
+  Withheld from everyone, regardless of role, while billing is not yet live.
+  See BILLING_UI_ENABLED: the route still answers, it is only unadvertised.
+*/
+const HIDDEN = BILLING_UI_ENABLED ? [] : ["/billing"];
+
 export function navFor(role: Role): NavItem[] {
   if (role === "STUDENT") return STUDENT_NAV;
-  if (role === "INSTRUCTOR") return STAFF_NAV.filter((i) => INSTRUCTOR_ALLOWED.includes(i.href));
-  if (role === "ADMIN") return STAFF_NAV.filter((i) => !OWNER_ONLY.includes(i.href));
-  return STAFF_NAV;
+
+  const staff = STAFF_NAV.filter((i) => !HIDDEN.includes(i.href));
+
+  if (role === "INSTRUCTOR") return staff.filter((i) => INSTRUCTOR_ALLOWED.includes(i.href));
+  if (role === "ADMIN") return staff.filter((i) => !OWNER_ONLY.includes(i.href));
+  return staff;
 }
 
 /**

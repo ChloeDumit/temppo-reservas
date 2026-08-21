@@ -91,10 +91,10 @@ type Step = {
 */
 const SETUP_STEPS: Step[] = [
   { key: "welcomeStaff", phase: "setup" },
-  { key: "studio", phase: "setup", href: "/settings" },
-  { key: "rules", phase: "setup", href: "/settings" },
-  { key: "locations", phase: "setup", href: "/settings", needs: "locations" },
-  { key: "teachers", phase: "setup", href: "/settings", needs: "teachers" },
+  { key: "studio", phase: "setup", href: "/settings#studio" },
+  { key: "rules", phase: "setup", href: "/settings#rules" },
+  { key: "locations", phase: "setup", href: "/settings#locations", needs: "locations" },
+  { key: "teachers", phase: "setup", href: "/settings#team", needs: "teachers" },
   { key: "packs", phase: "setup", href: "/packs", needs: "packs" },
   { key: "classes", phase: "setup", href: "/classes", needs: "classes" },
   { key: "students", phase: "setup", href: "/students", needs: "students" },
@@ -273,12 +273,39 @@ export function GuidedTour({
   const move = (delta: number) =>
     setIndex((current) => Math.min(Math.max(0, current + delta), steps.length - 1));
 
-  /** Hands the screen over so the step can actually be carried out. */
+  /**
+   * Hands the screen over so the step can actually be carried out.
+   *
+   * Several setup steps live on the same page — studio, rules, sedes and team
+   * are all inside Ajustes. Pushing that route while already on it is a no-op,
+   * so "llevame ahí" appeared to do nothing at all. When the anchor is already
+   * in the document we scroll to it instead, and only navigate when it isn't.
+   */
   const visit = (href: string) => {
     writePlace({ index, open: false });
     setRunning(false);
     setPaused(true);
-    router.push(href);
+
+    const [path, anchor] = href.split("#");
+    const target = anchor ? document.getElementById(anchor) : null;
+
+    if (target) {
+      const before = window.scrollY;
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      /*
+        Smooth scrolling is a silent no-op in some embedded and in-app browsers
+        — the call returns, nothing moves, and the button looks dead. If we
+        haven't travelled a moment later, jump instead: arriving abruptly beats
+        not arriving.
+      */
+      setTimeout(() => {
+        if (Math.abs(window.scrollY - before) < 4) target.scrollIntoView({ block: "start" });
+      }, 200);
+      return;
+    }
+
+    router.push(anchor ? `${path}#${anchor}` : path);
   };
 
   const resume = () => {

@@ -36,7 +36,7 @@ export default async function SettingsPage({
       <PageHeader title={t("title")} />
 
       <div className="space-y-4">
-        <Card>
+        <Card id="studio">
           <CardHeader title={t("studio")} />
           <CardBody>
             <StudioForm
@@ -61,7 +61,7 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        <Card>
+        <Card id="rules">
           <CardHeader title={t("rules")} />
           <CardBody>
             <RulesForm
@@ -77,7 +77,7 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        <Card>
+        <Card id="locations">
           <CardHeader title={t("locations")} />
           <CardBody className="space-y-4">
             <ul className="divide-y divide-line">
@@ -99,7 +99,7 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        <Card>
+        <Card id="team">
           <CardHeader title={t("team")} />
           <CardBody className="space-y-4">
             <ul className="divide-y divide-line">

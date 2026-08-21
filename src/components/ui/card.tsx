@@ -1,8 +1,23 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("card", className)}>{children}</div>;
+export function Card({
+  className,
+  children,
+  id,
+}: {
+  className?: string;
+  children: ReactNode;
+  /** Anchor for deep links — the guided tour scrolls to these. */
+  id?: string;
+}) {
+  return (
+    /* scroll-mt keeps an anchored section clear of the header, whether it is
+       reached by the guided tour or by a #hash in the URL. */
+    <div id={id} className={cn("card", id && "scroll-mt-20", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function CardHeader({

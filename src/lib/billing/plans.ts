@@ -57,3 +57,17 @@ export function extendedPeriodEnd(
   const from = currentPeriodEnd && currentPeriodEnd > now ? currentPeriodEnd : now;
   return addMonths(from, months);
 }
+
+/**
+ * Whether studios see the subscription UI at all.
+ *
+ * Off while TEMPPO is still in its own trial phase: nobody is being charged
+ * yet, so a "choose a plan" tab and a "your trial is ending" banner both offer
+ * a decision the studio cannot act on, and invite questions we do not want to
+ * answer yet.
+ *
+ * The /billing route itself stays reachable by URL, so the whole flow can be
+ * exercised before it is announced. Flip this to true to launch — nothing else
+ * needs to change.
+ */
+export const BILLING_UI_ENABLED = false;

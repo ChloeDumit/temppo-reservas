@@ -85,8 +85,27 @@ const routes = readdirSync("src/app/[locale]/(app)", { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => `/${entry.name}`);
 
-const deadEnds = staffSteps.filter((s) => s.href && !routes.includes(s.href)).map((s) => s.href);
+/*
+  An href may carry an anchor — several setup steps live in different sections
+  of Ajustes — so the route is what gets checked, and the anchor separately.
+*/
+const deadEnds = staffSteps
+  .filter((s) => s.href && !routes.includes(s.href.split("#")[0]))
+  .map((s) => s.href);
 check("every 'take me there' goes somewhere real", deadEnds, []);
+
+// An anchor that names no element scrolls nowhere, which is the bug this
+// replaced: the step pointed at the page it was already on and did nothing.
+const anchors = staffSteps
+  .map((s) => s.href?.split("#")[1])
+  .filter((a): a is string => Boolean(a));
+
+const settingsSource = readFileSync("src/app/[locale]/(app)/settings/page.tsx", "utf8");
+check(
+  "every anchored step has a section to scroll to",
+  anchors.filter((a) => !settingsSource.includes(`id="${a}"`)),
+  [],
+);
 
 check(
   "no step key is used twice",

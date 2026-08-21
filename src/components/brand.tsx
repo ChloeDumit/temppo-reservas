@@ -5,55 +5,80 @@ import { cn } from "@/lib/cn";
  *
  * Colours are literal rather than themed: this is the company mark, so it
  * stays constant even when a studio overrides the app's accent colour.
+ *
+ * The same artwork is rasterised into the PWA icon set by scripts/icons.mjs —
+ * change one and run `npm run icons` so the two do not drift apart.
  */
 export function Mascot({ className, size = 32 }: { className?: string; size?: number }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 100 100"
+      viewBox="0 0 240 240"
       fill="none"
       className={className}
       aria-hidden
     >
-      {/* Ground shadow */}
-      <ellipse cx="50" cy="90" rx="22" ry="5" fill="#C85C35" opacity="0.3" />
+      {/* The inner offset is part of the artwork: it centres the mascot once
+          the calendar card it holds is accounted for. */}
+      <g transform="translate(-9,-4)">
+        {/* Tail */}
+        <path
+          d="M170 62 A34 34 0 1 1 174 114"
+          fill="none"
+          stroke="#D2694A"
+          strokeWidth="15"
+          strokeLinecap="round"
+        />
 
-      {/* Body */}
-      <circle cx="50" cy="50" r="36" fill="#E07A5F" />
-      <path d="M22 60 Q50 85 78 60 Q75 78 50 82 Q25 78 22 60Z" fill="#C85C35" />
+        {/* Body */}
+        <circle cx="110" cy="112" r="88" fill="#DD7C63" />
+        <path d="M35 158 Q110 136 185 158 A88 88 0 0 1 35 158 Z" fill="#C75F43" />
 
-      {/* Feet */}
-      <ellipse cx="37" cy="84" rx="8" ry="5" fill="#E07A5F" />
-      <ellipse cx="37" cy="84" rx="8" ry="5" fill="#C85C35" opacity="0.3" />
-      <ellipse cx="63" cy="84" rx="8" ry="5" fill="#E07A5F" />
-      <ellipse cx="63" cy="84" rx="8" ry="5" fill="#C85C35" opacity="0.3" />
+        {/* Feet */}
+        <ellipse cx="78" cy="192" rx="26" ry="14" fill="#DD7C63" />
+        <ellipse cx="146" cy="192" rx="26" ry="14" fill="#DD7C63" />
 
-      {/* Eye */}
-      <circle cx="55" cy="42" r="12" fill="#FFFFFF" />
-      <circle cx="58" cy="43" r="6" fill="#3D2010" />
-      <circle cx="60" cy="40" r="2.5" fill="#FFFFFF" />
+        {/* Blush */}
+        <circle cx="74" cy="104" r="10" fill="#CE6349" opacity="0.55" />
 
-      {/* Smile */}
-      <path
-        d="M40 58 Q50 66 60 58"
-        stroke="#3D2010"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        fill="none"
-      />
+        {/* Eye */}
+        <ellipse cx="130" cy="86" rx="29" ry="32" fill="#FFFFFF" />
+        <circle cx="134" cy="90" r="18" fill="#4E2317" />
+        <circle cx="141" cy="81" r="6" fill="#FFFFFF" />
 
-      {/* Tail */}
-      <path
-        d="M80 50 Q90 42 88 32 Q86 24 78 28"
-        stroke="#C85C35"
-        strokeWidth="5"
-        strokeLinecap="round"
-        fill="none"
-      />
+        {/* Smile */}
+        <path
+          d="M78 120 Q104 142 130 124"
+          fill="none"
+          stroke="#4E2317"
+          strokeWidth="9"
+          strokeLinecap="round"
+        />
 
-      {/* Blush */}
-      <circle cx="38" cy="56" r="4" fill="#C85C35" opacity="0.35" />
+        {/* The day it is holding — the product in one object. */}
+        <g transform="rotate(-7 168 176)">
+          <rect x="128" y="139" width="88" height="84" rx="13" fill="#A64A2C" opacity="0.22" />
+          <rect x="146" y="126" width="8" height="14" rx="4" fill="#B0512F" />
+          <rect x="182" y="126" width="8" height="14" rx="4" fill="#B0512F" />
+          <rect x="124" y="134" width="88" height="84" rx="13" fill="#C75F43" />
+          <path
+            d="M124 154 h88 v51 a13 13 0 0 1 -13 13 h-62 a13 13 0 0 1 -13 -13 z"
+            fill="#FFF8F5"
+          />
+          <text
+            x="168"
+            y="201"
+            textAnchor="middle"
+            fontFamily="Nunito, Trebuchet MS, sans-serif"
+            fontSize="44"
+            fontWeight="800"
+            fill="#4E2317"
+          >
+            17
+          </text>
+        </g>
+      </g>
     </svg>
   );
 }
