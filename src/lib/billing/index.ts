@@ -3,8 +3,9 @@ import { db } from "@/lib/db";
 import type { Plan, SubscriptionStatus } from "@/generated/prisma/enums";
 import { addMonths } from "@/lib/dates";
 import {
+  extendedPeriodEnd,
   isPaidPlan,
-  planPriceCents,
+  PLAN_PRICE_CENTS,
   PLATFORM_CURRENCY,
   type PaidPlan,
 } from "./plans";
@@ -53,7 +54,7 @@ export async function startAutoDebit(params: {
 }): Promise<{ redirectUrl: string } | { error: "notConfigured" | "providerFailed" }> {
   if (!isSubscriptionBillingConfigured()) return { error: "notConfigured" };
 
-  const amountCents = planPriceCents(params.plan);
+  const amountCents = await planPriceCents(params.plan);
 
   const existing = await db.subscription.findUnique({ where: { studioId: params.studioId } });
 
@@ -183,6 +184,7 @@ export async function recordAuthorizedPayment(authorizedPaymentId: string): Prom
       currency: charge.currency || subscription.currency,
       method: "MERCADO_PAGO",
       status: charge.status,
+      months: 1,
       provider: PROVIDER,
       providerPaymentId: charge.id,
       paidAt: charge.paidAt,
@@ -191,19 +193,12 @@ export async function recordAuthorizedPayment(authorizedPaymentId: string): Prom
   });
 
   if (charge.status === "APPROVED") {
-    // Extend from wherever the studio was paid up to, not from today, so a late
-    // charge doesn't quietly shorten the month it paid for.
-    const from =
-      subscription.currentPeriodEnd && subscription.currentPeriodEnd > now
-        ? subscription.currentPeriodEnd
-        : now;
-
     await db.subscription.update({
       where: { id: subscription.id },
       data: {
         status: "ACTIVE",
         lastPaymentAt: charge.paidAt ?? now,
-        currentPeriodEnd: addMonths(from, 1),
+        currentPeriodEnd: extendedPeriodEnd(subscription.currentPeriodEnd, 1, now),
       },
     });
 
@@ -256,6 +251,11 @@ export async function recordManualCharge(params: {
 
   const now = new Date();
 
+  /*
+    Created without a paid-through date on purpose. The update below is the one
+    place the months are added, and setting them here as well granted a new
+    studio twice what it paid for — three months bought, six months given.
+  */
   const subscription = await db.subscription.upsert({
     where: { studioId: params.studioId },
     create: {
@@ -264,16 +264,9 @@ export async function recordManualCharge(params: {
       status: "ACTIVE",
       amountCents: params.amountCents,
       currency: PLATFORM_CURRENCY,
-      lastPaymentAt: now,
-      currentPeriodEnd: addMonths(now, params.months),
     },
     update: {},
   });
-
-  const from =
-    subscription.currentPeriodEnd && subscription.currentPeriodEnd > now
-      ? subscription.currentPeriodEnd
-      : now;
 
   await db.$transaction([
     db.subscriptionCharge.create({
@@ -284,6 +277,7 @@ export async function recordManualCharge(params: {
         currency: PLATFORM_CURRENCY,
         method: "BANK_TRANSFER",
         status: "APPROVED",
+        months: params.months,
         note: params.note ?? null,
         recordedById: params.recordedById,
         paidAt: now,
@@ -296,7 +290,7 @@ export async function recordManualCharge(params: {
         status: "ACTIVE",
         amountCents: params.amountCents,
         lastPaymentAt: now,
-        currentPeriodEnd: addMonths(from, params.months),
+        currentPeriodEnd: extendedPeriodEnd(subscription.currentPeriodEnd, params.months, now),
         cancelledAt: null,
       },
     }),
@@ -332,4 +326,109 @@ export function billingWarning(
   }
 
   return null;
+}
+
+/**
+ * What each plan costs right now: the console's prices, falling back to the
+ * code defaults for any plan nobody has priced yet.
+ *
+ * Everything that quotes or charges money goes through here — the billing page,
+ * the preapproval sent to Mercado Pago, and the manual charge in the console —
+ * so a price changed in one place is the price everywhere.
+ */
+export async function planPrices(): Promise<Record<PaidPlan, number>> {
+  const rows = await db.planPrice.findMany();
+  const prices = { ...PLAN_PRICE_CENTS };
+
+  for (const row of rows) {
+    if (isPaidPlan(row.plan) && row.amountCents > 0) prices[row.plan] = row.amountCents;
+  }
+
+  return prices;
+}
+
+export async function planPriceCents(plan: PaidPlan): Promise<number> {
+  return (await planPrices())[plan];
+}
+
+export async function setPlanPrice(plan: PaidPlan, amountCents: number, updatedById: string) {
+  await db.planPrice.upsert({
+    where: { plan: plan as Plan },
+    create: { plan: plan as Plan, amountCents, updatedById },
+    update: { amountCents, updatedById },
+  });
+}
+
+/**
+ * Undoes a manual charge that should never have been booked.
+ *
+ * Manual entry without a way back is a one-way door: a typo in the amount or
+ * the wrong studio is only correctable if the time it bought can be handed
+ * back, which is what `months` on the charge is for. The row is marked refunded
+ * rather than deleted — the money either moved or it did not, and erasing the
+ * record would lose that either way.
+ *
+ * Automatic charges are left alone: those are Mercado Pago's to reverse, and
+ * marking one refunded here would only make our copy disagree with theirs.
+ */
+export async function voidManualCharge(chargeId: string): Promise<boolean> {
+  const charge = await db.subscriptionCharge.findUnique({
+    where: { id: chargeId },
+    include: { subscription: true },
+  });
+
+  if (!charge || charge.method !== "BANK_TRANSFER" || charge.status !== "APPROVED") return false;
+
+  await db.$transaction([
+    db.subscriptionCharge.update({
+      where: { id: charge.id },
+      data: { status: "REFUNDED" },
+    }),
+    db.subscription.update({
+      where: { id: charge.subscriptionId },
+      data: {
+        currentPeriodEnd: charge.subscription.currentPeriodEnd
+          ? addMonths(charge.subscription.currentPeriodEnd, -charge.months)
+          : null,
+      },
+    }),
+  ]);
+
+  return true;
+}
+
+/** Every charge across every studio, newest first. The platform's ledger. */
+export function allCharges(take = 100) {
+  return db.subscriptionCharge.findMany({
+    orderBy: { createdAt: "desc" },
+    take,
+    include: { subscription: { include: { studio: { select: { id: true, name: true } } } } },
+  });
+}
+
+/** Live subscriptions, for the recurring-revenue figure. */
+export function activeSubscriptions() {
+  return db.subscription.findMany({
+    where: { status: "ACTIVE" },
+    include: { studio: { select: { id: true, name: true } } },
+    orderBy: { currentPeriodEnd: "asc" },
+  });
+}
+
+/**
+ * Studios that need chasing: a charge that failed, or a paid-through date that
+ * has quietly passed. The second is the one a status field alone would miss —
+ * a manual studio never fails a charge, it just stops paying.
+ */
+export function subscriptionsNeedingAttention(now = new Date()) {
+  return db.subscription.findMany({
+    where: {
+      OR: [
+        { status: "PAST_DUE" },
+        { status: { in: ["ACTIVE", "PAUSED"] }, currentPeriodEnd: { lt: now } },
+      ],
+    },
+    include: { studio: { select: { id: true, name: true, suspendedAt: true } } },
+    orderBy: { currentPeriodEnd: "asc" },
+  });
 }

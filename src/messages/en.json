@@ -359,7 +359,8 @@
     "whatsappNumber": "Studio WhatsApp",
     "whatsappHint": "Where students send payment receipts. International format.",
     "monthlyChanges": "Changes per month",
-    "monthlyChangesHint": "How many fixed-spot classes a student may move each month. Cancel beyond it and the class is lost. 0 = no changes."
+    "monthlyChangesHint": "How many fixed-spot classes a student may move each month. Cancel beyond it and the class is lost. 0 = no changes.",
+    "invitePasswordHint": "Read it out so they can sign in now. They'll change it on first use. A link is emailed to them too."
   },
   "booking": {
     "title": "Book a class",

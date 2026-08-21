@@ -188,7 +188,7 @@ model StudentProfile {
 
   /// The sucursales this student belongs to. Empty means "not yet assigned"
   /// rather than "barred" — it filters what they see, it does not gate booking.
-  locations         Location[]
+  locations Location[]
 
   bookings          Booking[]
   waitlistEntries   WaitlistEntry[]
@@ -741,7 +741,7 @@ model Subscription {
   currency    String             @default("UYU")
 
   /// null while the studio is settled by hand (transfer, cash).
-  provider String?
+  provider    String?
   /// Mercado Pago preapproval id. Unique so a webhook can find its row.
   providerRef String? @unique
 
@@ -773,12 +773,16 @@ model SubscriptionCharge {
   method      PaymentMethod
   status      PaymentStatus @default(PENDING)
 
-  provider String?
+  provider          String?
   /// Unique: the provider retries webhooks, and a charge must be credited once.
   providerPaymentId String? @unique
 
+  /// How many months this charge paid for. Voiding one hands exactly this much
+  /// time back, which is only possible because it is written down here.
+  months Int @default(1)
+
   /// The manual path only: "transferencia BROU 21/08".
-  note String?
+  note         String?
   /// Platform admin who recorded a manual payment. Deliberately not a relation
   /// — User rows are tenant-scoped and this points across tenants.
   recordedById String?
@@ -788,4 +792,17 @@ model SubscriptionCharge {
 
   @@index([studioId, createdAt])
   @@index([subscriptionId, createdAt])
+}
+
+/**
+ * What each plan costs, per month, in PLATFORM_CURRENCY cents.
+ * Prices started life as constants, which made every price change a deploy.
+ * Rows here override the code defaults; an empty table means the defaults
+ * stand, so this can never leave the platform unable to quote a price.
+ */
+model PlanPrice {
+  plan        Plan     @id
+  amountCents Int
+  updatedAt   DateTime @updatedAt
+  updatedById String?
 }

@@ -359,7 +359,8 @@
     "whatsappNumber": "WhatsApp del estudio",
     "whatsappHint": "Donde los alumnos mandan los comprobantes. Formato internacional.",
     "monthlyChanges": "Cambios por mes",
-    "monthlyChangesHint": "Cuántas clases de cupo fijo puede mover un alumno cada mes. Si cancela de más, pierde la clase. 0 = sin cambios."
+    "monthlyChangesHint": "Cuántas clases de cupo fijo puede mover un alumno cada mes. Si cancela de más, pierde la clase. 0 = sin cambios.",
+    "invitePasswordHint": "Pasásela al profe para que entre ahora. Se la va a cambiar la primera vez. También le llega un enlace por email."
   },
   "booking": {
     "title": "Reservar clase",

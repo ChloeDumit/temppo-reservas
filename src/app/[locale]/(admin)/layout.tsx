@@ -25,6 +25,7 @@ export default async function AdminLayout({
 
   const tabs = [
     { href: "/admin", label: "Estudios" },
+    { href: "/admin/payments", label: "Cobros" },
     { href: "/admin/users", label: "Usuarios" },
   ];
 

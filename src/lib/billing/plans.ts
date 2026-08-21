@@ -1,4 +1,5 @@
 import type { Plan } from "@/generated/prisma/enums";
+import { addMonths } from "@/lib/dates";
 
 /** Every plan a studio can actually pay for. TRIAL is a state, not a product. */
 export type PaidPlan = Exclude<Plan, "TRIAL">;
@@ -17,14 +18,15 @@ export function isPaidPlan(plan: string): plan is PaidPlan {
 export const PLATFORM_CURRENCY = "UYU";
 
 /**
- * ⚠️ PLACEHOLDER PRICES — set the real ones before pointing this at a live
- * Mercado Pago account.
+ * Fallback prices, monthly, in cents of PLATFORM_CURRENCY.
  *
- * This is the only place a price is written down. The billing page, the
- * preapproval sent to Mercado Pago and the amount check on the incoming
- * webhook all read from here, so changing a number here changes all three.
+ * These are what a plan costs until the platform console says otherwise — the
+ * PlanPrice table overrides them. They stay in code as the floor so an empty
+ * table, a fresh database or a failed query can never leave the platform unable
+ * to quote a price.
  *
- * Monthly, in cents of PLATFORM_CURRENCY.
+ * ⚠️ Still placeholders. Set real ones in the console, or here for a new
+ * deployment's starting point.
  */
 export const PLAN_PRICE_CENTS: Record<PaidPlan, number> = {
   ESSENTIAL: 100_000, // UYU 1.000 — placeholder
@@ -32,6 +34,26 @@ export const PLAN_PRICE_CENTS: Record<PaidPlan, number> = {
   NETWORK: 300_000, // UYU 3.000 — placeholder
 };
 
-export function planPriceCents(plan: PaidPlan) {
+/** Synchronous fallback. Prefer `planPrices()`, which reads the console's values. */
+export function defaultPlanPriceCents(plan: PaidPlan) {
   return PLAN_PRICE_CENTS[plan];
+}
+
+/**
+ * Where a subscription is paid through after buying `months` more.
+ *
+ * Extends from whatever the studio had left rather than from today, so a late
+ * renewal doesn't quietly cost them the days they already paid for — and a
+ * lapsed one starts from today rather than back-filling a gap nobody was owed.
+ *
+ * Pure, and the single place this arithmetic happens: doing it in two spots is
+ * how a first manual charge once granted double the months it was paid for.
+ */
+export function extendedPeriodEnd(
+  currentPeriodEnd: Date | null,
+  months: number,
+  now: Date,
+): Date {
+  const from = currentPeriodEnd && currentPeriodEnd > now ? currentPeriodEnd : now;
+  return addMonths(from, months);
 }

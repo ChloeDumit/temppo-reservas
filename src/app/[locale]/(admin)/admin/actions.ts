@@ -1,11 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { assertPlatformAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
-import { planPriceCents, recordManualCharge } from "@/lib/billing";
+import { localePath } from "@/i18n/routing";
+import {
+  PAID_PLANS,
+  planPriceCents,
+  recordManualCharge,
+  setPlanPrice,
+  voidManualCharge,
+} from "@/lib/billing";
+import { slugify } from "@/lib/slug";
 import { parseMoneyToCents } from "@/lib/money";
 import type { Plan } from "@/generated/prisma/enums";
 
@@ -17,10 +27,26 @@ import type { Plan } from "@/generated/prisma/enums";
  * an audit row against the studio it touched.
  */
 
-function revalidateAdmin(studioId?: string) {
-  revalidatePath("/[locale]/(admin)/admin", "page");
-  revalidatePath("/[locale]/(admin)/admin/users", "page");
-  if (studioId) revalidatePath("/[locale]/(admin)/admin/studios/[id]", "page");
+/*
+  How every console action ends.
+
+  revalidatePath alone was not enough: it clears the server's copy, but the page
+  that submitted the form kept rendering the client router's cached one, so a
+  plan written to the database still showed the old value on screen — which
+  reads as "the button does nothing". Redirecting back to the page the form
+  declared forces a real render, and is also what puts the operator's eye back
+  on the value they just changed.
+
+  `returnTo` comes from the form rather than the referer so it cannot be aimed
+  somewhere else, and it is pattern-checked anyway.
+*/
+const RETURN_TO = /^\/admin(\/[A-Za-z0-9_-]+)*$/;
+
+async function finishAdminAction(returnTo: unknown): Promise<never> {
+  revalidatePath("/", "layout");
+
+  const path = typeof returnTo === "string" && RETURN_TO.test(returnTo) ? returnTo : "/admin";
+  redirect(localePath(await getLocale(), path));
 }
 
 const planSchema = z.object({
@@ -51,7 +77,7 @@ export async function setPlanAction(formData: FormData) {
     metadata: { from: studio.plan, to: parsed.data.plan },
   });
 
-  revalidateAdmin(studio.id);
+  await finishAdminAction(formData.get("returnTo"));
 }
 
 /** Pushes a trial out by a number of days from today. */
@@ -83,7 +109,7 @@ export async function extendTrialAction(formData: FormData) {
     metadata: { days, until: trialEndsAt.toISOString() },
   });
 
-  revalidateAdmin(studioId);
+  await finishAdminAction(formData.get("returnTo"));
 }
 
 /** Suspending cuts off access without deleting anything. */
@@ -121,7 +147,7 @@ export async function toggleSuspendAction(formData: FormData) {
     metadata: { reason: reason || null },
   });
 
-  revalidateAdmin(studioId);
+  await finishAdminAction(formData.get("returnTo"));
 }
 
 export async function toggleUserActiveAction(formData: FormData) {
@@ -147,7 +173,7 @@ export async function toggleUserActiveAction(formData: FormData) {
     metadata: { email: user.email },
   });
 
-  revalidateAdmin(user.studioId);
+  await finishAdminAction(formData.get("returnTo"));
 }
 
 const manualChargeSchema = z.object({
@@ -175,7 +201,7 @@ export async function recordManualChargeAction(formData: FormData) {
 
   const amountCents = parsed.data.amount
     ? parseMoneyToCents(parsed.data.amount)
-    : planPriceCents(parsed.data.plan);
+    : await planPriceCents(parsed.data.plan);
   if (amountCents === null) return;
 
   const ok = await recordManualCharge({
@@ -198,5 +224,122 @@ export async function recordManualChargeAction(formData: FormData) {
     metadata: { amountCents, months: parsed.data.months, plan: parsed.data.plan },
   });
 
-  revalidateAdmin(parsed.data.studioId);
+  await finishAdminAction(formData.get("returnTo"));
+}
+
+const priceSchema = z.object({
+  ESSENTIAL: z.string().trim().min(1),
+  STUDIO: z.string().trim().min(1),
+  NETWORK: z.string().trim().min(1),
+});
+
+/**
+ * Sets what the plans cost.
+ *
+ * Only quotes from here on: a studio already on auto-debit keeps paying the
+ * amount it authorised, because Mercado Pago holds that figure and changing it
+ * would need the owner to authorise again. New subscriptions and manual charges
+ * pick the new price up immediately.
+ */
+export async function setPlanPricesAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const parsed = priceSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+
+  for (const plan of PAID_PLANS) {
+    const cents = parseMoneyToCents(parsed.data[plan]);
+    if (cents === null || cents <= 0) continue;
+    await setPlanPrice(plan, cents, admin.id);
+  }
+
+  /*
+    Not written to AuditLog: every row there belongs to a studio, and a price
+    change belongs to none of them. PlanPrice carries its own updatedAt and
+    updatedById instead, which is the same record without bending the trail.
+  */
+  await finishAdminAction(formData.get("returnTo"));
+}
+
+/** Reverses a manual charge and gives back the time it bought. */
+export async function voidChargeAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const chargeId = String(formData.get("chargeId") ?? "");
+  if (!chargeId) return;
+
+  const charge = await db.subscriptionCharge.findUnique({ where: { id: chargeId } });
+  if (!charge) return;
+
+  const ok = await voidManualCharge(chargeId);
+  if (!ok) return;
+
+  await recordAudit({
+    studioId: charge.studioId,
+    actorId: admin.id,
+    actorLabel: `${admin.name} (plataforma)`,
+    action: "platform.subscription_charge_void",
+    entityType: "SubscriptionCharge",
+    entityId: chargeId,
+    metadata: { amountCents: charge.amountCents, months: charge.months },
+  });
+
+  await finishAdminAction(formData.get("returnTo"));
+}
+
+const studioConfigSchema = z.object({
+  studioId: z.string().min(1),
+  name: z.string().trim().min(1).max(80),
+  slug: z.string().trim().min(1).max(40),
+  timezone: z.string().trim().min(1).max(60),
+  currency: z.string().trim().length(3),
+  locale: z.enum(["es", "en"]),
+  cancellationCutoffHours: z.coerce.number().int().min(0).max(168),
+  reminderHoursBefore: z.coerce.number().int().min(1).max(168),
+  waitlistClaimWindowMins: z.coerce.number().int().min(5).max(1440),
+  noShowLimit: z.coerce.number().int().min(0).max(50),
+  monthlyChangesAllowed: z.coerce.number().int().min(0).max(31),
+  bookingOpensDaysAhead: z.coerce.number().int().min(1).max(365),
+});
+
+/**
+ * Edits a studio's configuration without logging in as them.
+ *
+ * The slug is the one field with reach beyond the studio: it is the public
+ * booking URL, so it is normalised and checked for collisions, and an existing
+ * link breaks when it changes. Everything else is the same set of dials the
+ * studio has in its own settings.
+ */
+export async function updateStudioConfigAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const parsed = studioConfigSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+
+  const { studioId, slug, currency, ...rest } = parsed.data;
+
+  const studio = await db.studio.findUnique({ where: { id: studioId } });
+  if (!studio) return;
+
+  const nextSlug = slugify(slug);
+  if (!nextSlug) return;
+
+  if (nextSlug !== studio.slug) {
+    const taken = await db.studio.findUnique({ where: { slug: nextSlug } });
+    if (taken) return;
+  }
+
+  await db.studio.update({
+    where: { id: studioId },
+    data: { ...rest, slug: nextSlug, currency: currency.toUpperCase() },
+  });
+
+  await recordAudit({
+    studioId,
+    actorId: admin.id,
+    actorLabel: `${admin.name} (plataforma)`,
+    action: "platform.studio_config",
+    entityType: "Studio",
+    entityId: studioId,
+    metadata: { slug: nextSlug, from: studio.slug },
+  });
+
+  await finishAdminAction(formData.get("returnTo"));
 }

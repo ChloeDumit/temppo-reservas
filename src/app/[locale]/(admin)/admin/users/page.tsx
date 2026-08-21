@@ -87,6 +87,7 @@ export default async function AdminUsersPage({
 
               <form action={toggleUserActiveAction}>
                 <input type="hidden" name="userId" value={user.id} />
+                <input type="hidden" name="returnTo" value="/admin/users" />
                 <button
                   type="submit"
                   className="rounded-[var(--radius-pill)] px-3 py-1.5 text-xs text-white/60 hover:bg-white/10 hover:text-white"

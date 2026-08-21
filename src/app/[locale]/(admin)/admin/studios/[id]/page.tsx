@@ -7,7 +7,7 @@ import { formatMoney } from "@/lib/money";
 import {
   chargesFor,
   PAID_PLANS,
-  PLAN_PRICE_CENTS,
+  planPrices,
   PLATFORM_CURRENCY,
   subscriptionFor,
 } from "@/lib/billing";
@@ -17,7 +17,29 @@ import {
   recordManualChargeAction,
   toggleSuspendAction,
   toggleUserActiveAction,
+  updateStudioConfigAction,
 } from "../../actions";
+
+const TIMEZONES = [
+  "America/Montevideo",
+  "America/Argentina/Buenos_Aires",
+  "America/Santiago",
+  "America/Sao_Paulo",
+  "America/Bogota",
+  "America/Mexico_City",
+  "America/Lima",
+  "Europe/Madrid",
+];
+
+/** The dials a studio has in its own settings, editable from here too. */
+const RULES = [
+  { name: "cancellationCutoffHours", label: "Cancelación (h)", min: 0, max: 168 },
+  { name: "reminderHoursBefore", label: "Recordatorio (h)", min: 1, max: 168 },
+  { name: "waitlistClaimWindowMins", label: "Espera (min)", min: 5, max: 1440 },
+  { name: "noShowLimit", label: "Faltas máx.", min: 0, max: 50 },
+  { name: "monthlyChangesAllowed", label: "Cambios/mes", min: 0, max: 31 },
+  { name: "bookingOpensDaysAhead", label: "Reserva (días)", min: 1, max: 365 },
+] as const;
 
 const PLANS = ["TRIAL", "ESSENTIAL", "STUDIO", "NETWORK"] as const;
 
@@ -52,7 +74,7 @@ export default async function AdminStudioPage({
 
   if (!studio) notFound();
 
-  const [income, recentAudit, subscription, charges] = await Promise.all([
+  const [income, recentAudit, subscription, charges, prices] = await Promise.all([
     db.transaction.aggregate({
       where: { studioId: id, type: "INCOME", occurredAt: { gte: monthStart } },
       _sum: { amountCents: true },
@@ -64,6 +86,7 @@ export default async function AdminStudioPage({
     }),
     subscriptionFor(id),
     chargesFor(id, 6),
+    planPrices(),
   ]);
 
   const date = (d: Date) =>
@@ -114,6 +137,7 @@ export default async function AdminStudioPage({
 
         <form action={setPlanAction} className="mt-3 flex flex-wrap items-center gap-2">
           <input type="hidden" name="studioId" value={studio.id} />
+          <input type="hidden" name="returnTo" value={`/admin/studios/${studio.id}`} />
           <select
             name="plan"
             defaultValue={studio.plan}
@@ -135,6 +159,7 @@ export default async function AdminStudioPage({
 
         <form action={extendTrialAction} className="mt-3 flex flex-wrap items-center gap-2">
           <input type="hidden" name="studioId" value={studio.id} />
+          <input type="hidden" name="returnTo" value={`/admin/studios/${studio.id}`} />
           <span className="text-sm text-white/50">
             Prueba{" "}
             {studio.trialEndsAt ? `hasta ${date(studio.trialEndsAt)}` : "sin fecha"}
@@ -199,6 +224,7 @@ export default async function AdminStudioPage({
           className="mt-4 flex flex-wrap items-end gap-2 border-t border-white/10 pt-4"
         >
           <input type="hidden" name="studioId" value={studio.id} />
+          <input type="hidden" name="returnTo" value={`/admin/studios/${studio.id}`} />
           <label className="text-xs text-white/40">
             Plan
             <select
@@ -226,7 +252,7 @@ export default async function AdminStudioPage({
             <input
               name="amount"
               inputMode="numeric"
-              placeholder={String(Math.round(PLAN_PRICE_CENTS.STUDIO / 100))}
+              placeholder={String(Math.round(prices.STUDIO / 100))}
               className="mt-1 block w-28 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
             />
           </label>
@@ -286,6 +312,7 @@ export default async function AdminStudioPage({
 
         <form action={toggleSuspendAction} className="mt-3 flex flex-wrap items-center gap-2">
           <input type="hidden" name="studioId" value={studio.id} />
+          <input type="hidden" name="returnTo" value={`/admin/studios/${studio.id}`} />
           {!studio.suspendedAt && (
             <input
               name="reason"
@@ -303,6 +330,81 @@ export default async function AdminStudioPage({
             }
           >
             {studio.suspendedAt ? "Reactivar estudio" : "Suspender estudio"}
+          </button>
+        </form>
+      </section>
+
+      {/* ── Configuration ──────────────────────────────────── */}
+      <section className="mt-4 rounded-[var(--radius-lg)] border border-white/10 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50">
+          Configuración
+        </h2>
+        <p className="mt-2 text-sm text-white/50">
+          Los mismos ajustes que el estudio tiene en su panel. Cambiar el slug rompe los enlaces
+          públicos que ya circularon.
+        </p>
+
+        <form action={updateStudioConfigAction} className="mt-4 space-y-4">
+          <input type="hidden" name="studioId" value={studio.id} />
+          <input type="hidden" name="returnTo" value={`/admin/studios/${studio.id}`} />
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="text-xs text-white/40">
+              Nombre
+              <input name="name" required maxLength={80} defaultValue={studio.name} className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white" />
+            </label>
+            <label className="text-xs text-white/40">
+              Slug (URL pública)
+              <input name="slug" required maxLength={40} defaultValue={studio.slug} className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white" />
+            </label>
+            <label className="text-xs text-white/40">
+              Zona horaria
+              <select name="timezone" defaultValue={studio.timezone} className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white">
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz} className="bg-ink">
+                    {tz}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-xs text-white/40">
+              Moneda
+              <input name="currency" required maxLength={3} defaultValue={studio.currency} className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white" />
+            </label>
+            <label className="text-xs text-white/40">
+              Idioma
+              <select name="locale" defaultValue={studio.locale} className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white">
+                <option value="es" className="bg-ink">
+                  es
+                </option>
+                <option value="en" className="bg-ink">
+                  en
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <div className="grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-3 lg:grid-cols-6">
+            {RULES.map((rule) => (
+              <label key={rule.name} className="text-xs text-white/40">
+                {rule.label}
+                <input
+                  name={rule.name}
+                  type="number"
+                  min={rule.min}
+                  max={rule.max}
+                  defaultValue={studio[rule.name]}
+                  className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
+                />
+              </label>
+            ))}
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
+          >
+            Guardar configuración
           </button>
         </form>
       </section>
@@ -331,6 +433,7 @@ export default async function AdminStudioPage({
               </div>
               <form action={toggleUserActiveAction}>
                 <input type="hidden" name="userId" value={user.id} />
+                <input type="hidden" name="returnTo" value={`/admin/studios/${studio.id}`} />
                 <button
                   type="submit"
                   className="rounded-[var(--radius-pill)] px-3 py-1.5 text-xs text-white/60 hover:bg-white/10 hover:text-white"

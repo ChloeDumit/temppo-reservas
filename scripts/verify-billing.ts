@@ -27,7 +27,9 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 async function main() {
   const { addMonths } = await import("../src/lib/dates");
   const { billingWarning } = await import("../src/lib/billing/index");
-  const { PLAN_PRICE_CENTS, PAID_PLANS, isPaidPlan } = await import("../src/lib/billing/plans");
+  const { PLAN_PRICE_CENTS, PAID_PLANS, isPaidPlan, extendedPeriodEnd } = await import(
+    "../src/lib/billing/plans"
+  );
   const { resolveBillingTopic } = await import("../src/lib/billing/mercadopago");
   const { verifyMercadoPagoSignature } = await import("../src/lib/payments/mercadopago");
 
@@ -48,6 +50,29 @@ async function main() {
     "2028-02-29",
   );
   check("several months at once", iso(addMonths(new Date("2026-08-21T00:00:00Z"), 3)), "2026-11-21");
+
+  console.log("\nPaid-through dates");
+
+  const today = new Date("2026-08-21T00:00:00Z");
+
+  // The bug this exists to prevent: months added in two places at once, so a
+  // studio's first manual charge granted double what it paid for.
+  check(
+    "a first charge grants exactly what was bought",
+    iso(extendedPeriodEnd(null, 3, today)),
+    "2026-11-21",
+  );
+  check(
+    "a renewal extends from what was left, not from today",
+    iso(extendedPeriodEnd(new Date("2026-11-21T00:00:00Z"), 1, today)),
+    "2026-12-21",
+  );
+  // A studio that lapsed months ago should not be handed the gap for free.
+  check(
+    "a lapsed subscription restarts from today",
+    iso(extendedPeriodEnd(new Date("2026-05-01T00:00:00Z"), 1, today)),
+    "2026-09-21",
+  );
 
   console.log("\nPlan catalogue");
 

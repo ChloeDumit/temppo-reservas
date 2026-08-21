@@ -72,9 +72,25 @@ async function main() {
     source.includes("user.id === admin.id"),
     true,
   );
+  /*
+    Every console action leaves a trail. The one exception is deliberate:
+    AuditLog rows belong to a studio, and a plan price belongs to none of them,
+    so PlanPrice carries its own updatedAt/updatedById instead. Listing it here
+    rather than loosening the count keeps the guard honest — a new action with
+    no audit row still fails this.
+  */
+  const AUDITED_ELSEWHERE = ["setPlanPricesAction"];
+  const shouldAudit = exported.filter((name) => !AUDITED_ELSEWHERE.includes(name));
+
+  check(
+    "the audit exemptions still exist",
+    AUDITED_ELSEWHERE.filter((name) => !exported.includes(name)),
+    [],
+  );
+
   // Count call sites only — the import line mentions it too.
   const auditCalls = (source.match(/await recordAudit\(/g) ?? []).length;
-  check("every action writes an audit row", auditCalls, exported.length);
+  check("every other action writes an audit row", auditCalls, shouldAudit.length);
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exitCode = 1;

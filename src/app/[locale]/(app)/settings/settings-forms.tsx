@@ -236,6 +236,29 @@ export function InviteForm({ currency }: { currency: string }) {
   const [role, setRole] = useState("INSTRUCTOR");
   const message = useMessage(state);
 
+  /*
+    The password is handed over here rather than only emailed. An invite that
+    depends on mail arriving is an invite that quietly fails, and the studio has
+    no way to tell the difference between "not delivered" and "not created".
+  */
+  if (state?.ok && state.tempPassword) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-[var(--radius-lg)] border border-line bg-sunken px-4 py-4 text-center">
+          <p className="text-xs uppercase tracking-wide text-muted">{ts("tempPasswordTitle")}</p>
+          <p className="mt-1.5 font-display text-3xl font-bold tracking-wider text-accent">
+            {state.tempPassword}
+          </p>
+          <p className="mt-2 text-xs text-muted">{t("invitePasswordHint")}</p>
+        </div>
+
+        <p className="rounded-md bg-caution-soft px-3 py-2 text-xs text-caution">
+          {ts("tempPasswordOnce")}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form action={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">

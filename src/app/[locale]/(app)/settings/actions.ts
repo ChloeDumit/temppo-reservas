@@ -9,9 +9,19 @@ import { recordAudit } from "@/lib/audit";
 import { normalizeHex } from "@/lib/color";
 import { parseMoneyToCents } from "@/lib/money";
 import { generateToken, hashToken } from "@/lib/auth/tokens";
+import { hashPassword } from "@/lib/auth/password";
+import { generateTempPassword } from "@/lib/auth/temp-password";
 import { notify } from "@/lib/notifications";
 
-export type ActionState = { error?: string; ok?: boolean } | null;
+export type ActionState = {
+  error?: string;
+  ok?: boolean;
+  /**
+   * Shown to the inviter exactly once, so a new instructor can be signed in on
+   * the spot. Never stored in plaintext and never logged.
+   */
+  tempPassword?: string;
+} | null;
 
 function revalidateSettings() {
   revalidatePath("/[locale]/(app)/settings", "page");
@@ -151,7 +161,15 @@ const memberSchema = z.object({
   payPerClass: z.string().optional(),
 });
 
-/** Creates the account and emails a magic link — no password to share. */
+/**
+ * Creates the account, hands back a one-time password and emails a magic link.
+ *
+ * The link alone was not enough. It only works if mail is configured and
+ * actually lands — and when it doesn't, the account exists but nobody can get
+ * into it, which looks from the outside like the invite did nothing at all.
+ * Staff now get what students already got: a password to read out, and a forced
+ * change on first sign-in so it never becomes a permanent one.
+ */
 export async function inviteMemberAction(
   _prev: ActionState,
   formData: FormData,
@@ -171,12 +189,16 @@ export async function inviteMemberAction(
     ? parseMoneyToCents(parsed.data.payPerClass)
     : null;
 
+  const tempPassword = generateTempPassword();
+
   const created = await db.user.create({
     data: {
       studioId: user.studioId,
       email: parsed.data.email,
       name: parsed.data.name,
       role: parsed.data.role,
+      passwordHash: await hashPassword(tempPassword),
+      mustChangePassword: true,
       ...(parsed.data.role === "INSTRUCTOR"
         ? { instructorProfile: { create: { payPerClassCents } } }
         : {}),
@@ -215,5 +237,6 @@ export async function inviteMemberAction(
   });
 
   revalidateSettings();
-  return { ok: true };
+  // The plaintext exists only in this response — not in the database, not in a log.
+  return { ok: true, tempPassword };
 }

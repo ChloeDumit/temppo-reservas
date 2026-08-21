@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { requireStaff } from "@/lib/auth/guards";
+import { ADMIN_ROLES, requireStaff } from "@/lib/auth/guards";
 import { billingWarning, subscriptionFor } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
@@ -129,18 +129,29 @@ export default async function DashboardPage({
     timeZone: studio.timezone,
   }).format(now);
 
-  const attention = [
-    pendingPayments > 0 && {
-      label: t("pendingPayments"),
-      value: pendingPayments,
-      href: "/payments",
-    },
-    ...setupSteps.filter((step) => !step.done).map((step) => ({
-      label: step.label,
-      value: null as number | null,
-      href: step.href,
-    })),
-  ].filter(Boolean) as { label: string; value: number | null; href: string }[];
+  /*
+    An instructor teaches; they do not run the studio. Everything below is
+    management: unpaid invoices, the setup checklist, the month's balance. It
+    was previously shown to every staff role, which both leaked the studio's
+    finances to its teachers and handed them chips linking to pages the role
+    guards immediately bounce them out of.
+  */
+  const manages = ADMIN_ROLES.includes(user.role);
+
+  const attention = !manages
+    ? []
+    : ([
+        pendingPayments > 0 && {
+          label: t("pendingPayments"),
+          value: pendingPayments,
+          href: "/payments",
+        },
+        ...setupSteps.filter((step) => !step.done).map((step) => ({
+          label: step.label,
+          value: null as number | null,
+          href: step.href,
+        })),
+      ].filter(Boolean) as { label: string; value: number | null; href: string }[]);
 
   /*
     Money owed to us, shown only to the person who can do something about it.
@@ -261,23 +272,25 @@ export default async function DashboardPage({
       )}
 
       {/* Numbers live below the fold: useful, but not the daily question. */}
-      <section className="mb-4 grid grid-cols-2 gap-3">
+      <section className={`mb-4 grid gap-3 ${manages ? "grid-cols-2" : "grid-cols-1"}`}>
         <Link href="/students" className="pressable card px-4 py-3.5">
           <p className="text-[11px] uppercase tracking-wider text-muted">{t("studentsShort")}</p>
           <p className="mt-1 font-display text-2xl font-semibold tabular-nums text-ink">
             {activeStudents}
           </p>
         </Link>
-        <Link href="/reports" className="pressable card px-4 py-3.5">
-          <p className="text-[11px] uppercase tracking-wider text-muted">{t("balanceShort")}</p>
-          <p
-            className={`mt-1 font-display text-2xl font-semibold tabular-nums ${
-              net >= 0 ? "text-positive" : "text-critical"
-            }`}
-          >
-            {money(net)}
-          </p>
-        </Link>
+        {manages && (
+          <Link href="/reports" className="pressable card px-4 py-3.5">
+            <p className="text-[11px] uppercase tracking-wider text-muted">{t("balanceShort")}</p>
+            <p
+              className={`mt-1 font-display text-2xl font-semibold tabular-nums ${
+                net >= 0 ? "text-positive" : "text-critical"
+              }`}
+            >
+              {money(net)}
+            </p>
+          </Link>
+        )}
       </section>
 
       <section>
