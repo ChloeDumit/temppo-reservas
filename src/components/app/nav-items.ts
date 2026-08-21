@@ -19,10 +19,18 @@ const STAFF_NAV: NavItem[] = [
   { href: "/payments", label: "payments", icon: "wallet" },
   { href: "/reports", label: "reports", icon: "chart" },
   { href: "/settings", label: "settings", icon: "settings" },
+  { href: "/billing", label: "billing", icon: "card" },
 ];
 
 // Instructors don't handle money or studio configuration.
 const INSTRUCTOR_ALLOWED = ["/dashboard", "/schedule", "/availability", "/checkin", "/students"];
+
+/*
+  What the studio owes TEMPPO is the owner's business, not the studio's. An
+  ADMIN runs the day to day — students, money coming in, the schedule — but the
+  subscription is a contract with the person who signed it.
+*/
+const OWNER_ONLY = ["/billing"];
 
 const STUDENT_NAV: NavItem[] = [
   { href: "/my", label: "myClasses", icon: "calendar" },
@@ -33,6 +41,7 @@ const STUDENT_NAV: NavItem[] = [
 export function navFor(role: Role): NavItem[] {
   if (role === "STUDENT") return STUDENT_NAV;
   if (role === "INSTRUCTOR") return STAFF_NAV.filter((i) => INSTRUCTOR_ALLOWED.includes(i.href));
+  if (role === "ADMIN") return STAFF_NAV.filter((i) => !OWNER_ONLY.includes(i.href));
   return STAFF_NAV;
 }
 

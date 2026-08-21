@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireStaff } from "@/lib/auth/guards";
+import { billingWarning, subscriptionFor } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
 import { addDays, formatTime, startOfDayInZone, startOfMonthInZone } from "@/lib/dates";
@@ -23,6 +24,7 @@ export default async function DashboardPage({
   const studio = user.studio;
   const t = await getTranslations("dashboard");
   const ts = await getTranslations("schedule");
+  const tb = await getTranslations("billing");
 
   // Keep the calendar filled without a cron job.
   await ensureInstances(studio);
@@ -140,8 +142,28 @@ export default async function DashboardPage({
     })),
   ].filter(Boolean) as { label: string; value: number | null; href: string }[];
 
+  /*
+    Money owed to us, shown only to the person who can do something about it.
+    A warning here never gates anything — a studio behind on its bill keeps
+    working, and cutting one off stays a deliberate call from the console.
+  */
+  const billing =
+    user.role === "OWNER" ? billingWarning(studio, await subscriptionFor(studio.id), now) : null;
+
   return (
     <>
+      {billing && (
+        <Link
+          href="/billing"
+          className={`pressable mb-4 block rounded-[var(--radius-lg)] px-4 py-3 text-sm ${
+            billing === "pastDue"
+              ? "bg-critical-soft text-critical"
+              : "bg-caution-soft text-caution"
+          }`}
+        >
+          {tb(`warning.${billing}`)}
+        </Link>
+      )}
       {/*
         The day comes first. A studio owner opening this between classes wants
         one question answered — what is happening now — not a wall of metrics.

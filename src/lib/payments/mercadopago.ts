@@ -17,13 +17,18 @@ const API = "https://api.mercadopago.com";
  * Returns true when no secret is configured — the webhook handler re-reads the
  * payment from the API regardless, so an unsigned setup is still safe, just
  * noisier.
+ *
+ * `secret` is a parameter because two different Mercado Pago accounts call in:
+ * the studio's, for student payments, and the platform's, for subscriptions.
+ * Each signs with its own key.
  */
 export function verifyMercadoPagoSignature(params: {
   signatureHeader: string | null;
   requestIdHeader: string | null;
   dataId: string | null;
+  secret?: string;
 }): boolean {
-  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  const secret = params.secret ?? process.env.MERCADOPAGO_WEBHOOK_SECRET;
   if (!secret) return true;
   if (!params.signatureHeader || !params.dataId) return false;
 

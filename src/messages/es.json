@@ -50,7 +50,8 @@
     "more": "Más",
     "account": "Cuenta",
     "availability": "Cupos",
-    "replayTour": "Ver el recorrido"
+    "replayTour": "Ver el recorrido",
+    "billing": "Suscripción"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -267,6 +268,58 @@
     "addExpense": "Registrar egreso",
     "category": "Categoría",
     "expenseAdded": "Egreso registrado."
+  },
+  "billing": {
+    "title": "Suscripción",
+    "current": "Tu plan",
+    "planTrial": "Prueba gratuita",
+    "perMonth": "{amount} por mes",
+    "trialEnds": "Tu prueba termina el {date}.",
+    "nextCharge": "Próximo cobro: {date}.",
+    "lastPayment": "Último pago: {date}.",
+    "choosePlan": "Planes",
+    "choosePlanHint": "El cobro es automático todos los meses con la tarjeta que autorices en Mercado Pago.",
+    "manualOnly": "El cobro automático todavía no está habilitado. Escribinos y coordinamos el pago por transferencia.",
+    "subscribe": "Suscribirme",
+    "switch": "Cambiar a este plan",
+    "currentPlan": "Plan actual",
+    "cancel": "Cancelar suscripción",
+    "cancelHint": "Seguís con acceso hasta el final del período que ya pagaste.",
+    "history": "Pagos",
+    "byTransfer": "por transferencia",
+    "errorNotConfigured": "El cobro automático no está disponible en este momento.",
+    "errorNoEmail": "Agregá un email a tu cuenta para poder suscribirte.",
+    "errorProvider": "No pudimos abrir el pago. Probá de nuevo en un minuto.",
+    "status": {
+      "NONE": "Sin suscripción",
+      "PENDING": "Esperando autorización",
+      "ACTIVE": "Al día",
+      "PAST_DUE": "Pago pendiente",
+      "PAUSED": "En pausa",
+      "CANCELLED": "Cancelada"
+    },
+    "chargeStatus": {
+      "PENDING": "Pendiente",
+      "APPROVED": "Pagado",
+      "REJECTED": "Rechazado",
+      "REFUNDED": "Devuelto"
+    },
+    "plan": {
+      "ESSENTIAL": "Esencial",
+      "STUDIO": "Estudio",
+      "NETWORK": "Red"
+    },
+    "planBlurb": {
+      "ESSENTIAL": "Para un estudio que recién arranca.",
+      "STUDIO": "Para un estudio con equipo y agenda completa.",
+      "NETWORK": "Para varias sucursales bajo una misma marca."
+    },
+    "warning": {
+      "trialEnding": "Tu prueba está por terminar. Elegí un plan para seguir sin interrupciones.",
+      "trialExpired": "Tu prueba terminó. Elegí un plan para seguir usando TEMPPO.",
+      "pastDue": "No pudimos cobrar tu última cuota. Revisá la tarjeta en Mercado Pago.",
+      "cancelled": "Tu suscripción está cancelada. Podés volver a activarla cuando quieras."
+    }
   },
   "settings": {
     "title": "Ajustes",

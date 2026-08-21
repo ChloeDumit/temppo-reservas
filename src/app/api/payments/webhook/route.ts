@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { paymentProvider, verifyMercadoPagoSignature } from "@/lib/payments";
+import {
+  recordAuthorizedPayment,
+  resolveBillingTopic,
+  syncPreapproval,
+  verifyBillingSignature,
+} from "@/lib/billing";
 import { recordAudit } from "@/lib/audit";
 import { notifyPreferred } from "@/lib/notifications";
 
@@ -18,8 +24,44 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  // Reject anything that isn't actually from Mercado Pago before we act.
   const dataId = (payload as { data?: { id?: string | number } })?.data?.id;
+
+  /*
+    Mercado Pago allows one webhook URL per application, so a deployment that
+    runs both flows through a single application sends subscription events here
+    too. They are handed straight to the billing side rather than half-handled:
+    /api/billing/webhook stays the dedicated endpoint for when the two are split
+    across applications, and both spellings of the setup work unchanged.
+  */
+  const billingTopic = resolveBillingTopic(
+    (payload ?? {}) as { type?: string; entity?: string; action?: string },
+  );
+
+  if (billingTopic) {
+    const ok = verifyBillingSignature({
+      signatureHeader: request.headers.get("x-signature"),
+      requestIdHeader: request.headers.get("x-request-id"),
+      dataId: dataId != null ? String(dataId) : null,
+    });
+
+    if (!ok) {
+      console.warn("[payments/webhook] rejected subscription event: bad signature");
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    if (dataId != null) {
+      try {
+        if (billingTopic === "preapproval") await syncPreapproval(String(dataId));
+        else await recordAuthorizedPayment(String(dataId));
+      } catch (error) {
+        console.error("[payments/webhook] subscription handler failed", error);
+      }
+    }
+
+    return NextResponse.json({ ok: true });
+  }
+
+  // Reject anything that isn't actually from Mercado Pago before we act.
   const signatureOk = verifyMercadoPagoSignature({
     signatureHeader: request.headers.get("x-signature"),
     requestIdHeader: request.headers.get("x-request-id"),

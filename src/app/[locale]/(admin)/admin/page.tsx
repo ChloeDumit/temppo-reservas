@@ -27,6 +27,7 @@ export default async function AdminStudiosPage({
     db.studio.findMany({
       orderBy: { createdAt: "desc" },
       include: {
+        subscription: { select: { status: true, currentPeriodEnd: true } },
         _count: {
           select: {
             users: true,
@@ -104,6 +105,11 @@ export default async function AdminStudiosPage({
                   </td>
                   <td className="px-3 py-3">
                     <span className="text-white/80">{studio.plan}</span>
+                    {studio.subscription?.status === "PAST_DUE" && (
+                      <span className="ml-2 rounded-[var(--radius-pill)] bg-red-500/20 px-2 py-0.5 text-[11px] text-red-300">
+                        Pago rechazado
+                      </span>
+                    )}
                     {studio.plan === "TRIAL" && trialDays !== null && (
                       <span
                         className={`block text-xs ${

@@ -101,12 +101,17 @@ export function isBirthdayToday(birthDate: Date, timeZone: string, now = new Dat
 }
 
 /**
- * Same day-of-month, N months on. Used for month boundaries, where the input
- * is already the first of a month so the end-of-month clamping that trips up
- * date arithmetic never comes into play.
+ * Same day-of-month, N months on, clamped to the end of a shorter month.
+ *
+ * Month boundaries pass in the first of a month, where the clamp never fires.
+ * Billing periods don't: a subscription starting on the 31st has to land on
+ * the 28th in February rather than skipping it for March 3rd.
  */
 export function addMonths(date: Date, months: number): Date {
   const next = new Date(date);
+  const day = next.getUTCDate();
   next.setUTCMonth(next.getUTCMonth() + months);
+  // Overflowed into the following month — walk back to the intended one's last day.
+  if (next.getUTCDate() < day) next.setUTCDate(0);
   return next;
 }

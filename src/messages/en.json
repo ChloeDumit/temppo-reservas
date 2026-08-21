@@ -50,7 +50,8 @@
     "more": "More",
     "account": "Account",
     "availability": "Spots",
-    "replayTour": "Replay the tour"
+    "replayTour": "Replay the tour",
+    "billing": "Subscription"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -267,6 +268,58 @@
     "addExpense": "Record expense",
     "category": "Category",
     "expenseAdded": "Expense recorded."
+  },
+  "billing": {
+    "title": "Subscription",
+    "current": "Your plan",
+    "planTrial": "Free trial",
+    "perMonth": "{amount} per month",
+    "trialEnds": "Your trial ends on {date}.",
+    "nextCharge": "Next charge: {date}.",
+    "lastPayment": "Last payment: {date}.",
+    "choosePlan": "Plans",
+    "choosePlanHint": "Billed automatically each month to the card you authorise at Mercado Pago.",
+    "manualOnly": "Automatic billing isn't switched on yet. Get in touch and we'll arrange payment by transfer.",
+    "subscribe": "Subscribe",
+    "switch": "Switch to this plan",
+    "currentPlan": "Current plan",
+    "cancel": "Cancel subscription",
+    "cancelHint": "You keep access until the end of the period you've already paid for.",
+    "history": "Payments",
+    "byTransfer": "by transfer",
+    "errorNotConfigured": "Automatic billing isn't available right now.",
+    "errorNoEmail": "Add an email to your account to subscribe.",
+    "errorProvider": "We couldn't open the payment. Try again in a minute.",
+    "status": {
+      "NONE": "No subscription",
+      "PENDING": "Awaiting authorisation",
+      "ACTIVE": "Up to date",
+      "PAST_DUE": "Payment failed",
+      "PAUSED": "Paused",
+      "CANCELLED": "Cancelled"
+    },
+    "chargeStatus": {
+      "PENDING": "Pending",
+      "APPROVED": "Paid",
+      "REJECTED": "Rejected",
+      "REFUNDED": "Refunded"
+    },
+    "plan": {
+      "ESSENTIAL": "Essential",
+      "STUDIO": "Studio",
+      "NETWORK": "Network"
+    },
+    "planBlurb": {
+      "ESSENTIAL": "For a studio just getting started.",
+      "STUDIO": "For a studio with a team and a full schedule.",
+      "NETWORK": "For several locations under one brand."
+    },
+    "warning": {
+      "trialEnding": "Your trial is about to end. Pick a plan to carry on uninterrupted.",
+      "trialExpired": "Your trial has ended. Pick a plan to keep using TEMPPO.",
+      "pastDue": "We couldn't charge your last instalment. Check the card at Mercado Pago.",
+      "cancelled": "Your subscription is cancelled. You can turn it back on whenever you like."
+    }
   },
   "settings": {
     "title": "Settings",

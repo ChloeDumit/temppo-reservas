@@ -5,6 +5,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { assertPlatformAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
+import { planPriceCents, recordManualCharge } from "@/lib/billing";
+import { parseMoneyToCents } from "@/lib/money";
 import type { Plan } from "@/generated/prisma/enums";
 
 /**
@@ -146,4 +148,55 @@ export async function toggleUserActiveAction(formData: FormData) {
   });
 
   revalidateAdmin(user.studioId);
+}
+
+const manualChargeSchema = z.object({
+  studioId: z.string().min(1),
+  plan: z.enum(["ESSENTIAL", "STUDIO", "NETWORK"]),
+  /// Blank means "the list price" — the common case, and the one where a typo
+  /// in a thousands separator would otherwise book the wrong number silently.
+  amount: z.string().trim().optional(),
+  months: z.coerce.number().int().min(1).max(24),
+  note: z.string().trim().max(200).optional(),
+});
+
+/**
+ * Books a subscription payment that arrived outside Mercado Pago — a transfer,
+ * cash, a deal struck over the phone.
+ *
+ * Only the platform can record one: it is an assertion that we received money,
+ * which a studio must never be able to make about itself. Nothing here renews,
+ * so a studio on the manual path resurfaces the moment its period runs out.
+ */
+export async function recordManualChargeAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const parsed = manualChargeSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+
+  const amountCents = parsed.data.amount
+    ? parseMoneyToCents(parsed.data.amount)
+    : planPriceCents(parsed.data.plan);
+  if (amountCents === null) return;
+
+  const ok = await recordManualCharge({
+    studioId: parsed.data.studioId,
+    plan: parsed.data.plan,
+    amountCents,
+    months: parsed.data.months,
+    note: parsed.data.note || null,
+    recordedById: admin.id,
+  });
+  if (!ok) return;
+
+  await recordAudit({
+    studioId: parsed.data.studioId,
+    actorId: admin.id,
+    actorLabel: `${admin.name} (plataforma)`,
+    action: "platform.subscription_manual_charge",
+    entityType: "Subscription",
+    entityId: parsed.data.studioId,
+    metadata: { amountCents, months: parsed.data.months, plan: parsed.data.plan },
+  });
+
+  revalidateAdmin(parsed.data.studioId);
 }

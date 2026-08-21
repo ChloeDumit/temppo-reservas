@@ -5,13 +5,29 @@ import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import {
+  chargesFor,
+  PAID_PLANS,
+  PLAN_PRICE_CENTS,
+  PLATFORM_CURRENCY,
+  subscriptionFor,
+} from "@/lib/billing";
+import {
   setPlanAction,
   extendTrialAction,
+  recordManualChargeAction,
   toggleSuspendAction,
   toggleUserActiveAction,
 } from "../../actions";
 
 const PLANS = ["TRIAL", "ESSENTIAL", "STUDIO", "NETWORK"] as const;
+
+const SUBSCRIPTION_LABEL: Record<string, string> = {
+  PENDING: "Esperando autorización",
+  ACTIVE: "Al día",
+  PAST_DUE: "Pago rechazado",
+  PAUSED: "En pausa",
+  CANCELLED: "Cancelada",
+};
 
 export default async function AdminStudioPage({
   params,
@@ -36,7 +52,7 @@ export default async function AdminStudioPage({
 
   if (!studio) notFound();
 
-  const [income, recentAudit] = await Promise.all([
+  const [income, recentAudit, subscription, charges] = await Promise.all([
     db.transaction.aggregate({
       where: { studioId: id, type: "INCOME", occurredAt: { gte: monthStart } },
       _sum: { amountCents: true },
@@ -46,6 +62,8 @@ export default async function AdminStudioPage({
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
+    subscriptionFor(id),
+    chargesFor(id, 6),
   ]);
 
   const date = (d: Date) =>
@@ -136,6 +154,126 @@ export default async function AdminStudioPage({
             Extender días
           </button>
         </form>
+      </section>
+
+      {/* ── Subscription ───────────────────────────────────── */}
+      <section className="mt-4 rounded-[var(--radius-lg)] border border-white/10 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50">
+            Suscripción
+          </h2>
+          {subscription && (
+            <span
+              className={
+                subscription.status === "ACTIVE"
+                  ? "rounded-[var(--radius-pill)] bg-emerald-500/20 px-3 py-1 text-xs text-emerald-200"
+                  : subscription.status === "PAST_DUE"
+                    ? "rounded-[var(--radius-pill)] bg-red-500/20 px-3 py-1 text-xs text-red-300"
+                    : "rounded-[var(--radius-pill)] bg-white/10 px-3 py-1 text-xs text-white/60"
+              }
+            >
+              {SUBSCRIPTION_LABEL[subscription.status] ?? subscription.status}
+            </span>
+          )}
+        </div>
+
+        {subscription ? (
+          <p className="mt-2 text-sm text-white/50">
+            {formatMoney(subscription.amountCents, subscription.currency, locale)}/mes ·{" "}
+            {subscription.providerRef ? "débito automático" : "cobro manual"}
+            {subscription.currentPeriodEnd && ` · paga hasta ${date(subscription.currentPeriodEnd)}`}
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-white/50">
+            Sin suscripción. Registrá un pago para dejar constancia de un cobro por transferencia.
+          </p>
+        )}
+
+        {/*
+          The manual path. A studio on auto-debit never needs this, but a
+          transfer that landed in the bank has to be recordable by hand or the
+          plan and the money drift apart.
+        */}
+        <form
+          action={recordManualChargeAction}
+          className="mt-4 flex flex-wrap items-end gap-2 border-t border-white/10 pt-4"
+        >
+          <input type="hidden" name="studioId" value={studio.id} />
+          <label className="text-xs text-white/40">
+            Plan
+            <select
+              name="plan"
+              defaultValue={
+                subscription?.plan && subscription.plan !== "TRIAL" ? subscription.plan : "ESSENTIAL"
+              }
+              className="mt-1 block rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
+            >
+              {PAID_PLANS.map((plan) => (
+                <option key={plan} value={plan} className="bg-ink">
+                  {plan}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs text-white/40">
+            Monto ({PLATFORM_CURRENCY})
+            {/*
+              Left blank it bills the list price, which is what almost every
+              transfer is. Typing a separator here is the one place a thousands
+              dot could be read as a decimal point, so the field stays optional
+              and the placeholder shows plain digits.
+            */}
+            <input
+              name="amount"
+              inputMode="numeric"
+              placeholder={String(Math.round(PLAN_PRICE_CENTS.STUDIO / 100))}
+              className="mt-1 block w-28 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
+            />
+          </label>
+          <label className="text-xs text-white/40">
+            Meses
+            <input
+              name="months"
+              type="number"
+              min={1}
+              max={24}
+              defaultValue={1}
+              className="mt-1 block w-20 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
+            />
+          </label>
+          <input
+            name="note"
+            placeholder="Referencia (transferencia BROU…)"
+            maxLength={200}
+            className="mt-1 min-w-0 flex-1 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
+          />
+          <button
+            type="submit"
+            className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
+          >
+            Registrar pago
+          </button>
+        </form>
+
+        {charges.length > 0 && (
+          <ul className="mt-4 space-y-1.5 border-t border-white/10 pt-4 text-xs">
+            {charges.map((charge) => (
+              <li key={charge.id} className="flex flex-wrap gap-x-3 text-white/50">
+                <span className="tabular-nums text-white/80">
+                  {formatMoney(charge.amountCents, charge.currency, locale)}
+                </span>
+                <span>{charge.method === "BANK_TRANSFER" ? "transferencia" : "Mercado Pago"}</span>
+                <span className={charge.status === "APPROVED" ? "text-emerald-300" : "text-white/40"}>
+                  {charge.status}
+                </span>
+                {charge.note && <span className="text-white/30">{charge.note}</span>}
+                <span className="ml-auto text-white/30">
+                  {date(charge.paidAt ?? charge.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* ── Suspension ─────────────────────────────────────── */}

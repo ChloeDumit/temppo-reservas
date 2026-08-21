@@ -92,8 +92,17 @@ check(
 );
 
 // The overflow sections are only discoverable if the "Más" step names them.
+// Owner-only tabs are left out: the tour runs for every staff role, and naming
+// a destination an ADMIN cannot see teaches them a door that isn't there.
+const ownerOnly = [...nav.matchAll(/OWNER_ONLY = \[([^\]]*)\]/g)]
+  .flatMap((m) => [...m[1].matchAll(/"([^"]+)"/g)])
+  .map((m) => m[1]);
+
 const moreBody = es.tour.more?.body ?? "";
-const overflowLabels = staffNav.slice(TAB_SLOTS).map((h) => h.replace("/", ""));
+const overflowLabels = staffNav
+  .slice(TAB_SLOTS)
+  .filter((h) => !ownerOnly.includes(h))
+  .map((h) => h.replace("/", ""));
 const namedInMore = ["Alumnos", "Clases", "Interesados", "Packs", "Pagos", "Reportes", "Ajustes"];
 check("the Más step names what is inside", overflowLabels.length, namedInMore.length);
 check(
