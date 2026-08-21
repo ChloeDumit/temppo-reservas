@@ -21,13 +21,24 @@ export default async function LandingPage({
 
   return (
     <div className="min-h-dvh">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
+      {/*
+        The brand and both calls to action do not fit one phone-width row —
+        together they ran 418px wide at 375px and pushed the whole page into a
+        sideways scroll. So the nav drops to its own full-width row below the
+        brand and the two buttons split it, which also gives them a proper
+        thumb-sized target. One row again from `sm` up, where there is room.
+
+        Wrapping rather than hiding: "iniciar sesión" is what a returning studio
+        comes here for, and the Spanish labels are the long ones — a fixed
+        layout that fits today breaks on the next copy change.
+      */}
+      <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-5">
         <Brand />
-        <nav className="flex items-center gap-2">
-          <Link href="/login" className={buttonClass("ghost", "sm")}>
+        <nav className="flex w-full items-center gap-2 sm:w-auto">
+          <Link href="/login" className={buttonClass("ghost", "sm", "flex-1 sm:flex-none")}>
             {t("ctaSecondary")}
           </Link>
-          <Link href="/register" className={buttonClass("primary", "sm")}>
+          <Link href="/register" className={buttonClass("primary", "sm", "flex-1 sm:flex-none")}>
             {t("ctaPrimary")}
           </Link>
         </nav>
@@ -75,7 +86,7 @@ export default async function LandingPage({
         </section>
         <section className="grid gap-px overflow-hidden border-b border-line bg-line sm:grid-cols-3">
           {features.map((feature) => (
-            <div key={feature.title} className="bg-paper px-1 py-10 sm:px-6">
+            <div key={feature.title} className="bg-paper py-10 sm:px-6">
               <h2 className="text-lg">{feature.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">{feature.body}</p>
             </div>
