@@ -5,7 +5,7 @@
  *
  * Creates a class with a single seat, books one student into it, and puts
  * another on the waitlist. Cancelling the booked student then triggers the
- * real offer path: push, then WhatsApp, then email.
+ * real offer path: push, then email.
  *
  * Safe to re-run — it resets its own class each time and touches nothing else.
  */

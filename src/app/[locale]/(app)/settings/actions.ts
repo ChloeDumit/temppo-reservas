@@ -183,7 +183,7 @@ export async function inviteMemberAction(
   });
 
   const base = process.env.APP_URL || "http://localhost:3000";
-  await notify("EMAIL", {
+  await notify({
     studioId: user.studioId,
     to: created.email,
     template: "team_invite",

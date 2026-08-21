@@ -124,7 +124,6 @@ export async function offerNextSpot(params: {
   await notifyPreferred({
     studioId: studio.id,
     to: next.student.user.email,
-    phone: next.student.user.phone,
     userId: next.student.userId,
     url: "/my",
     template: "waitlist_offer",

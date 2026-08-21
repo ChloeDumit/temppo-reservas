@@ -55,9 +55,17 @@ export async function bookClass(params: {
   source?: BookingSource;
   /** Staff booking on someone's behalf bypasses the "opens in N days" window. */
   bypassWindow?: boolean;
+  /** On the house: take the seat without touching the student's credits. */
+  bypassCredit?: boolean;
   now?: Date;
 }): Promise<BookingResult> {
-  const { studio, studentId, classInstanceId, bypassWindow = false } = params;
+  const {
+    studio,
+    studentId,
+    classInstanceId,
+    bypassWindow = false,
+    bypassCredit = false,
+  } = params;
   const source = params.source ?? "STUDENT";
   const now = params.now ?? new Date();
 
@@ -116,9 +124,11 @@ export async function bookClass(params: {
 
           const unlimited = packs.find((p) => p.isUnlimited);
           const withCredit = packs.find((p) => !p.isUnlimited && p.creditsUsed < p.creditsTotal);
-          const chosen = unlimited ?? withCredit;
+          // A gifted seat hangs off no pack at all, so a student with credits
+          // in hand still keeps every one of them.
+          const chosen = bypassCredit ? undefined : (unlimited ?? withCredit);
 
-          if (!chosen && source === "STUDENT") {
+          if (!chosen && !bypassCredit && source === "STUDENT") {
             return { ok: false, code: "NO_CREDITS" } as const;
           }
 

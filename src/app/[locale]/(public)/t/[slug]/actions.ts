@@ -84,7 +84,7 @@ export async function submitLeadAction(
     relatedId: lead.id,
   });
 
-  await notify("EMAIL", {
+  await notify({
     studioId: studio.id,
     to: parsed.data.email,
     template: "lead_confirmation",

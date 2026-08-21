@@ -137,7 +137,8 @@
     "cancelClass": "Cancel class",
     "cancelClassConfirm": "This cancels the class and notifies everyone booked. Confirm?",
     "classCancelled": "Class cancelled.",
-    "allLocations": "All locations"
+    "allLocations": "All locations",
+    "gift": "Don't use a credit"
   },
   "classes": {
     "title": "Classes",

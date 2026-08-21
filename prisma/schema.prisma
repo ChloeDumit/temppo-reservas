@@ -290,6 +290,9 @@ enum BookingSource {
   WAITLIST
   TRIAL
   RECURRING
+  /// On the house — a birthday class or similar. Spends no credit, and stays
+  /// distinguishable from a paid booking in the reports.
+  GIFT
 }
 
 enum RecurringBookingStatus {
@@ -536,8 +539,11 @@ model Transaction {
 // ------------------------------------------------------- comms, audit, leads
 
 enum NotificationChannel {
-  WHATSAPP
   EMAIL
+  /// Retired: nothing sends over this any more. The value stays because
+  /// existing log rows reference it, and Prisma cannot read a row whose
+  /// enum value it does not know.
+  WHATSAPP
 }
 
 enum NotificationStatus {

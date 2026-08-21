@@ -10,6 +10,6 @@ export type NotificationPayload = {
 };
 
 export interface NotificationTransport {
-  readonly channel: "EMAIL" | "WHATSAPP";
+  readonly channel: "EMAIL";
   send(payload: NotificationPayload): Promise<{ ok: boolean; error?: string }>;
 }

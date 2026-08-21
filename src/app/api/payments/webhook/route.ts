@@ -103,7 +103,6 @@ export async function POST(request: NextRequest) {
     await notifyPreferred({
       studioId: payment.studioId,
       to: studentPack.student.user.email,
-      phone: studentPack.student.user.phone,
       template: "payment_approved",
       subject: "Pago confirmado",
       body: `Hola ${studentPack.student.user.name}, tu pago fue confirmado. Ya podés reservar tus clases.`,

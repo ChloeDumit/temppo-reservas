@@ -1,7 +1,8 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { notifyPreferred } from "@/lib/notifications";
+import { notifyPreferred, notifyOwners } from "@/lib/notifications";
 import { sweepExpiredOffers } from "@/lib/waitlist";
+import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
 
 /**
  * Sends the pre-class reminder for every studio whose window has arrived.
@@ -16,10 +17,13 @@ export async function sendDueReminders(now = new Date()) {
 
   let sent = 0;
   let classes = 0;
+  let birthdays = 0;
 
   for (const studio of studios) {
     // Offers that ran out get passed along on the same schedule.
     await sweepExpiredOffers(studio, now);
+
+    birthdays += await sendBirthdayNotices(studio, now);
 
     const windowEnd = new Date(now.getTime() + studio.reminderHoursBefore * 3_600_000);
 
@@ -61,7 +65,6 @@ export async function sendDueReminders(now = new Date()) {
         await notifyPreferred({
           studioId: studio.id,
           to: student.email,
-          phone: student.phone,
           userId: student.id,
           url: "/my",
           template: "class_reminder",
@@ -82,5 +85,61 @@ export async function sendDueReminders(now = new Date()) {
     }
   }
 
-  return { studios: studios.length, classes, sent };
+  return { studios: studios.length, classes, sent, birthdays };
+}
+
+type BirthdayStudio = { id: string; name: string; timezone: string; locale: string };
+
+/**
+ * Tells the studio whose birthday it is, so someone can offer them a class on
+ * the house before the day is over.
+ *
+ * The guard is the notification log rather than a column: one notice per
+ * student per day, which is what "already told them" actually means, and it
+ * survives the job running every fifteen minutes.
+ */
+async function sendBirthdayNotices(studio: BirthdayStudio, now: Date): Promise<number> {
+  const students = await db.studentProfile.findMany({
+    where: { user: { studioId: studio.id, isActive: true }, birthDate: { not: null } },
+    include: { user: true },
+  });
+
+  const todays = students.filter(
+    (student) => student.birthDate && isBirthdayToday(student.birthDate, studio.timezone, now),
+  );
+  if (todays.length === 0) return 0;
+
+  const since = startOfDayInZone(now, studio.timezone);
+  const alreadyTold = await db.notificationLog.findMany({
+    where: {
+      studioId: studio.id,
+      template: "student_birthday",
+      relatedId: { in: todays.map((student) => student.id) },
+      createdAt: { gte: since },
+    },
+    select: { relatedId: true },
+  });
+  const told = new Set(alreadyTold.map((row) => row.relatedId));
+
+  let count = 0;
+  for (const student of todays) {
+    if (told.has(student.id)) continue;
+
+    const age = ageFrom(student.birthDate!, now);
+
+    await notifyOwners(studio.id, {
+      url: "/students",
+      template: "student_birthday",
+      subject: `${studio.name} — cumpleaños`,
+      body:
+        studio.locale === "en"
+          ? `${student.user.name} turns ${age} today. Add them to a class without using a credit — tick "don't use a credit" when you add them.`
+          : `${student.user.name} cumple ${age} hoy. Podés sumarla a una clase sin gastarle crédito — marcá "sin gastar crédito" al agregarla.`,
+      relatedType: "StudentProfile",
+      relatedId: student.id,
+    });
+    count++;
+  }
+
+  return count;
 }

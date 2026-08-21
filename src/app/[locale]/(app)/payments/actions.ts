@@ -93,7 +93,6 @@ export async function approvePaymentAction(formData: FormData) {
   await notifyPreferred({
     studioId: user.studioId,
     to: payment.student.user.email,
-    phone: payment.student.user.phone,
     template: "payment_approved",
     subject: `${user.studio.name} — pago confirmado`,
     body: `Hola ${payment.student.user.name}, confirmamos tu pago. Ya podés reservar tus clases.`,
@@ -133,7 +132,6 @@ export async function rejectPaymentAction(formData: FormData) {
   await notifyPreferred({
     studioId: user.studioId,
     to: payment.student.user.email,
-    phone: payment.student.user.phone,
     template: "payment_rejected",
     subject: `${user.studio.name} — problema con tu pago`,
     body: `Hola ${payment.student.user.name}, no pudimos confirmar tu pago.${reason ? ` Motivo: ${reason}` : ""} Escribinos para resolverlo.`,

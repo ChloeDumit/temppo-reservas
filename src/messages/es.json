@@ -137,7 +137,8 @@
     "cancelClass": "Cancelar clase",
     "cancelClassConfirm": "Se cancelará la clase y se avisará a los inscriptos. ¿Confirmás?",
     "classCancelled": "Clase cancelada.",
-    "allLocations": "Todas las sedes"
+    "allLocations": "Todas las sedes",
+    "gift": "Sin gastar crédito"
   },
   "classes": {
     "title": "Clases",

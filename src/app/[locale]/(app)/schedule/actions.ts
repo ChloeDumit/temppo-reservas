@@ -27,12 +27,15 @@ export async function addBookingAction(
   const studentId = String(formData.get("studentId") ?? "");
   if (!classInstanceId || !studentId) return { error: "generic" };
 
+  const gift = formData.get("gift") === "on";
+
   const result = await bookClass({
     studio: user.studio,
     studentId,
     classInstanceId,
-    source: "ADMIN",
+    source: gift ? "GIFT" : "ADMIN",
     bypassWindow: true,
+    bypassCredit: gift,
   });
 
   if (!result.ok) return { error: result.code };
@@ -44,7 +47,7 @@ export async function addBookingAction(
     action: "booking.create",
     entityType: "Booking",
     entityId: result.bookingId,
-    metadata: { classInstanceId, studentId, by: "staff" },
+    metadata: { classInstanceId, studentId, by: "staff", gift },
   });
 
   revalidateSchedule();
@@ -123,7 +126,6 @@ export async function cancelClassAction(formData: FormData) {
     await notifyPreferred({
       studioId: user.studioId,
       to: booking.student.user.email,
-      phone: booking.student.user.phone,
       template: "class_cancelled",
       subject: `${user.studio.name} — clase cancelada`,
       body: `Hola ${booking.student.user.name}, la clase ${instance.name} fue cancelada. Tu crédito fue devuelto.`,

@@ -3,7 +3,7 @@ import "server-only";
 /**
  * Renders the HTML shell around a notification.
  *
- * The plain-text body stays the source of truth — it is what WhatsApp and push
+ * The plain-text body stays the source of truth — it is what push
  * send, and what non-HTML mail clients fall back to. This wraps that same text
  * in a branded layout rather than asking eleven call sites to write markup.
  *

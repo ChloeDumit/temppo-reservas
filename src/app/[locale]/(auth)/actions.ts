@@ -111,7 +111,7 @@ export async function magicLinkAction(_prev: AuthState, formData: FormData): Pro
     // API routes are not locale-prefixed; the locale rides along as a param.
     const link = `${base}/api/auth/magic?token=${token}&locale=${locale}`;
 
-    await notify("EMAIL", {
+    await notify({
       studioId: user.studioId,
       to: user.email,
       template: "magic_link",
@@ -197,7 +197,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
 
   const base = process.env.APP_URL || "http://localhost:3000";
 
-  await notify("EMAIL", {
+  await notify({
     studioId: user.studioId,
     to: user.email,
     template: "welcome",
@@ -214,7 +214,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   // are invisible unless they are pushed somewhere off the tenant.
   const opsEmail = process.env.OPS_EMAIL;
   if (opsEmail) {
-    await notify("EMAIL", {
+    await notify({
       studioId: user.studioId,
       to: opsEmail,
       template: "signup_ops",

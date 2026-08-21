@@ -48,6 +48,10 @@ export function AddStudentForm({
           </p>
         )}
       </div>
+      <label className="flex items-center gap-1.5 py-2 text-xs text-muted">
+        <input type="checkbox" name="gift" className="size-4 accent-[var(--accent)]" />
+        {t("gift")}
+      </label>
       <SubmitButton variant="secondary" pendingLabel={tc("saving")}>
         {tc("create")}
       </SubmitButton>
