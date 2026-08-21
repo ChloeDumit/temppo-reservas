@@ -35,11 +35,18 @@ type Step = {
   target?: string;
 };
 
+/*
+  Follows the tab bar left to right, so the tour reads as a tour of what is on
+  screen. Everything behind "Más" gets named in that one step rather than a
+  step each — seven more cards would be a chore, but leaving them unnamed hid
+  Clases, which is where the whole timetable is set up.
+*/
 const STAFF_STEPS: Step[] = [
   { key: "welcomeStaff" },
+  { key: "panel", target: "tab:/dashboard" },
   { key: "schedule", target: "tab:/schedule" },
-  { key: "spots", target: "tab:/availability" },
   { key: "checkin", target: "tab:/checkin" },
+  { key: "spots", target: "tab:/availability" },
   { key: "more", target: "tab:more" },
   { key: "done" },
 ];

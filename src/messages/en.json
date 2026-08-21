@@ -525,7 +525,7 @@
     },
     "schedule": {
       "title": "Your schedule",
-      "body": "Every class this week, with spots and instructor. Tap a class to see who is coming, add students, or mark attendance."
+      "body": "Every class this week. Tap one to see who is coming, add students by hand, or mark attendance."
     },
     "spots": {
       "title": "Standing spots",
@@ -537,11 +537,11 @@
     },
     "more": {
       "title": "Everything else",
-      "body": "Students, packs, payments, reports and settings live here. Logging out is in this menu too."
+      "body": "In here: Students, Classes (where you build the repeating timetable), Leads, Packs, Payments, Reports and Settings. Logging out is in this menu too."
     },
     "done": {
       "title": "All set",
-      "body": "That is it. You can replay this any time from the menu at the bottom."
+      "body": "Start with Classes to load your timetable. To see this tour again, it is in the More menu."
     },
     "welcomeStudent": {
       "title": "Hi there!",
@@ -566,6 +566,10 @@
     "doneStudent": {
       "title": "Off you go!",
       "body": "That is everything. Book your first class whenever you are ready."
+    },
+    "panel": {
+      "title": "Your dashboard",
+      "body": "What is happening today: the next class with its spots, and anything needing you, like pending payments."
     }
   },
   "password": {

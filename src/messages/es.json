@@ -525,23 +525,23 @@
     },
     "schedule": {
       "title": "Tu agenda",
-      "body": "Todas las clases de la semana, con cupos y profesor. Tocá una clase para ver quién viene, agregar alumnos o pasar lista."
+      "body": "Todas las clases de la semana. Tocá una para ver quién viene, agregar alumnos a mano o pasar lista."
     },
     "spots": {
       "title": "Cupos fijos",
-      "body": "Quién tiene lugar reservado todas las semanas. De un vistazo ves qué horarios tienen lugar libre, sin abrir un Excel."
+      "body": "Quién tiene lugar reservado todas las semanas. De un vistazo ves qué horarios tienen lugar libre, sin abrir una planilla."
     },
     "checkin": {
       "title": "Ingreso",
-      "body": "Escaneá el código QR del alumno cuando llega y queda registrada la asistencia al instante."
+      "body": "Escaneá el código QR del alumno cuando llega y la asistencia queda registrada al instante."
     },
     "more": {
       "title": "Todo lo demás",
-      "body": "Alumnos, packs, pagos, reportes y ajustes viven acá. También cerrás sesión desde este menú."
+      "body": "Acá adentro están Alumnos, Clases (donde armás los horarios que se repiten), Interesados, Packs, Pagos, Reportes y Ajustes. También cerrás sesión desde este menú."
     },
     "done": {
       "title": "Listo",
-      "body": "Eso es todo. Si querés volver a verlo, está en el menú, abajo de todo."
+      "body": "Empezá por Clases para cargar tus horarios. Si querés ver este recorrido de nuevo, está en el menú Más."
     },
     "welcomeStudent": {
       "title": "¡Hola!",
@@ -566,6 +566,10 @@
     "doneStudent": {
       "title": "¡A moverse!",
       "body": "Ya está. Reservá tu primera clase cuando quieras."
+    },
+    "panel": {
+      "title": "Tu panel",
+      "body": "Lo que pasa hoy: la próxima clase con sus cupos, y lo que necesita tu atención, como pagos pendientes."
     }
   },
   "password": {
