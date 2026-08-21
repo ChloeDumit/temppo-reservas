@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
-import { formatDateTime, startOfMonthInZone } from "@/lib/dates";
+import { startOfMonthInZone } from "@/lib/dates";
 import { attendanceSummary, financialSummary, instructorPayroll } from "@/lib/reports";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
@@ -47,16 +47,17 @@ export default async function ReportsPage({
 
   const range = { from, to };
 
-  const [finance, attendance, payroll, audit, incomeRows] = await Promise.all([
+  /*
+    The activity log used to be rendered here, sixty rows of "payment.approve"
+    and "student.update" under the accounts. It is a security trail, not a
+    report: nobody reading their month's balance is also auditing who edited a
+    student, and it buried the exports under a wall of noise. It is still
+    downloadable below, which is where an audit trail is actually useful.
+  */
+  const [finance, attendance, payroll, incomeRows] = await Promise.all([
     financialSummary(studio.id, range),
     attendanceSummary(studio.id, range),
     instructorPayroll(studio.id, range),
-    db.auditLog.findMany({
-      where: { studioId: studio.id, createdAt: { gte: from, lt: to } },
-      include: { actor: true },
-      orderBy: { createdAt: "desc" },
-      take: 60,
-    }),
     db.transaction.findMany({
       where: { studioId: studio.id, type: "INCOME", occurredAt: { gte: from, lt: to } },
       select: { amountCents: true, occurredAt: true },
@@ -201,8 +202,8 @@ export default async function ReportsPage({
         )}
       </Card>
 
-      <Card className="mb-5">
-        <CardHeader title={t("exports")} />
+      <Card>
+        <CardHeader title={t("exports")} description={t("exportsHint")} />
         <CardBody className="flex flex-wrap gap-2">
           {EXPORTS.map(([kind, label]) => (
             <a
@@ -216,31 +217,6 @@ export default async function ReportsPage({
         </CardBody>
       </Card>
 
-      <Card>
-        <CardHeader title={t("auditLog")} />
-        {audit.length === 0 ? (
-          <EmptyState message={t("auditEmpty")} />
-        ) : (
-          <ul className="divide-y divide-line">
-            {audit.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 py-2.5 text-sm sm:px-5"
-              >
-                <span className="font-medium text-ink">
-                  {entry.actor?.name ?? entry.actorLabel ?? "—"}
-                </span>
-                <code className="rounded bg-sunken px-1.5 py-0.5 text-xs text-ink-soft">
-                  {entry.action}
-                </code>
-                <span className="ml-auto text-xs text-muted">
-                  {formatDateTime(entry.createdAt, studio.timezone, locale)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
     </>
   );
 }

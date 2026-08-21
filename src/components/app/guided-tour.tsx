@@ -308,10 +308,22 @@ export function GuidedTour({
     router.push(anchor ? `${path}#${anchor}` : path);
   };
 
+  /**
+   * Picks the tour back up on the step *after* the one that sent us away.
+   *
+   * It used to reopen the step just carried out, which read as the tour having
+   * lost its place: you configure your rules, tap "seguir la guía", and it asks
+   * you to configure your rules. The whole reason it stood aside was that this
+   * step was being done.
+   *
+   * The last step has nowhere to advance to, so `move` clamps and it simply
+   * reopens — which is the right ending.
+   */
   const resume = () => {
     setPaused(false);
     setRunning(true);
-    // The step may well have been completed while the tour was standing aside.
+    move(1);
+    // A step may well have been completed while the tour was standing aside.
     loadProgress();
   };
 

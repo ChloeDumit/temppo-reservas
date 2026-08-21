@@ -225,6 +225,22 @@
     animation: pulse-soft 1.8s ease-in-out infinite;
   }
 
+  /*
+    Held back, then faded in. A loading screen that appears and disappears
+    inside 200ms is read as a flicker rather than as feedback, so this stays
+    invisible until the wait is real enough to be worth explaining.
+  */
+  .animate-boot-in {
+    opacity: 0;
+    animation: boot-in 260ms ease-out 320ms forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-boot-in {
+      animation-duration: 1ms;
+    }
+  }
+
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -232,6 +248,10 @@
   @keyframes pulse-soft {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.55; }
+  }
+
+  @keyframes boot-in {
+    to { opacity: 1; }
   }
 
   @keyframes fade-in {

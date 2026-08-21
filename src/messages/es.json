@@ -60,17 +60,14 @@
     "password": "Contraseña",
     "signIn": "Entrar",
     "magicLink": "Enviarme un enlace de acceso",
-    "documentLogin": "Entrar con cédula",
-    "signInWithPassword": "Entrar con email y contraseña",
     "documentId": "Cédula",
     "pin": "PIN",
-    "invalidDocument": "Cédula o PIN incorrectos.",
     "magicLinkSent": "Te enviamos un enlace de acceso a tu email.",
     "magicLinkExpired": "El enlace expiró o ya fue usado. Pedí uno nuevo.",
     "chooseStudioTitle": "¿A qué estudio querés entrar?",
     "chooseStudioSubtitle": "Tu email tiene cuenta en más de un estudio.",
     "orDivider": "o",
-    "invalidCredentials": "Email o contraseña incorrectos.",
+    "invalidCredentials": "Los datos no coinciden. Revisá el email o cédula y la contraseña.",
     "accountInactive": "Tu cuenta está desactivada. Contactá al estudio.",
     "noAccount": "¿No tenés cuenta?",
     "registerStudio": "Registrá tu estudio",
@@ -83,7 +80,12 @@
     "emailTaken": "Ya existe una cuenta con ese email.",
     "slugTaken": "Ese nombre de estudio ya está en uso.",
     "checkEmail": "Revisá tu email",
-    "magicLinkDevNotice": "Modo desarrollo: el enlace se imprime en la consola del servidor."
+    "magicLinkDevNotice": "Modo desarrollo: el enlace se imprime en la consola del servidor.",
+    "identifier": "Email o cédula",
+    "identifierHint": "Lo que te dio tu estudio.",
+    "secret": "Contraseña o PIN",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "dashboard": {
     "title": "Panel",
@@ -527,13 +529,12 @@
     "exportPayroll": "Sueldos",
     "exportStudents": "Alumnos",
     "exportAudit": "Auditoría",
-    "auditLog": "Registro de actividad",
-    "auditEmpty": "Sin actividad registrada.",
     "auditActor": "Quién",
     "auditAction": "Acción",
     "auditWhen": "Cuándo",
     "weekly": "Ingresos por semana",
-    "noChartData": "Sin datos en el período."
+    "noChartData": "Sin datos en el período.",
+    "exportsHint": "Descargas en CSV, incluido el registro de actividad."
   },
   "availability": {
     "title": "Cupos fijos",
@@ -724,6 +725,9 @@
     "hint": "Mínimo 8 caracteres.",
     "save": "Guardar y entrar",
     "passwordShort": "Usá al menos 8 caracteres.",
-    "passwordMismatch": "Las contraseñas no coinciden."
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "tooShort": "Tiene que tener al menos 8 caracteres.",
+    "ready": "Las dos coinciden. Ya podés entrar.",
+    "mismatch": "Las contraseñas no coinciden."
   }
 }

@@ -9,6 +9,8 @@ import { hashPassword } from "@/lib/auth/password";
 import { generateTempPassword } from "@/lib/auth/temp-password";
 import { normalizeDocumentId, PIN_MIN_LENGTH, PIN_MAX_LENGTH } from "@/lib/auth/document";
 import { currentLocationId } from "@/lib/locations";
+import { generateToken, hashToken } from "@/lib/auth/tokens";
+import { notify } from "@/lib/notifications";
 
 export type ActionState = {
   error?: string;
@@ -191,6 +193,40 @@ export async function saveStudentAction(
       entityId: created.studentProfile!.id,
       metadata: { name, email },
     });
+
+    /*
+      Nothing used to reach the student at all: the account was created, the
+      temporary password was shown to whoever was at the desk, and that was the
+      only route in. If the student was not standing there — most of them, since
+      staff add people between classes — nobody ever told them they had an
+      account.
+
+      So they get a link of their own. It carries the same seven-day window as a
+      staff invite, and it signs them in without the password having to be read
+      out at all; the password stays valid as the in-person fallback.
+    */
+    if (created.email) {
+      const token = generateToken();
+      await db.verificationToken.create({
+        data: {
+          userId: created.id,
+          tokenHash: hashToken(token),
+          purpose: "MAGIC_LINK",
+          expiresAt: new Date(Date.now() + 7 * 86_400_000),
+        },
+      });
+
+      const base = process.env.APP_URL || "http://localhost:3000";
+      await notify({
+        studioId: user.studioId,
+        to: created.email,
+        template: "student_invite",
+        subject: `${user.studio.name} — TEMPPO Reservas`,
+        body: `Hola ${created.name},\n\n${user.studio.name} te dio de alta en TEMPPO Reservas. Desde acá podés reservar tus clases, ver tus packs y tu historial.\n\nEntrá acá: ${base}/api/auth/magic?token=${token}&locale=${user.studio.locale}`,
+        relatedType: "User",
+        relatedId: created.id,
+      });
+    }
   }
 
   revalidatePath("/[locale]/(app)/students", "page");

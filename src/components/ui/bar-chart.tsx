@@ -26,7 +26,13 @@ export function BarChart({
   return (
     <div className={cn("scroll-x", className)}>
       <div
-        className="flex min-w-full items-end gap-2"
+        /*
+          Left-aligned, not stretched. Columns are flex-1 so a full month fills
+          the width, but capped: with a single week to show, an uncapped column
+          became a 700px block of solid colour that read as a rendering fault
+          rather than as one week's income.
+        */
+        className="flex min-w-full items-end justify-start gap-2"
         style={{ minWidth: `${bars.length * 44}px` }}
         role="img"
         aria-label={bars.map((b) => `${b.label}: ${formatValue(b.value)}`).join("; ")}
@@ -34,7 +40,7 @@ export function BarChart({
         {bars.map((bar) => {
           const height = max > 0 ? Math.max(2, Math.round((bar.value / max) * 100)) : 2;
           return (
-            <div key={bar.label} className="flex min-w-10 flex-1 flex-col items-center gap-1.5">
+            <div key={bar.label} className="flex min-w-10 max-w-24 flex-1 flex-col items-center gap-1.5">
               <span className="text-[10px] tabular-nums text-muted">
                 {bar.value > 0 ? formatValue(bar.value) : ""}
               </span>

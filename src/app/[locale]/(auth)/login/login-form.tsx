@@ -3,26 +3,24 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Field, Input } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import {
-  loginAction,
-  magicLinkAction,
-  documentLoginAction,
-  type AuthState,
-} from "../actions";
+import { signInAction, magicLinkAction, type AuthState } from "../actions";
 
 export function LoginForm({ next, linkExpired }: { next?: string; linkExpired?: boolean }) {
   const t = useTranslations("auth");
   const tc = useTranslations("common");
   const te = useTranslations("errors");
-  const [mode, setMode] = useState<"password" | "magic" | "document">("password");
 
-  const [passwordState, submitPassword] = useActionState<AuthState, FormData>(loginAction, null);
+  /*
+    Two ways in, not three. Email-and-password and cédula-and-PIN are now the
+    same form — the server works out which handle it was given — so the only
+    real choice left is "I know my password" versus "email me a link".
+  */
+  const [magic, setMagic] = useState(false);
+
+  const [signInState, submitSignIn] = useActionState<AuthState, FormData>(signInAction, null);
   const [magicState, submitMagic] = useActionState<AuthState, FormData>(magicLinkAction, null);
-  const [documentState, submitDocument] = useActionState<AuthState, FormData>(
-    documentLoginAction,
-    null,
-  );
 
   const translateError = (key?: string) => {
     if (!key) return undefined;
@@ -53,62 +51,7 @@ export function LoginForm({ next, linkExpired }: { next?: string; linkExpired?: 
         </p>
       )}
 
-      {mode === "password" ? (
-        <form action={submitPassword} className="mt-5 space-y-4">
-          {next && <input type="hidden" name="next" value={next} />}
-          <Field label={t("email")} htmlFor="email">
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="hola@estudio.com"
-            />
-          </Field>
-          <Field label={t("password")} htmlFor="password" error={translateError(passwordState?.error)}>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
-          </Field>
-          <SubmitButton className="w-full" pendingLabel={tc("loading")}>
-            {t("signIn")}
-          </SubmitButton>
-        </form>
-      ) : mode === "document" ? (
-        <form action={submitDocument} className="mt-5 space-y-4">
-          {next && <input type="hidden" name="next" value={next} />}
-          <Field label={t("documentId")} htmlFor="documentId">
-            <Input
-              id="documentId"
-              name="documentId"
-              inputMode="numeric"
-              autoComplete="username"
-              required
-              maxLength={30}
-              placeholder="1.234.567-8"
-            />
-          </Field>
-          <Field label={t("pin")} htmlFor="pin" error={translateError(documentState?.error)}>
-            <Input
-              id="pin"
-              name="pin"
-              type="password"
-              inputMode="numeric"
-              autoComplete="current-password"
-              required
-              maxLength={8}
-            />
-          </Field>
-          <SubmitButton className="w-full" pendingLabel={tc("loading")}>
-            {t("signIn")}
-          </SubmitButton>
-        </form>
-      ) : (
+      {magic ? (
         <form action={submitMagic} className="mt-5 space-y-4">
           <Field label={t("email")} htmlFor="magic-email" error={translateError(magicState?.error)}>
             <Input
@@ -124,6 +67,40 @@ export function LoginForm({ next, linkExpired }: { next?: string; linkExpired?: 
             {t("magicLink")}
           </SubmitButton>
         </form>
+      ) : (
+        <form action={submitSignIn} className="mt-5 space-y-4">
+          {next && <input type="hidden" name="next" value={next} />}
+
+          <Field label={t("identifier")} htmlFor="identifier" hint={t("identifierHint")}>
+            <Input
+              id="identifier"
+              name="identifier"
+              // Not type="email": a cédula is equally valid here, and the
+              // browser would refuse to submit one.
+              type="text"
+              inputMode="email"
+              autoCapitalize="none"
+              autoComplete="username"
+              required
+              maxLength={160}
+              placeholder="hola@estudio.com"
+            />
+          </Field>
+
+          <Field label={t("secret")} htmlFor="secret" error={translateError(signInState?.error)}>
+            <PasswordInput
+              id="secret"
+              name="secret"
+              autoComplete="current-password"
+              required
+              maxLength={200}
+            />
+          </Field>
+
+          <SubmitButton className="w-full" pendingLabel={tc("loading")}>
+            {t("signIn")}
+          </SubmitButton>
+        </form>
       )}
 
       <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-muted">
@@ -132,35 +109,13 @@ export function LoginForm({ next, linkExpired }: { next?: string; linkExpired?: 
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <div className="space-y-2 text-center">
-        {mode !== "password" && (
-          <button
-            type="button"
-            onClick={() => setMode("password")}
-            className="block w-full text-sm text-accent underline underline-offset-4 hover:text-accent-hover"
-          >
-            {t("signInWithPassword")}
-          </button>
-        )}
-        {mode !== "magic" && (
-          <button
-            type="button"
-            onClick={() => setMode("magic")}
-            className="block w-full text-sm text-accent underline underline-offset-4 hover:text-accent-hover"
-          >
-            {t("magicLink")}
-          </button>
-        )}
-        {mode !== "document" && (
-          <button
-            type="button"
-            onClick={() => setMode("document")}
-            className="block w-full text-sm text-accent underline underline-offset-4 hover:text-accent-hover"
-          >
-            {t("documentLogin")}
-          </button>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={() => setMagic((current) => !current)}
+        className="block w-full text-sm text-accent underline underline-offset-4 hover:text-accent-hover"
+      >
+        {magic ? t("signIn") : t("magicLink")}
+      </button>
     </div>
   );
 }

@@ -66,3 +66,8 @@ next-env.d.ts
 
 # generated demo assets — rebuild with npm run demo:video && npm run demo:encode
 /demo/
+
+# Android release signing — never committed
+android/app/keystore.properties
+*.keystore
+*.jks

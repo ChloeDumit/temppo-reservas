@@ -32,21 +32,54 @@ async function requestMeta() {
   };
 }
 
-export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
+const signInSchema = z.object({
+  identifier: z.string().trim().min(3).max(160),
+  secret: z.string().min(1).max(200),
+});
+
+/**
+ * One sign-in for both kinds of handle.
+ *
+ * Email-and-password and cédula-and-PIN used to be separate forms behind
+ * separate buttons, which asked the person signing in to know which kind of
+ * account they had been given — a question the studio's front desk cannot
+ * answer for them either.
+ *
+ * So: one field for the handle, one for the secret. An "@" decides which
+ * column to look in, and BOTH stored hashes are then checked, because the two
+ * credentials are not really alternatives in practice. A student with a cédula
+ * on file is usually also issued a temporary password, and nothing is gained by
+ * refusing the one they actually remember.
+ */
+export async function signInAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const locale = await getLocale();
-  const email = emailSchema.safeParse(formData.get("email"));
-  const password = String(formData.get("password") ?? "");
+  const parsed = signInSchema.safeParse({
+    identifier: formData.get("identifier"),
+    secret: formData.get("secret"),
+  });
   const requestedNext = String(formData.get("next") ?? "");
 
-  if (!email.success) return { error: "invalidCredentials" };
+  if (!parsed.success) return { error: "invalidCredentials" };
 
-  // One email can hold an account at several studios, each with its own hash.
-  const candidates = await db.user.findMany({ where: { email: email.data } });
+  const { identifier, secret } = parsed.data;
+  const byEmail = identifier.includes("@");
+
+  // The same handle can exist at several studios, each with its own hashes.
+  const candidates = byEmail
+    ? await db.user.findMany({ where: { email: identifier.toLowerCase() } })
+    : await db.user.findMany({ where: { documentId: normalizeDocumentId(identifier) } });
 
   const verified = [];
   for (const candidate of candidates) {
-    if (candidate.passwordHash && (await verifyPassword(password, candidate.passwordHash))) {
-      verified.push(candidate);
+    const hashes = [candidate.passwordHash, candidate.pinHash].filter(
+      (hash): hash is string => Boolean(hash),
+    );
+
+    for (const hash of hashes) {
+      if (await verifyPassword(secret, hash)) {
+        verified.push(candidate);
+        break;
+      }
     }
   }
 
@@ -73,6 +106,7 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     action: "auth.login",
     entityType: "User",
     entityId: user.id,
+    metadata: { handle: byEmail ? "email" : "document" },
   });
 
   // Only honour a relative path, so `next` can't be used to bounce elsewhere.
@@ -272,70 +306,3 @@ export async function chooseStudioAction(formData: FormData) {
   redirect(destination);
 }
 
-const documentSchema = z.object({
-  documentId: z.string().trim().min(3).max(30),
-  pin: z.string().trim().min(PIN_MIN_LENGTH).max(PIN_MAX_LENGTH),
-});
-
-/**
- * Sign-in for students who have no email — a cédula and a PIN the studio sets.
- *
- * Deliberately weaker than the other paths: a document number is semi-public,
- * so this only ever reaches accounts the studio has explicitly given a PIN.
- */
-export async function documentLoginAction(
-  _prev: AuthState,
-  formData: FormData,
-): Promise<AuthState> {
-  const locale = await getLocale();
-  const parsed = documentSchema.safeParse({
-    documentId: formData.get("documentId"),
-    pin: formData.get("pin"),
-  });
-  if (!parsed.success) return { error: "invalidDocument" };
-
-  const requestedNext = String(formData.get("next") ?? "");
-  const documentId = normalizeDocumentId(parsed.data.documentId);
-
-  // Same person, possibly at more than one studio — same shape as email login.
-  const candidates = await db.user.findMany({ where: { documentId } });
-
-  const verified = [];
-  for (const candidate of candidates) {
-    if (candidate.pinHash && (await verifyPassword(parsed.data.pin, candidate.pinHash))) {
-      verified.push(candidate);
-    }
-  }
-
-  if (verified.length === 0) return { error: "invalidDocument" };
-
-  const usable = verified.filter((candidate) => candidate.isActive);
-  if (usable.length === 0) return { error: "accountInactive" };
-
-  if (usable.length > 1) {
-    const choice = await createStudioChoice(usable.map((candidate) => candidate.id));
-    const params = new URLSearchParams({ token: choice });
-    if (requestedNext) params.set("next", requestedNext);
-    redirect(localePath(locale, `/login/studio?${params.toString()}`));
-  }
-
-  const user = usable[0];
-
-  await createSession(user.id, await requestMeta());
-  await recordAudit({
-    studioId: user.studioId,
-    actorId: user.id,
-    actorLabel: user.name,
-    action: "auth.document_login",
-    entityType: "User",
-    entityId: user.id,
-  });
-
-  const home = user.role === "STUDENT" ? "/my" : "/dashboard";
-  const destination =
-    requestedNext.startsWith("/") && !requestedNext.startsWith("//")
-      ? requestedNext
-      : localePath(locale, home);
-
-  redirect(destination);
-}

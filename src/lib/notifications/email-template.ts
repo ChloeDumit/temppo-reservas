@@ -45,6 +45,7 @@ const CTA_LABELS: Record<string, { es: string; en: string }> = {
   payment_approved: { es: "Ver mis clases", en: "View my classes" },
   payment_submitted: { es: "Ver el pago", en: "View the payment" },
   team_invite: { es: "Aceptar la invitación", en: "Accept the invitation" },
+  student_invite: { es: "Entrar a mi estudio", en: "Open my studio" },
   welcome: { es: "Abrir mi estudio", en: "Open my studio" },
   lead_new: { es: "Ver el interesado", en: "View the lead" },
 };

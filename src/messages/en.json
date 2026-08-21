@@ -60,17 +60,14 @@
     "password": "Password",
     "signIn": "Sign in",
     "magicLink": "Email me a login link",
-    "documentLogin": "Sign in with ID number",
-    "signInWithPassword": "Sign in with email and password",
     "documentId": "ID number",
     "pin": "PIN",
-    "invalidDocument": "Wrong ID number or PIN.",
     "magicLinkSent": "We sent a login link to your email.",
     "magicLinkExpired": "That link expired or was already used. Request a new one.",
     "chooseStudioTitle": "Which studio are you signing in to?",
     "chooseStudioSubtitle": "Your email has an account at more than one studio.",
     "orDivider": "or",
-    "invalidCredentials": "Wrong email or password.",
+    "invalidCredentials": "Those details don't match. Check the email or ID and the password.",
     "accountInactive": "Your account is disabled. Contact the studio.",
     "noAccount": "No account yet?",
     "registerStudio": "Register your studio",
@@ -83,7 +80,12 @@
     "emailTaken": "An account with that email already exists.",
     "slugTaken": "That studio name is already taken.",
     "checkEmail": "Check your email",
-    "magicLinkDevNotice": "Development mode: the link is printed in the server console."
+    "magicLinkDevNotice": "Development mode: the link is printed in the server console.",
+    "identifier": "Email or ID number",
+    "identifierHint": "Whatever your studio gave you.",
+    "secret": "Password or PIN",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -527,13 +529,12 @@
     "exportPayroll": "Payroll",
     "exportStudents": "Students",
     "exportAudit": "Audit",
-    "auditLog": "Activity log",
-    "auditEmpty": "No activity recorded.",
     "auditActor": "Who",
     "auditAction": "Action",
     "auditWhen": "When",
     "weekly": "Income by week",
-    "noChartData": "No data in this period."
+    "noChartData": "No data in this period.",
+    "exportsHint": "CSV downloads, including the activity log."
   },
   "availability": {
     "title": "Standing spots",
@@ -724,6 +725,9 @@
     "hint": "At least 8 characters.",
     "save": "Save and continue",
     "passwordShort": "Use at least 8 characters.",
-    "passwordMismatch": "The passwords do not match."
+    "passwordMismatch": "The passwords do not match.",
+    "tooShort": "It needs at least 8 characters.",
+    "ready": "Both match. You're good to go.",
+    "mismatch": "The passwords don't match."
   }
 }

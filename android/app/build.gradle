@@ -1,5 +1,24 @@
 apply plugin: 'com.android.application'
 
+/*
+  Release signing, read from an untracked keystore.properties beside this file:
+
+      storeFile=/absolute/path/to/temppo.keystore
+      storePassword=…
+      keyAlias=temppo
+      keyPassword=…
+
+  Without it, `assembleRelease` produces an unsigned APK and the only installable
+  build is the debug one — which is signed with Android's shared debug key and is
+  what Play Protect objects to on a real phone. Absent the file the config is
+  simply skipped, so a clean checkout still builds.
+*/
+def keystorePropertiesFile = rootProject.file("app/keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "uy.temppo.reservas"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +35,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystoreProperties.containsKey('storeFile')) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (keystoreProperties.containsKey('storeFile')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
