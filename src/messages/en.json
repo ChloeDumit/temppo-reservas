@@ -101,6 +101,7 @@
     "reviewPayments": "Review payments",
     "setupTitle": "Finish setting up your studio",
     "setupLocation": "Add your first location",
+    "setupTeacher": "Add your teachers",
     "setupClass": "Create your first class",
     "setupPack": "Define a class pack",
     "setupStudent": "Add your first student",
@@ -604,32 +605,91 @@
     "label": "Guided tour",
     "next": "Next",
     "back": "Back",
-    "finish": "Get started",
+    "finish": "Start",
     "skip": "Skip the tour",
-    "replay": "Replay the tour",
+    "replay": "Take the tour",
+    "resume": "Continue the tour",
+    "phaseSetup": "Setup",
+    "phaseDaily": "Day to day",
+    "stepDone": "Done",
+    "stepPending": "To do",
     "welcomeStaff": {
       "title": "Welcome to TEMPPO!",
-      "body": "A 30-second look at where everything lives. Skip it whenever you like."
+      "body": "Let us get your studio running. First we set it up step by step, then I will show you the day to day. Leave whenever you like and pick up where you left off."
+    },
+    "studio": {
+      "title": "Your studio",
+      "body": "Name, logo and brand colour, plus timezone and currency. Everything your students see comes from here: the app, the emails and your booking page.",
+      "action": "Open settings"
+    },
+    "rules": {
+      "title": "Your rules",
+      "body": "How many hours ahead someone can cancel, how far ahead booking opens, and how many changes a month a fixed spot gets. Set once and left alone.",
+      "action": "Set the rules"
+    },
+    "locations": {
+      "title": "Your locations",
+      "body": "If you run more than one place, add them here and each keeps its own schedule, classes and students. With a single location you are already set.",
+      "action": "Add a location"
+    },
+    "teachers": {
+      "title": "Your teachers",
+      "body": "They come before classes, because every class is assigned to one. Each gets an email with a temporary password and sees only their own schedule. Teaching yourself? Add yourself too.",
+      "action": "Add a teacher"
+    },
+    "packs": {
+      "title": "Your packs",
+      "body": "This is what students buy: 4, 8 or 12 classes, with a price and an expiry. Until one pack exists, nobody can buy or book on their own.",
+      "action": "Create a pack"
+    },
+    "classes": {
+      "title": "Your classes",
+      "body": "This is the timetable: name, days, time, length, capacity and teacher. A class that runs Monday, Wednesday and Friday is entered once and repeats itself every week.",
+      "action": "Add classes"
+    },
+    "students": {
+      "title": "Your students",
+      "body": "Add them with a name and an email. Each gets a temporary password to sign in and change. They can also sign themselves up from your booking page.",
+      "action": "Add students"
+    },
+    "spots": {
+      "title": "Fixed spots",
+      "body": "If someone always comes at the same hour, give them the spot and it is held every week without them booking. Everyone else buys packs and picks as they go.",
+      "action": "Assign spots"
+    },
+    "panel": {
+      "title": "Your dashboard",
+      "body": "What is happening today: the next class with its spots, and whatever needs you, like pending payments."
     },
     "schedule": {
       "title": "Your schedule",
-      "body": "Every class this week. Tap one to see who is coming, add students by hand, or mark attendance."
-    },
-    "spots": {
-      "title": "Standing spots",
-      "body": "Who holds a place every week. See at a glance which times still have room — no spreadsheet needed."
+      "body": "Every class this week. Tap one to see who is coming, add someone by hand or take attendance."
     },
     "checkin": {
       "title": "Check-in",
-      "body": "Scan a student QR code as they arrive and attendance is recorded instantly."
+      "body": "Scan the student QR code as they arrive and attendance is recorded instantly."
+    },
+    "spotsDaily": {
+      "title": "Fixed spots",
+      "body": "Who holds a place every week. One glance shows which hours still have room, without opening a spreadsheet."
     },
     "more": {
       "title": "Everything else",
-      "body": "In here: Students, Classes (where you build the repeating timetable), Leads, Packs, Payments, Reports and Settings. Logging out is in this menu too."
+      "body": "In here you will find Students, Classes, Leads, Packs, Payments, Reports and Settings. You also sign out from this menu."
+    },
+    "payments": {
+      "title": "Payments",
+      "body": "Who has paid and who owes. Transfer receipts land here and you approve them one by one, instead of digging through a chat.",
+      "action": "Open payments"
+    },
+    "reports": {
+      "title": "Reports",
+      "body": "Attendance, the month income and what each teacher is owed. All of it exports, if your accountant needs it.",
+      "action": "Open reports"
     },
     "done": {
       "title": "All set",
-      "body": "Start with Classes to load your timetable. To see this tour again, it is in the More menu."
+      "body": "Everything is in place. If you want to go over something again, the tour is saved in the More menu."
     },
     "welcomeStudent": {
       "title": "Hi there!",
@@ -637,27 +697,23 @@
     },
     "myClasses": {
       "title": "My classes",
-      "body": "Your upcoming classes and the QR code to get into the studio. Cancel from here too."
+      "body": "Your upcoming classes and the QR code to get into the studio. You cancel from here too."
     },
     "book": {
       "title": "Book",
-      "body": "Pick a day and time. If a class is full you join the waitlist, and we tell you the moment a spot opens."
+      "body": "Pick a day and a time. If the class is full you join the waitlist and we let you know when a place opens up."
     },
     "buy": {
       "title": "Buy",
-      "body": "Class packs. Pay online, or by transfer and send the receipt over WhatsApp."
+      "body": "Class packs. Pay online or by transfer, sending the receipt."
     },
     "account": {
       "title": "Your account",
-      "body": "Turn on notifications for class reminders and freed-up spots. Log out from here as well."
+      "body": "Turn on notifications for your classes and for when a place frees up. You also sign out here."
     },
     "doneStudent": {
       "title": "Off you go!",
-      "body": "That is everything. Book your first class whenever you are ready."
-    },
-    "panel": {
-      "title": "Your dashboard",
-      "body": "What is happening today: the next class with its spots, and anything needing you, like pending payments."
+      "body": "That is it. Book your first class whenever you like."
     }
   },
   "password": {

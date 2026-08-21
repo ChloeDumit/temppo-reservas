@@ -91,6 +91,9 @@ export default async function DashboardPage({
         db.location.count({ where: { studioId: studio.id } }),
         db.classTemplate.count({ where: { studioId: studio.id } }),
         db.classPack.count({ where: { studioId: studio.id } }),
+        db.instructorProfile.count({
+          where: { user: { studioId: studio.id, isActive: true } },
+        }),
       ]),
     ]);
 
@@ -98,11 +101,18 @@ export default async function DashboardPage({
   const expenses = monthTx.find((r) => r.type === "EXPENSE")?._sum.amountCents ?? 0;
   const net = income - expenses;
 
-  const [locationCount, templateCount, packCount] = counts;
+  const [locationCount, templateCount, packCount, teacherCount] = counts;
+  /*
+    In the order the data depends on itself, matching the guided tour. A class
+    is assigned to a teacher, so listing classes first sent people off to build
+    a timetable with nobody to teach it — and left the studio wondering why the
+    teacher dropdown was empty.
+  */
   const setupSteps = [
     { done: locationCount > 0, label: t("setupLocation"), href: "/settings" },
-    { done: templateCount > 0, label: t("setupClass"), href: "/classes" },
+    { done: teacherCount > 0, label: t("setupTeacher"), href: "/settings" },
     { done: packCount > 0, label: t("setupPack"), href: "/packs" },
+    { done: templateCount > 0, label: t("setupClass"), href: "/classes" },
     { done: activeStudents > 0, label: t("setupStudent"), href: "/students" },
   ];
   const setupIncomplete = setupSteps.some((step) => !step.done);

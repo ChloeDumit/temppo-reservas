@@ -101,6 +101,7 @@
     "reviewPayments": "Revisar pagos",
     "setupTitle": "Terminá de configurar tu estudio",
     "setupLocation": "Agregá tu primera sede",
+    "setupTeacher": "Cargá tus profes",
     "setupClass": "Creá tu primera clase",
     "setupPack": "Definí un pack de clases",
     "setupStudent": "Sumá tu primer alumno",
@@ -607,29 +608,88 @@
     "finish": "Empezar",
     "skip": "Saltear el recorrido",
     "replay": "Ver el recorrido",
+    "resume": "Seguir la guía",
+    "phaseSetup": "Configuración",
+    "phaseDaily": "Día a día",
+    "stepDone": "Ya está",
+    "stepPending": "Pendiente",
     "welcomeStaff": {
       "title": "¡Bienvenida a TEMPPO!",
-      "body": "Te muestro en 30 segundos dónde está cada cosa. Podés saltearlo cuando quieras."
+      "body": "Vamos a dejar tu estudio funcionando. Primero lo configuramos paso a paso, después te muestro el día a día. Podés salir cuando quieras y seguir donde lo dejaste."
+    },
+    "studio": {
+      "title": "Tu estudio",
+      "body": "Nombre, logo y color de tu marca, más la zona horaria y la moneda. De acá sale todo lo que ven tus alumnos: la app, los mails y tu página de reservas.",
+      "action": "Ir a Ajustes"
+    },
+    "rules": {
+      "title": "Tus reglas",
+      "body": "Cuántas horas antes se puede cancelar, con cuánta anticipación se abren las reservas y cuántos cambios por mes tiene un cupo fijo. Se configuran una vez y no las tocás más.",
+      "action": "Configurar reglas"
+    },
+    "locations": {
+      "title": "Tus sucursales",
+      "body": "Si tenés más de un local, cargalos acá: cada uno maneja su agenda, sus clases y sus alumnos por separado. Con una sola sucursal ya está listo.",
+      "action": "Agregar sucursal"
+    },
+    "teachers": {
+      "title": "Tus profes",
+      "body": "Van antes que las clases, porque cada clase se asigna a una profe. Reciben un mail con su contraseña temporal y ven solamente su agenda. Si das clases vos, cargate también.",
+      "action": "Agregar profe"
+    },
+    "packs": {
+      "title": "Tus packs",
+      "body": "Es lo que compran tus alumnos: 4, 8 o 12 clases, con su precio y su vencimiento. Sin al menos un pack cargado nadie puede comprar ni reservar por su cuenta.",
+      "action": "Crear un pack"
+    },
+    "classes": {
+      "title": "Tus clases",
+      "body": "Acá armás la grilla: nombre, días, hora, duración, cupo y profe. Una clase que va lunes, miércoles y viernes se carga una sola vez y se repite sola todas las semanas.",
+      "action": "Cargar clases"
+    },
+    "students": {
+      "title": "Tus alumnos",
+      "body": "Cargalos con nombre y mail. Cada uno recibe una contraseña temporal para entrar y cambiarla. También pueden registrarse solos desde tu página de reservas.",
+      "action": "Agregar alumnos"
+    },
+    "spots": {
+      "title": "Cupos fijos",
+      "body": "Si alguien viene siempre al mismo horario, asignale el cupo y queda reservado todas las semanas sin que tenga que entrar a reservar. El resto compra packs y elige cada vez.",
+      "action": "Asignar cupos"
+    },
+    "panel": {
+      "title": "Tu panel",
+      "body": "Lo que pasa hoy: la próxima clase con sus cupos, y lo que necesita tu atención, como pagos pendientes."
     },
     "schedule": {
       "title": "Tu agenda",
       "body": "Todas las clases de la semana. Tocá una para ver quién viene, agregar alumnos a mano o pasar lista."
     },
-    "spots": {
-      "title": "Cupos fijos",
-      "body": "Quién tiene lugar reservado todas las semanas. De un vistazo ves qué horarios tienen lugar libre, sin abrir una planilla."
-    },
     "checkin": {
       "title": "Ingreso",
       "body": "Escaneá el código QR del alumno cuando llega y la asistencia queda registrada al instante."
     },
+    "spotsDaily": {
+      "title": "Cupos fijos",
+      "body": "Quién tiene lugar reservado todas las semanas. De un vistazo ves qué horarios tienen lugar libre, sin abrir una planilla."
+    },
     "more": {
       "title": "Todo lo demás",
-      "body": "Acá adentro están Alumnos, Clases (donde armás los horarios que se repiten), Interesados, Packs, Pagos, Reportes y Ajustes. También cerrás sesión desde este menú."
+      "body": "Acá adentro están Alumnos, Clases, Interesados, Packs, Pagos, Reportes y Ajustes. También cerrás sesión desde este menú."
+    },
+    "payments": {
+      "title": "Pagos",
+      "body": "Quién pagó y quién debe. Los comprobantes de transferencia te llegan acá y los aprobás de a uno, sin buscar en el chat.",
+      "action": "Ver pagos"
+    },
+    "reports": {
+      "title": "Reportes",
+      "body": "Asistencia, ingresos del mes y cuánto le corresponde a cada profe. Todo se exporta si lo necesitás para tu contador.",
+      "action": "Ver reportes"
     },
     "done": {
       "title": "Listo",
-      "body": "Empezá por Clases para cargar tus horarios. Si querés ver este recorrido de nuevo, está en el menú Más."
+      "body": "Ya está todo en su lugar. Si querés repasar algo, el recorrido queda guardado en el menú Más."
     },
     "welcomeStudent": {
       "title": "¡Hola!",
@@ -645,7 +705,7 @@
     },
     "buy": {
       "title": "Comprar",
-      "body": "Packs de clases. Pagás online o por transferencia, mandando el comprobante por WhatsApp."
+      "body": "Packs de clases. Pagás online o por transferencia, mandando el comprobante."
     },
     "account": {
       "title": "Tu cuenta",
@@ -654,10 +714,6 @@
     "doneStudent": {
       "title": "¡A moverse!",
       "body": "Ya está. Reservá tu primera clase cuando quieras."
-    },
-    "panel": {
-      "title": "Tu panel",
-      "body": "Lo que pasa hoy: la próxima clase con sus cupos, y lo que necesita tu atención, como pagos pendientes."
     }
   },
   "password": {
