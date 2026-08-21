@@ -56,6 +56,11 @@ model Studio {
   suspendedAt     DateTime?
   suspendedReason String?
 
+  /// Last time the calendar was generated for this studio. Read straight off
+  /// the studio record the guard already loaded, so the common page view can
+  /// skip the whole job without spending a single query to find out.
+  instancesSyncedAt DateTime?
+
   onboardingCompletedAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

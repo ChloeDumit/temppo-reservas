@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { ensureInstances } from "@/lib/classes";
 import { assertAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { normalizeHex } from "@/lib/color";
@@ -83,7 +84,16 @@ export async function updateRulesAction(
   const parsed = rulesSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "generic" };
 
-  await db.studio.update({ where: { id: user.studioId }, data: parsed.data });
+  const studio = await db.studio.update({
+    where: { id: user.studioId },
+    data: parsed.data,
+  });
+
+  /*
+    Widening how far ahead booking opens needs the extra weeks generated now,
+    not whenever the calendar next falls stale — the admin is about to look.
+  */
+  await ensureInstances(studio, new Date(), { force: true });
 
   await recordAudit({
     studioId: user.studioId,

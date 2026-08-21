@@ -7,6 +7,8 @@ type StudioLike = {
   id: string;
   timezone: string;
   bookingOpensDaysAhead: number;
+  /** Null on a studio whose calendar has never been built. */
+  instancesSyncedAt?: Date | null;
 };
 
 /**
@@ -17,13 +19,42 @@ type StudioLike = {
  * cancelled class keeps its row (status CANCELLED) and the unique constraint on
  * (templateId, startsAt) stops it from reappearing.
  */
-export async function ensureInstances(studio: StudioLike, now = new Date()) {
+/**
+ * How long a generated calendar is trusted before it is rebuilt.
+ *
+ * Generation is idempotent, so the only cost of waiting is that a class
+ * created in another tab takes this long to appear on a screen nobody
+ * refreshed. Anything that needs it sooner passes force.
+ */
+const GENERATION_TTL_MS = 15 * 60_000;
+
+export async function ensureInstances(
+  studio: StudioLike,
+  now = new Date(),
+  options: { force?: boolean } = {},
+) {
+  /*
+    The hot path: seven round trips ran on every view of the dashboard,
+    schedule, availability and booking screens — two of them writes, and one a
+    scan of every future occurrence — almost always to discover there was
+    nothing to do. The timestamp lives on the studio record the auth guard has
+    already loaded, so skipping costs no queries at all.
+  */
+  if (
+    !options.force &&
+    studio.instancesSyncedAt &&
+    now.getTime() - studio.instancesSyncedAt.getTime() < GENERATION_TTL_MS
+  ) {
+    return 0;
+  }
+
   const templates = await db.classTemplate.findMany({
     where: { studioId: studio.id, isActive: true },
   });
   if (templates.length === 0) {
     // Still reconcile standing spots against instances that already exist.
     await syncRecurringBookings(studio, now);
+    await markSynced(studio.id, now);
     return 0;
   }
 
@@ -89,6 +120,15 @@ export async function ensureInstances(studio: StudioLike, now = new Date()) {
 
   // Standing weekly spots claim their seats on any newly created occurrence.
   await syncRecurringBookings(studio, now);
+  await markSynced(studio.id, now);
 
   return result.count;
+}
+
+/** Records that the calendar is current, so page views can skip the work. */
+async function markSynced(studioId: string, now: Date) {
+  await db.studio.update({
+    where: { id: studioId },
+    data: { instancesSyncedAt: now },
+  });
 }

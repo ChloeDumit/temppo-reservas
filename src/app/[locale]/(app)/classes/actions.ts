@@ -87,7 +87,7 @@ export async function saveTemplateAction(
     templateId = created.id;
   }
 
-  await ensureInstances(user.studio);
+  await ensureInstances(user.studio, new Date(), { force: true });
 
   await recordAudit({
     studioId: user.studioId,
@@ -117,7 +117,7 @@ export async function toggleTemplateAction(formData: FormData) {
   await db.classTemplate.update({ where: { id }, data: { isActive } });
 
   if (isActive) {
-    await ensureInstances(user.studio);
+    await ensureInstances(user.studio, new Date(), { force: true });
   } else {
     // Pull unbooked future occurrences off the calendar.
     await db.classInstance.deleteMany({

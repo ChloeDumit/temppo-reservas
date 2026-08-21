@@ -1,4 +1,5 @@
 import "server-only";
+import { ensureInstances } from "@/lib/classes";
 import { db } from "@/lib/db";
 import { notifyPreferred, notifyOwners } from "@/lib/notifications";
 import { sweepExpiredOffers } from "@/lib/waitlist";
@@ -20,6 +21,13 @@ export async function sendDueReminders(now = new Date()) {
   let birthdays = 0;
 
   for (const studio of studios) {
+    /*
+      Keep every studio calendar current here rather than on page views. This
+      runs on the same 15-minute schedule as the generation TTL, so by the time
+      anyone opens the app the work is already done and the screen just reads.
+    */
+    await ensureInstances(studio, now, { force: true });
+
     // Offers that ran out get passed along on the same schedule.
     await sweepExpiredOffers(studio, now);
 
