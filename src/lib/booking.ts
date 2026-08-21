@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { shouldEarnMakeup, makeupBalance } from "@/lib/makeups";
 import type { BookingSource } from "@/generated/prisma/enums";
 
 export type BookingErrorCode =
@@ -13,14 +14,23 @@ export type BookingErrorCode =
   | "NO_CREDITS";
 
 export type BookingResult =
-  | { ok: true; bookingId: string; usedPackId: string | null }
+  | {
+      ok: true;
+      bookingId: string;
+      usedPackId: string | null;
+      /** Paid for with a fixed-spot make-up rather than a pack credit. */
+      usedMakeup: boolean;
+    }
   | { ok: false; code: BookingErrorCode };
 
 type StudioRules = {
   id: string;
+  timezone: string;
   cancellationCutoffHours: number;
   bookingOpensDaysAhead: number;
   noShowLimit: number;
+  /** Fixed-spot swaps permitted per calendar month. */
+  monthlyChangesAllowed: number;
 };
 
 /** Packs that can still pay for a class right now, soonest to expire first. */
@@ -128,7 +138,18 @@ export async function bookClass(params: {
           // in hand still keeps every one of them.
           const chosen = bypassCredit ? undefined : (unlimited ?? withCredit);
 
-          if (!chosen && !bypassCredit && source === "STUDENT") {
+          /*
+            A make-up is spent before a pack credit: it lapses at the end of the
+            month while credits usually outlive it, so spending the perishable
+            one first is what the student would choose.
+          */
+          const makeups =
+            bypassCredit || chosen
+              ? null
+              : await makeupBalance(studentId, studio, now, tx);
+          const useMakeup = (makeups?.available ?? 0) > 0;
+
+          if (!chosen && !useMakeup && !bypassCredit && source === "STUDENT") {
             return { ok: false, code: "NO_CREDITS" } as const;
           }
 
@@ -150,6 +171,9 @@ export async function bookClass(params: {
                   status: "BOOKED",
                   source,
                   studentPackId: chosen?.id ?? null,
+                  usedMakeup: useMakeup,
+                  // Re-booking this row must not leave a stale grant behind.
+                  earnedMakeup: false,
                   cancelledAt: null,
                 },
               })
@@ -160,6 +184,7 @@ export async function bookClass(params: {
                   studentId,
                   source,
                   studentPackId: chosen?.id ?? null,
+                  usedMakeup: useMakeup,
                 },
               });
 
@@ -169,7 +194,12 @@ export async function bookClass(params: {
             data: { status: "CLAIMED" },
           });
 
-          return { ok: true, bookingId: booking.id, usedPackId: chosen?.id ?? null } as const;
+          return {
+            ok: true,
+            bookingId: booking.id,
+            usedPackId: chosen?.id ?? null,
+            usedMakeup: useMakeup,
+          } as const;
         },
         { isolationLevel: "Serializable" },
       );
@@ -188,7 +218,15 @@ export async function bookClass(params: {
 }
 
 export type CancelResult =
-  | { ok: true; late: boolean; refunded: boolean; classInstanceId: string }
+  | {
+      ok: true;
+      late: boolean;
+      /** A pack credit came back. */
+      refunded: boolean;
+      /** A fixed-spot swap was granted, usable until the month ends. */
+      earnedMakeup: boolean;
+      classInstanceId: string;
+    }
   | { ok: false; code: "NOT_FOUND" | "IN_PAST" | "ALREADY_CANCELLED" };
 
 /**
@@ -237,12 +275,31 @@ export async function cancelBooking(params: {
       }
     }
 
+    /*
+      A fixed-spot student gets no credit back — they pay for the slot, not the
+      class — so instead they may swap a capped number of times a month. Judged
+      here, at the moment of cancelling, because the allowance is about when
+      they changed their mind.
+    */
+    const earnedMakeup = await shouldEarnMakeup(
+      {
+        studentId: booking.studentId,
+        source: booking.source,
+        studentPackId: booking.studentPackId,
+        late,
+      },
+      studio,
+      now,
+      tx,
+    );
+
     await tx.booking.update({
       where: { id: booking.id },
       data: {
         status: late ? "LATE_CANCELLED" : "CANCELLED",
         cancelledAt: now,
         studentPackId: refunded ? null : booking.studentPackId,
+        earnedMakeup,
       },
     });
 
@@ -250,6 +307,7 @@ export async function cancelBooking(params: {
       ok: true,
       late,
       refunded,
+      earnedMakeup,
       classInstanceId: booking.classInstanceId,
     } as const;
   });

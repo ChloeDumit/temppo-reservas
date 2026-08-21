@@ -71,6 +71,7 @@ const rulesSchema = z.object({
   reminderHoursBefore: z.coerce.number().int().min(1).max(168),
   waitlistClaimWindowMins: z.coerce.number().int().min(5).max(1440),
   noShowLimit: z.coerce.number().int().min(0).max(50),
+  monthlyChangesAllowed: z.coerce.number().int().min(0).max(31),
   bookingOpensDaysAhead: z.coerce.number().int().min(1).max(365),
 });
 

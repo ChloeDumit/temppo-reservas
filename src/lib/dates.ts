@@ -99,3 +99,14 @@ export function isBirthdayToday(birthDate: Date, timeZone: string, now = new Dat
     birthDate.getUTCMonth() === today.getMonth() && birthDate.getUTCDate() === today.getDate()
   );
 }
+
+/**
+ * Same day-of-month, N months on. Used for month boundaries, where the input
+ * is already the first of a month so the end-of-month clamping that trips up
+ * date arithmetic never comes into play.
+ */
+export function addMonths(date: Date, months: number): Date {
+  const next = new Date(date);
+  next.setUTCMonth(next.getUTCMonth() + months);
+  return next;
+}

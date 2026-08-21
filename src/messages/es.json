@@ -26,7 +26,10 @@
     "required": "Este campo es obligatorio",
     "name": "Nombre",
     "description": "Descripción",
-    "done": "Listo"
+    "done": "Listo",
+    "allLocations": "Todas las sucursales",
+    "location": "Sucursal",
+    "locationsLabel": "Sucursales"
   },
   "nav": {
     "dashboard": "Panel",
@@ -300,7 +303,9 @@
     "updated": "Ajustes actualizados.",
     "memberInvited": "Invitación enviada.",
     "whatsappNumber": "WhatsApp del estudio",
-    "whatsappHint": "Donde los alumnos mandan los comprobantes. Formato internacional."
+    "whatsappHint": "Donde los alumnos mandan los comprobantes. Formato internacional.",
+    "monthlyChanges": "Cambios por mes",
+    "monthlyChangesHint": "Cuántas clases de cupo fijo puede mover un alumno cada mes. Si cancela de más, pierde la clase. 0 = sin cambios."
   },
   "booking": {
     "title": "Reservar clase",
@@ -334,7 +339,15 @@
     "nextClassHero": "Tu próxima clase",
     "noneUpcomingCalm": "No tenés clases reservadas todavía.",
     "bookFirst": "Reservar mi primera clase",
-    "creditsRing": "clases"
+    "creditsRing": "clases",
+    "makeupsTitle": "Cambios del mes",
+    "makeupsAvailable": "Te queda {count} clase para recuperar",
+    "makeupsAvailablePlural": "Te quedan {count} clases para recuperar",
+    "makeupsNone": "No tenés clases para recuperar.",
+    "changesLeft": "Podés mover {count} clases más este mes.",
+    "changesLeftOne": "Podés mover 1 clase más este mes.",
+    "changesNone": "Ya usaste tus cambios del mes. Si cancelás, perdés la clase.",
+    "makeupsExpire": "Vencen a fin de mes."
   },
   "marketing": {
     "tagline": "Gestión de reservas para estudios que quieren crecer sin fricción.",

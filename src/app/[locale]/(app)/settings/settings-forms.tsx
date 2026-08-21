@@ -130,6 +130,7 @@ export function RulesForm({
     reminderHoursBefore: number;
     waitlistClaimWindowMins: number;
     noShowLimit: number;
+    monthlyChangesAllowed: number;
     bookingOpensDaysAhead: number;
   };
 }) {
@@ -179,6 +180,15 @@ export function RulesForm({
             max={1440}
             required
             defaultValue={values.waitlistClaimWindowMins}
+          />
+        </Field>
+        <Field label={t("monthlyChanges")} hint={t("monthlyChangesHint")}>
+          <Input
+            name="monthlyChangesAllowed"
+            type="number"
+            min={0}
+            max={31}
+            defaultValue={values.monthlyChangesAllowed}
           />
         </Field>
         <Field label={t("noShowLimit")} hint={t("noShowLimitHint")} error={message}>

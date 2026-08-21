@@ -26,7 +26,10 @@
     "required": "This field is required",
     "name": "Name",
     "description": "Description",
-    "done": "Done"
+    "done": "Done",
+    "allLocations": "All locations",
+    "location": "Location",
+    "locationsLabel": "Locations"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -300,7 +303,9 @@
     "updated": "Settings updated.",
     "memberInvited": "Invitation sent.",
     "whatsappNumber": "Studio WhatsApp",
-    "whatsappHint": "Where students send payment receipts. International format."
+    "whatsappHint": "Where students send payment receipts. International format.",
+    "monthlyChanges": "Changes per month",
+    "monthlyChangesHint": "How many fixed-spot classes a student may move each month. Cancel beyond it and the class is lost. 0 = no changes."
   },
   "booking": {
     "title": "Book a class",
@@ -334,7 +339,15 @@
     "nextClassHero": "Your next class",
     "noneUpcomingCalm": "You have no classes booked yet.",
     "bookFirst": "Book my first class",
-    "creditsRing": "classes"
+    "creditsRing": "classes",
+    "makeupsTitle": "Changes this month",
+    "makeupsAvailable": "You have {count} class to make up",
+    "makeupsAvailablePlural": "You have {count} classes to make up",
+    "makeupsNone": "No classes to make up.",
+    "changesLeft": "You can move {count} more classes this month.",
+    "changesLeftOne": "You can move 1 more class this month.",
+    "changesNone": "You have used this month’s changes. Cancelling now loses the class.",
+    "makeupsExpire": "They expire at the end of the month."
   },
   "marketing": {
     "tagline": "Booking management for studios that want to grow without friction.",

@@ -70,6 +70,7 @@ export default async function SettingsPage({
                 reminderHoursBefore: studio.reminderHoursBefore,
                 waitlistClaimWindowMins: studio.waitlistClaimWindowMins,
                 noShowLimit: studio.noShowLimit,
+                monthlyChangesAllowed: studio.monthlyChangesAllowed,
                 bookingOpensDaysAhead: studio.bookingOpensDaysAhead,
               }}
             />

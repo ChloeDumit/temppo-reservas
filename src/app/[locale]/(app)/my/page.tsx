@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { requireStudentProfile } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { creditsRemaining } from "@/lib/booking";
+import { makeupBalance } from "@/lib/makeups";
 import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,7 @@ export default async function MyClassesPage({
   const now = new Date();
   const studentId = profile.id;
 
-  const [upcoming, past, packs, credits] = await Promise.all([
+  const [upcoming, past, packs, credits, makeups] = await Promise.all([
     db.booking.findMany({
       where: {
         studentId,
@@ -60,9 +61,18 @@ export default async function MyClassesPage({
       orderBy: { expiresAt: "asc" },
     }),
     creditsRemaining(studentId),
+    // Only meaningful for a student on a fixed spot; a pack student sees zeroes.
+    makeupBalance(studentId, studio),
   ]);
 
   const cutoffMs = studio.cancellationCutoffHours * 3_600_000;
+
+  // The swap allowance only applies to a student the studio has put on a
+  // standing weekly spot; everyone else pays per class out of a pack.
+  const hasFixedSpot =
+    (await db.recurringBooking.count({
+      where: { studentId, status: { in: ["ACTIVE", "PAUSED"] } },
+    })) > 0;
 
   // The hero shows the soonest booking; the list below keeps the full picture.
   const nextBooking = upcoming[0] ?? null;
@@ -143,6 +153,33 @@ export default async function MyClassesPage({
           </div>
         )}
       </section>
+      {/*
+        Only for students who actually hold a fixed spot. A pack student has no
+        swap allowance, and the card would only confuse them.
+      */}
+      {hasFixedSpot && makeups.allowance > 0 && (
+        <Card className="mb-4">
+          <CardHeader title={t("makeupsTitle")} />
+          <div className="space-y-1.5 px-4 py-4 sm:px-5">
+            <p className="text-sm text-ink">
+              {makeups.available === 0
+                ? t("makeupsNone")
+                : makeups.available === 1
+                  ? t("makeupsAvailable", { count: 1 })
+                  : t("makeupsAvailablePlural", { count: makeups.available })}
+            </p>
+            <p className="text-xs text-muted">
+              {makeups.changesLeft === 0
+                ? t("changesNone")
+                : makeups.changesLeft === 1
+                  ? t("changesLeftOne")
+                  : t("changesLeft", { count: makeups.changesLeft })}
+              {makeups.available > 0 ? ` ${t("makeupsExpire")}` : ""}
+            </p>
+          </div>
+        </Card>
+      )}
+
       {packs.length > 0 && (
         <Card className="mb-4">
           <CardHeader title={ts("activePacks")} />
