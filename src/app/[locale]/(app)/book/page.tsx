@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireStudentProfile } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { currentLocationId, locationScope } from "@/lib/locations";
 import { ensureInstances } from "@/lib/classes";
 import { creditsRemaining } from "@/lib/booking";
 import { sweepExpiredOffers } from "@/lib/waitlist";
@@ -31,12 +32,16 @@ export default async function BookPage({
   const now = new Date();
   const horizonEnd = addDays(startOfDayInZone(now, studio.timezone), studio.bookingOpensDaysAhead);
 
+  // Students switch sucursal with the same control staff use.
+  const locationId = await currentLocationId(studio.id);
+
   const [instances, myBookings, credits] = await Promise.all([
     db.classInstance.findMany({
       where: {
         studioId: studio.id,
         status: "SCHEDULED",
         startsAt: { gt: now, lte: horizonEnd },
+        ...locationScope(locationId),
       },
       orderBy: { startsAt: "asc" },
       include: {

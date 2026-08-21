@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { currentLocationId, locationScope } from "@/lib/locations";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,9 +34,11 @@ export default async function ClassesPage({
   const tc = await getTranslations("common");
   const ts = await getTranslations("schedule");
 
+  const locationId = await currentLocationId(studio.id);
+
   const [templates, instructors, locations] = await Promise.all([
     db.classTemplate.findMany({
-      where: { studioId: studio.id },
+      where: { studioId: studio.id, ...locationScope(locationId) },
       orderBy: [{ isActive: "desc" }, { startTime: "asc" }],
       // Grouped by weekday pattern below — the schedule reads that way, and
       // ordering by time alone piles every 08:00 from every day together.

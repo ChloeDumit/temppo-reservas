@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { listLocations } from "@/lib/locations";
 import { ageFrom, formatDate, formatDateTime } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -41,6 +42,8 @@ export default async function StudentDetailPage({
   const tp = await getTranslations("payments");
   const tb = await getTranslations("booking");
 
+  const locations = await listLocations(studio.id);
+
   const student = await db.studentProfile.findFirst({
     where: { id, user: { studioId: studio.id } },
     include: {
@@ -52,6 +55,7 @@ export default async function StudentDetailPage({
         take: 25,
       },
       payments: { orderBy: { createdAt: "desc" }, take: 25 },
+      locations: { select: { id: true } },
     },
   });
 
@@ -235,11 +239,13 @@ export default async function StudentDetailPage({
           icon={null}
         >
         <StudentForm
+          locations={locations}
           values={{
             id: student.id,
             name: student.user.name,
             email: student.user.email ?? "",
             documentId: student.user.documentId ?? "",
+            locationIds: student.locations.map((location) => location.id),
             phone: student.user.phone ?? "",
             birthDate: student.birthDate?.toISOString().slice(0, 10) ?? "",
             healthNotes: student.healthNotes ?? "",

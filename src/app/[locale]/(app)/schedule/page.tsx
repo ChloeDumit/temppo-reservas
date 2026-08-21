@@ -10,23 +10,23 @@ import {
   startOfWeekInZone,
   wallTimeToUtc,
 } from "@/lib/dates";
+import { currentLocationId, locationScope } from "@/lib/locations";
 import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Icon } from "@/components/app/icon";
-import { LocationFilter } from "@/components/app/location-filter";
 
 export default async function SchedulePage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ week?: string; location?: string }>;
+  searchParams: Promise<{ week?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { week, location } = await searchParams;
+  const { week } = await searchParams;
 
   const user = await requireStaff();
   const studio = user.studio;
@@ -42,19 +42,15 @@ export default async function SchedulePage({
   const weekStart = startOfWeekInZone(anchor, studio.timezone);
   const weekEnd = addDays(weekStart, 7);
 
-  const locations = await db.location.findMany({
-    where: { studioId: studio.id, isActive: true },
-    orderBy: { name: "asc" },
-  });
-
-  // Only filter when the chosen location actually belongs to this studio.
-  const locationId = locations.some((l) => l.id === location) ? location : undefined;
+  // The sucursal comes from the app-wide switcher now, so the choice survives
+  // moving between the schedule and everything else.
+  const locationId = await currentLocationId(studio.id);
 
   const instances = await db.classInstance.findMany({
     where: {
       studioId: studio.id,
       startsAt: { gte: weekStart, lt: weekEnd },
-      ...(locationId ? { locationId } : {}),
+      ...locationScope(locationId),
     },
     orderBy: { startsAt: "asc" },
     include: {
@@ -99,7 +95,7 @@ export default async function SchedulePage({
 
       <div className="mb-4 flex items-center gap-2">
         <Link
-          href={{ pathname: "/schedule", query: { week: prevWeek, ...(locationId ? { location: locationId } : {}) } }}
+          href={{ pathname: "/schedule", query: { week: prevWeek } }}
           className={buttonClass("secondary", "sm")}
           aria-label={t("prevWeek")}
         >
@@ -109,24 +105,12 @@ export default async function SchedulePage({
           {t("title")}
         </Link>
         <Link
-          href={{ pathname: "/schedule", query: { week: nextWeek, ...(locationId ? { location: locationId } : {}) } }}
+          href={{ pathname: "/schedule", query: { week: nextWeek } }}
           className={buttonClass("secondary", "sm")}
           aria-label={t("nextWeek")}
         >
           <Icon name="chevronRight" className="size-4" />
         </Link>
-
-        {locations.length > 1 && (
-          <div className="ml-auto">
-            <LocationFilter
-              locations={locations.map((l) => ({ id: l.id, name: l.name }))}
-              selected={locationId}
-              week={week}
-              allLabel={t("allLocations")}
-              label={t("location")}
-            />
-          </div>
-        )}
       </div>
 
       {instances.length === 0 ? (

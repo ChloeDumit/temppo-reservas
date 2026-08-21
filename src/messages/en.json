@@ -215,7 +215,8 @@
     "pinHint": "4 to 8 digits, for signing in by ID",
     "pinEditHint": "Leave blank to keep the current one",
     "pinRequired": "Without an email, they need a PIN.",
-    "invalidPin": "The PIN must be 4 to 8 digits."
+    "invalidPin": "The PIN must be 4 to 8 digits.",
+    "locationsHint": "Which locations they train at"
   },
   "packs": {
     "title": "Class packs",

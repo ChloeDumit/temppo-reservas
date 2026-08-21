@@ -74,6 +74,7 @@ model Studio {
   auditLogs         AuditLog[]
   leads             Lead[]
   recurringBookings RecurringBooking[]
+  subscription      Subscription?
 
   @@index([slug])
 }
@@ -702,4 +703,84 @@ model VerificationToken {
   createdAt DateTime            @default(now())
 
   @@index([userId, purpose])
+}
+
+// -------------------------------------------------------- platform billing
+
+/**
+ * What a studio owes TEMPPO — the opposite direction from Payment, which is a
+ * student paying their studio. The two flows never mix: subscription money is
+ * ours, so it stays out of Transaction and out of every studio-facing report.
+ */
+enum SubscriptionStatus {
+  /// Preapproval created; waiting for the owner to authorise it at the provider.
+  PENDING
+  ACTIVE
+  /// A scheduled charge failed. Access is deliberately untouched — a human decides.
+  PAST_DUE
+  PAUSED
+  CANCELLED
+}
+
+model Subscription {
+  id String @id @default(cuid())
+
+  /// One live subscription per studio. The history lives in SubscriptionCharge,
+  /// so a studio that cancels and comes back reuses this row.
+  studioId String @unique
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  plan        Plan
+  status      SubscriptionStatus @default(PENDING)
+  amountCents Int
+  currency    String             @default("UYU")
+
+  /// null while the studio is settled by hand (transfer, cash).
+  provider String?
+  /// Mercado Pago preapproval id. Unique so a webhook can find its row.
+  providerRef String? @unique
+
+  /// Paid up to. Auto-debit takes this from the provider's next charge date; a
+  /// manually recorded payment pushes it out a month at a time.
+  currentPeriodEnd DateTime?
+  lastPaymentAt    DateTime?
+  cancelledAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  charges SubscriptionCharge[]
+
+  @@index([status])
+}
+
+model SubscriptionCharge {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  /// Denormalised so the platform console can list a studio's charges without
+  /// joining through the subscription.
+  studioId String
+
+  amountCents Int
+  currency    String        @default("UYU")
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+
+  provider String?
+  /// Unique: the provider retries webhooks, and a charge must be credited once.
+  providerPaymentId String? @unique
+
+  /// The manual path only: "transferencia BROU 21/08".
+  note String?
+  /// Platform admin who recorded a manual payment. Deliberately not a relation
+  /// — User rows are tenant-scoped and this points across tenants.
+  recordedById String?
+
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([studioId, createdAt])
+  @@index([subscriptionId, createdAt])
 }

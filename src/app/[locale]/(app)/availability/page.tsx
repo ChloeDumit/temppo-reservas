@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { currentLocationId } from "@/lib/locations";
 import { ensureInstances } from "@/lib/classes";
 import { weeklyAvailability } from "@/lib/recurring";
 import { Card } from "@/components/ui/card";
@@ -33,10 +34,15 @@ export default async function AvailabilityPage({
 
   await ensureInstances(studio);
 
+  const locationId = await currentLocationId(studio.id);
+
   const [slots, students] = await Promise.all([
     weeklyAvailability(studio.id),
     db.studentProfile.findMany({
-      where: { user: { studioId: studio.id, isActive: true } },
+      where: {
+        user: { studioId: studio.id, isActive: true },
+        ...(locationId ? { locations: { some: { id: locationId } } } : {}),
+      },
       include: { user: true },
       orderBy: { user: { name: "asc" } },
     }),

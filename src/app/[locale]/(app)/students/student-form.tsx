@@ -13,6 +13,7 @@ export type StudentValues = {
   name: string;
   email: string;
   documentId: string;
+  locationIds: string[];
   phone: string;
   birthDate: string;
   healthNotes: string;
@@ -21,7 +22,13 @@ export type StudentValues = {
   notes: string;
 };
 
-export function StudentForm({ values }: { values: StudentValues }) {
+export function StudentForm({
+  values,
+  locations = [],
+}: {
+  values: StudentValues;
+  locations?: { id: string; name: string }[];
+}) {
   const t = useTranslations("students");
   const tc = useTranslations("common");
   const te = useTranslations("errors");
@@ -121,6 +128,25 @@ export function StudentForm({ values }: { values: StudentValues }) {
           <Input name="emergencyPhone" type="tel" maxLength={30} defaultValue={values.emergencyPhone} />
         </Field>
       </div>
+
+      {locations.length > 1 && (
+        <Field label={tc("locationsLabel")} hint={t("locationsHint")}>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 pt-1">
+            {locations.map((location) => (
+              <label key={location.id} className="flex items-center gap-1.5 text-sm">
+                <input
+                  type="checkbox"
+                  name="locationIds"
+                  value={location.id}
+                  defaultChecked={values.locationIds.includes(location.id)}
+                  className="size-4 accent-[var(--accent)]"
+                />
+                {location.name}
+              </label>
+            ))}
+          </div>
+        </Field>
+      )}
 
       <Field label={t("healthNotes")}>
         <Textarea name="healthNotes" maxLength={1000} defaultValue={values.healthNotes} />

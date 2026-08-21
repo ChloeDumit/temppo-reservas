@@ -8,6 +8,7 @@ import { recordAudit } from "@/lib/audit";
 import { hashPassword } from "@/lib/auth/password";
 import { generateTempPassword } from "@/lib/auth/temp-password";
 import { normalizeDocumentId, PIN_MIN_LENGTH, PIN_MAX_LENGTH } from "@/lib/auth/document";
+import { currentLocationId } from "@/lib/locations";
 
 export type ActionState = {
   error?: string;
@@ -37,6 +38,9 @@ export async function saveStudentAction(
 ): Promise<ActionState> {
   const user = await assertStaff();
   const parsed = studentSchema.safeParse(Object.fromEntries(formData));
+
+  // Repeated form keys collapse in Object.fromEntries, so read these directly.
+  const requestedLocationIds = formData.getAll("locationIds").map(String).filter(Boolean);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.path[0] === "email" ? "invalidEmail" : "generic" };
   }
@@ -60,6 +64,16 @@ export async function saveStudentAction(
   // Email accounts get a temporary password instead; a cédula-only account has
   // nothing to sign in with unless a PIN is set here and now.
   if (!id && !email && !pin) return { error: "pinRequired" };
+
+  // Only sucursales this studio actually owns, so a tampered form cannot
+  // attach a student to somebody else's.
+  const ownedLocations = requestedLocationIds.length
+    ? await db.location.findMany({
+        where: { id: { in: requestedLocationIds }, studioId: user.studioId },
+        select: { id: true },
+      })
+    : [];
+  const locationIds = ownedLocations.map((location) => location.id);
 
   const profileData = {
     birthDate: birthDate ? new Date(`${birthDate}T00:00:00Z`) : null,
@@ -94,6 +108,9 @@ export async function saveStudentAction(
       where: { id },
       data: {
         ...profileData,
+        ...(requestedLocationIds.length
+          ? { locations: { set: locationIds.map((id) => ({ id })) } }
+          : {}),
         user: {
           update: {
             name,
@@ -140,6 +157,9 @@ export async function saveStudentAction(
     const tempPassword = email ? generateTempPassword() : null;
     issued = tempPassword ?? undefined;
 
+    const fallback = locationIds.length ? null : await currentLocationId(user.studioId);
+    const attach = locationIds.length ? locationIds : fallback ? [fallback] : [];
+
     const created = await db.user.create({
       data: {
         studioId: user.studioId,
@@ -152,7 +172,12 @@ export async function saveStudentAction(
           ? { passwordHash: await hashPassword(tempPassword), mustChangePassword: true }
           : {}),
         ...(pin ? { pinHash: await hashPassword(pin) } : {}),
-        studentProfile: { create: profileData },
+        studentProfile: {
+          create: {
+            ...profileData,
+            ...(attach.length ? { locations: { connect: attach.map((id) => ({ id })) } } : {}),
+          },
+        },
       },
       include: { studentProfile: true },
     });

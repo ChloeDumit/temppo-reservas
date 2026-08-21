@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { currentLocationId } from "@/lib/locations";
 import { formatDate, startOfMonthInZone } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -28,14 +29,23 @@ export default async function PaymentsPage({
 
   const monthStart = startOfMonthInZone(new Date(), studio.timezone);
 
+  const locationId = await currentLocationId(studio.id);
+  // A payment buys a pack, not a class, so the only sucursal it can be tied
+  // to is the student's own.
+  const atLocation = locationId ? { locations: { some: { id: locationId } } } : {};
+
   const [pending, history, monthTx, students, packs] = await Promise.all([
     db.payment.findMany({
-      where: { studioId: studio.id, status: "PENDING" },
+      where: { studioId: studio.id, status: "PENDING", ...(locationId ? { student: atLocation } : {}) },
       include: { student: { include: { user: true } }, studentPack: { include: { pack: true } } },
       orderBy: { createdAt: "asc" },
     }),
     db.payment.findMany({
-      where: { studioId: studio.id, status: { not: "PENDING" } },
+      where: {
+        studioId: studio.id,
+        status: { not: "PENDING" },
+        ...(locationId ? { student: atLocation } : {}),
+      },
       include: { student: { include: { user: true } } },
       orderBy: { createdAt: "desc" },
       take: 40,
@@ -46,7 +56,7 @@ export default async function PaymentsPage({
       _sum: { amountCents: true },
     }),
     db.studentProfile.findMany({
-      where: { user: { studioId: studio.id, isActive: true } },
+      where: { user: { studioId: studio.id, isActive: true }, ...atLocation },
       include: { user: true },
       orderBy: { user: { name: "asc" } },
     }),

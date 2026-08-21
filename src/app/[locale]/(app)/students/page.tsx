@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { currentLocationId, listLocations } from "@/lib/locations";
 import { isBirthdayToday } from "@/lib/dates";
 import { Card } from "@/components/ui/card";
 import { List, ListRow } from "@/components/ui/list";
@@ -15,6 +16,7 @@ const EMPTY = {
   name: "",
   email: "",
   documentId: "",
+  locationIds: [] as string[],
   phone: "",
   birthDate: "",
   healthNotes: "",
@@ -39,8 +41,12 @@ export default async function StudentsPage({
   const t = await getTranslations("students");
   const tc = await getTranslations("common");
 
+  const locationId = await currentLocationId(studio.id);
+  const locations = await listLocations(studio.id);
+
   const students = await db.studentProfile.findMany({
     where: {
+      ...(locationId ? { locations: { some: { id: locationId } } } : {}),
       user: {
         studioId: studio.id,
         ...(q
@@ -71,7 +77,7 @@ export default async function StudentsPage({
         description={`${students.length}`}
         action={
           <SheetForm label={t("newStudent")} title={t("newStudent")}>
-            <StudentForm values={EMPTY} />
+            <StudentForm values={EMPTY} locations={locations} />
           </SheetForm>
         }
       />

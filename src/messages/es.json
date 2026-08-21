@@ -215,7 +215,8 @@
     "pinHint": "4 a 8 dígitos, para entrar con cédula",
     "pinEditHint": "Dejalo vacío para no cambiarlo",
     "pinRequired": "Sin email, necesitás darle un PIN.",
-    "invalidPin": "El PIN va de 4 a 8 dígitos."
+    "invalidPin": "El PIN va de 4 a 8 dígitos.",
+    "locationsHint": "En qué sucursales entrena"
   },
   "packs": {
     "title": "Packs de clases",

@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
 import { addDays, formatTime, startOfDayInZone, startOfMonthInZone } from "@/lib/dates";
+import { currentLocationId, locationScope } from "@/lib/locations";
 import { formatMoney } from "@/lib/money";
 import { Card } from "@/components/ui/card";
 import { RingMeter } from "@/components/ui/meter";
@@ -31,6 +32,10 @@ export default async function DashboardPage({
   const dayEnd = addDays(dayStart, 1);
   const monthStart = startOfMonthInZone(now, studio.timezone);
 
+  const locationId = await currentLocationId(studio.id);
+  // A student belongs to sucursales; money and classes follow from that.
+  const atLocation = locationId ? { locations: { some: { id: locationId } } } : {};
+
   const [todayClasses, activeStudents, pendingPayments, monthTx, upcoming, counts] =
     await Promise.all([
       db.classInstance.findMany({
@@ -38,6 +43,7 @@ export default async function DashboardPage({
           studioId: studio.id,
           startsAt: { gte: dayStart, lt: dayEnd },
           status: "SCHEDULED",
+          ...locationScope(locationId),
         },
         orderBy: { startsAt: "asc" },
         include: {
@@ -45,15 +51,33 @@ export default async function DashboardPage({
           _count: { select: { bookings: { where: { status: { in: ["BOOKED", "ATTENDED"] } } } } },
         },
       }),
-      db.user.count({ where: { studioId: studio.id, role: "STUDENT", isActive: true } }),
-      db.payment.count({ where: { studioId: studio.id, status: "PENDING" } }),
+      db.user.count({
+        where: {
+          studioId: studio.id,
+          role: "STUDENT",
+          isActive: true,
+          ...(locationId ? { studentProfile: atLocation } : {}),
+        },
+      }),
+      db.payment.count({
+        where: {
+          studioId: studio.id,
+          status: "PENDING",
+          ...(locationId ? { student: atLocation } : {}),
+        },
+      }),
       db.transaction.groupBy({
         by: ["type"],
         where: { studioId: studio.id, occurredAt: { gte: monthStart } },
         _sum: { amountCents: true },
       }),
       db.classInstance.findMany({
-        where: { studioId: studio.id, startsAt: { gte: dayEnd }, status: "SCHEDULED" },
+        where: {
+          studioId: studio.id,
+          startsAt: { gte: dayEnd },
+          status: "SCHEDULED",
+          ...locationScope(locationId),
+        },
         orderBy: { startsAt: "asc" },
         take: 5,
         include: {

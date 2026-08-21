@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { currentLocationId, locationScope } from "@/lib/locations";
 import { formatTime, startOfDayInZone, addDays } from "@/lib/dates";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +37,14 @@ export default async function CheckInPage({
   const dayStart = startOfDayInZone(now, studio.timezone);
 
   // Classes within a couple of hours either way — what the desk needs right now.
+  const locationId = await currentLocationId(studio.id);
+
   const soon = await db.classInstance.findMany({
     where: {
       studioId: studio.id,
       status: "SCHEDULED",
       startsAt: { gte: dayStart, lt: addDays(dayStart, 1) },
+      ...locationScope(locationId),
     },
     orderBy: { startsAt: "asc" },
     include: {

@@ -10,6 +10,8 @@ import { LogoutButton } from "@/components/app/logout-button";
 import { navFor, splitNav } from "@/components/app/nav-items";
 import { InstallPrompt } from "@/components/app/install-prompt";
 import { GuidedTour } from "@/components/app/guided-tour";
+import { LocationSwitcher } from "@/components/app/location-switcher";
+import { locationsFor, currentLocationId } from "@/lib/locations";
 
 export default async function AppLayout({
   children,
@@ -24,6 +26,24 @@ export default async function AppLayout({
   const user = await requireUser();
   const studio = user.studio;
   const ts = await getTranslations("settings");
+
+  const tc = await getTranslations("common");
+
+  // Staff see every sucursal; a student only the ones they train at.
+  const [locations, activeLocationId] = await Promise.all([
+    locationsFor(studio.id, user.studentProfile?.id),
+    currentLocationId(studio.id),
+  ]);
+
+  const locationSwitcher = (className?: string) => (
+    <LocationSwitcher
+      locations={locations}
+      selected={activeLocationId}
+      allLabel={tc("allLocations")}
+      label={tc("location")}
+      className={className}
+    />
+  );
 
   const { primary, overflow } = splitNav(user.role);
   const home = user.role === "STUDENT" ? "/my" : "/dashboard";
@@ -49,7 +69,10 @@ export default async function AppLayout({
             <StudioAvatar />
             <span className="truncate text-[15px] font-semibold text-ink">{studio.name}</span>
           </Link>
-          <LocaleSwitch />
+          <div className="flex shrink-0 items-center gap-2">
+            {locationSwitcher("max-w-[9rem] truncate")}
+            <LocaleSwitch />
+          </div>
         </div>
       </header>
 
@@ -59,6 +82,8 @@ export default async function AppLayout({
             <StudioAvatar />
             <span className="truncate text-sm font-semibold">{studio.name}</span>
           </Link>
+
+          <div className="mb-4 px-1">{locationSwitcher("w-full")}</div>
 
           <SidebarNav items={navFor(user.role)} />
 
