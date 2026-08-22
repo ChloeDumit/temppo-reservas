@@ -16,6 +16,17 @@ export const routing = defineRouting({
    * explicit and portable across hosts.
    */
   localePrefix: "always",
+  /**
+   * The browser's language does not decide.
+   *
+   * Accept-Language negotiation sent anyone with an English-configured browser
+   * to /en, which in this market is a great many people who nonetheless speak
+   * Spanish and arrived from a Spanish page. An unprefixed URL now always
+   * lands on Spanish, and the ES/EN switch stays one tap away — it writes the
+   * locale into the path, so choosing English still works and still sticks for
+   * as long as the visitor stays on prefixed links.
+   */
+  localeDetection: false,
 });
 
 /**
