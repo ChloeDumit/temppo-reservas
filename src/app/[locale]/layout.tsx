@@ -36,8 +36,8 @@ const body = Karla({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reservas.temppo.uy";
 
 const description =
-  "Software de reservas y gestión para estudios. Cupos fijos, packs y lista de espera, " +
-  "con precio fijo por estudio y sin costo por alumno.";
+  "Software de reservas y gestión para estudios. Cupos fijos, packs, lista de espera, " +
+  "control de asistencia y registro de pagos.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

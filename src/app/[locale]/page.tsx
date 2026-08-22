@@ -3,18 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { Brand } from "@/components/brand";
 import { Icon } from "@/components/app/icon";
 import { buttonClass } from "@/components/ui/button";
-import { BILLING_UI_ENABLED, PAID_PLANS } from "@/lib/billing/plans";
-import { planPrices } from "@/lib/billing";
-import { PLATFORM_CURRENCY } from "@/lib/billing/plans";
-import { formatMoney } from "@/lib/money";
 import { whatsappLink } from "@/lib/payment-code";
-
-/*
-  Prices are read rather than hardcoded, so changing one in the platform console
-  changes the public page too. Hourly is far more often than a price moves and
-  keeps the most-visited page off the database on every hit.
-*/
-export const revalidate = 3600;
 
 export default async function LandingPage({
   params,
@@ -24,7 +13,6 @@ export default async function LandingPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("marketing");
-  const tb = await getTranslations("billing");
 
   const pain = [t("pain1"), t("pain2"), t("pain3"), t("pain4")];
 
@@ -50,16 +38,7 @@ export default async function LandingPage({
     { q: t("faq2Q"), a: t("faq2A") },
     { q: t("faq3Q"), a: t("faq3A") },
     { q: t("faq4Q"), a: t("faq4A") },
-    { q: t("faq5Q"), a: t("faq5A") },
   ];
-
-  /*
-    Real numbers only. While billing is still switched off the prices in the
-    code are placeholders, and publishing those would be worse than publishing
-    nothing — so the page states the pricing model and holds back the figures
-    until the same flag that opens billing to studios is turned on.
-  */
-  const prices = BILLING_UI_ENABLED ? await planPrices() : null;
 
   const phone = process.env.TEMPPO_WHATSAPP;
   const whatsapp = phone ? whatsappLink(phone, t("whatsappMessage")) : null;
@@ -259,44 +238,6 @@ export default async function LandingPage({
                   <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{cap.body}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ----------------------------------------------------------- pricing */}
-        <section id="precios" className="border-y border-line bg-sunken">
-          <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-lg text-balance text-2xl sm:text-3xl">{t("priceTitle")}</h2>
-            <p className="mt-4 max-w-xl text-ink-soft">{t("priceBody")}</p>
-
-            {prices && (
-              <>
-                <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                  {PAID_PLANS.map((plan) => (
-                    <article
-                      key={plan}
-                      className="rounded-[var(--radius-lg)] border border-line bg-surface p-6"
-                    >
-                      <h3 className="font-display text-xl">{tb(`plan.${plan}`)}</h3>
-                      <p className="mt-1 text-sm text-ink-soft">{tb(`planBlurb.${plan}`)}</p>
-                      <p className="mt-5 font-display text-3xl tabular-nums text-accent">
-                        {formatMoney(prices[plan], PLATFORM_CURRENCY, locale)}
-                      </p>
-                      <p className="text-xs uppercase tracking-widest text-muted">
-                        {t("pricePerMonth")}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-                <p className="mt-5 text-sm text-muted">{t("priceEverything")}</p>
-              </>
-            )}
-
-            <div className="mt-9 flex flex-wrap items-center gap-x-4 gap-y-3">
-              <Link href="/register" className={buttonClass("primary", "md")}>
-                {t("ctaPrimary")}
-              </Link>
-              <span className="text-sm text-muted">{t("trialNote")}</span>
             </div>
           </div>
         </section>
