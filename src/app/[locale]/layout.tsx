@@ -36,8 +36,8 @@ const body = Karla({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reservas.temppo.uy";
 
 const description =
-  "Cupos fijos, packs y lista de espera para estudios de pilates, yoga y fitness. " +
-  "Precio fijo por estudio, sin costo por alumno.";
+  "Sistema de reservas y gestión para estudios de pilates, yoga, entrenamiento funcional " +
+  "y danza. Cupos fijos, packs y lista de espera. Precio fijo por estudio, sin costo por alumno.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -47,11 +47,14 @@ export const metadata: Metadata = {
   },
   description,
   keywords: [
-    "software gestión estudio pilates",
-    "sistema de reservas pilates",
-    "reservas yoga Uruguay",
-    "cupos fijos pilates",
-    "agenda para estudios de pilates",
+    "software de gestión para estudios",
+    "sistema de reservas de clases",
+    "gestión de estudios de pilates",
+    "software para estudios de yoga",
+    "reservas para entrenamiento funcional",
+    "agenda para estudios de danza",
+    "cupos fijos",
+    "Uruguay",
   ],
   openGraph: {
     type: "website",
