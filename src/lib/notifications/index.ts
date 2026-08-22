@@ -89,3 +89,50 @@ export async function notifyOwners(
     });
   }
 }
+
+/**
+ * Tells whoever runs the platform, not the studio.
+ *
+ * Reads the admins out of the database rather than an address in the
+ * environment: the people who can act on a signup are exactly the people the
+ * console lets in, and keeping the two in one place means granting admin also
+ * grants the alerts. OPS_EMAIL still works, and is the only recipient before
+ * the first admin exists.
+ *
+ * `studioId` is the studio the news is *about* — the notification log is
+ * tenant-scoped, and this is the tenant it concerns.
+ */
+export async function notifyPlatformAdmins(
+  studioId: string,
+  payload: Omit<NotificationPayload, "studioId" | "to">,
+): Promise<void> {
+  for (const to of await platformAdminRecipients()) {
+    /*
+      Deliberately not notifyPreferred: a push subscription belongs to a
+      browser signed into a studio, and this goes to a person wearing their
+      platform hat. Email reaches them wherever they are.
+    */
+    await notify({ ...payload, studioId, to });
+  }
+}
+
+/**
+ * Who counts as "whoever runs the platform" right now.
+ *
+ * Separate from the sending so it can be checked without a live mail
+ * transport: with an API key configured this really does send, and a test that
+ * posts to Resend to prove who would have received something is a test that
+ * bounces mail at real addresses.
+ */
+export async function platformAdminRecipients(): Promise<string[]> {
+  const admins = await db.user.findMany({
+    where: { isPlatformAdmin: true, isActive: true },
+    select: { email: true },
+  });
+
+  const inbox = process.env.OPS_EMAIL;
+  // An account signed in by cédula has no address to send to.
+  const addresses = admins.map((a) => a.email).filter((email): email is string => Boolean(email));
+
+  return [...new Set([...addresses, ...(inbox ? [inbox] : [])])];
+}

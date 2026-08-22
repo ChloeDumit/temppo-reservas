@@ -16,7 +16,7 @@ import {
 import { MAGIC_LINK_TTL_MINUTES } from "@/lib/auth/constants";
 import { uniqueSlug } from "@/lib/slug";
 import { normalizeDocumentId, PIN_MIN_LENGTH, PIN_MAX_LENGTH } from "@/lib/auth/document";
-import { notify } from "@/lib/notifications";
+import { notify, notifyPlatformAdmins } from "@/lib/notifications";
 import { recordAudit } from "@/lib/audit";
 import { localePath } from "@/i18n/routing";
 
@@ -244,20 +244,27 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     relatedId: user.studioId,
   });
 
-  // Platform-level heads-up: there is no super-admin in the schema, so signups
-  // are invisible unless they are pushed somewhere off the tenant.
-  const opsEmail = process.env.OPS_EMAIL;
-  if (opsEmail) {
-    await notify({
-      studioId: user.studioId,
-      to: opsEmail,
-      template: "signup_ops",
-      subject: `Nueva cuenta — ${studioName}`,
-      body: `${name} <${email}> creó ${studioName}.\n\nSlug: ${slug}\nIdioma: ${locale}\nPrueba hasta: ${trialEndsAt.toISOString().slice(0, 10)}`,
-      relatedType: "Studio",
-      relatedId: user.studioId,
-    });
-  }
+  /*
+    Platform-level heads-up. A signup is invisible from inside the tenant, and
+    the first hours after one are when a studio is most worth a phone call —
+    so this goes to everyone who can open the console, with a link straight to
+    the studio's record there.
+  */
+  await notifyPlatformAdmins(user.studioId, {
+    template: "signup_ops",
+    subject: `Nueva cuenta — ${studioName}`,
+    body: [
+      `${name} <${email}> creó ${studioName}.`,
+      "",
+      `Slug: ${slug}`,
+      `Idioma: ${locale}`,
+      `Prueba hasta: ${trialEndsAt.toISOString().slice(0, 10)}`,
+      "",
+      `${base}${localePath(locale, `/admin/studios/${user.studioId}`)}`,
+    ].join("\n"),
+    relatedType: "Studio",
+    relatedId: user.studioId,
+  });
 
   redirect(localePath(locale, "/dashboard"));
 }
