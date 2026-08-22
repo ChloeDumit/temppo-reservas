@@ -8,6 +8,8 @@ import { createRequire } from "node:module";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+const STUDIO_TZ = "America/Montevideo";
+
 const req = createRequire(import.meta.url);
 const serverOnlyPath = req.resolve("server-only");
 req.cache[serverOnlyPath] = {
@@ -37,6 +39,7 @@ const SLUG = "verify-birthday";
 async function main() {
   const { bookClass, creditsRemaining } = await import("../src/lib/booking");
   const { sendDueReminders } = await import("../src/lib/reminders");
+  const { inZone } = await import("../src/lib/dates");
 
   await db.studio.deleteMany({ where: { slug: SLUG } });
 
@@ -44,7 +47,7 @@ async function main() {
     data: {
       name: "Birthday Scratch",
       slug: SLUG,
-      timezone: "America/Montevideo",
+      timezone: STUDIO_TZ,
       cancellationCutoffHours: 6,
       bookingOpensDaysAhead: 30,
     },
@@ -76,12 +79,18 @@ async function main() {
     return user.studentProfile!;
   };
 
+  /*
+    Built from the calendar the studio is on, not the machine's. A birthday is
+    "today" in Montevideo, and from 21:00 there it is already tomorrow in UTC —
+    a fixture built from UTC parts spent every evening looking for a birthday
+    the studio had not reached yet, and failed for three hours a day.
+  */
+  const there = inZone(now, STUDIO_TZ);
+
   // Same day and month as today, thirty years back.
-  const birthday = new Date(
-    Date.UTC(now.getUTCFullYear() - 30, now.getUTCMonth(), now.getUTCDate()),
-  );
+  const birthday = new Date(Date.UTC(there.getFullYear() - 30, there.getMonth(), there.getDate()));
   // Deliberately not today.
-  const otherDay = new Date(Date.UTC(1990, now.getUTCMonth(), now.getUTCDate() === 1 ? 2 : 1));
+  const otherDay = new Date(Date.UTC(1990, there.getMonth(), there.getDate() === 1 ? 2 : 1));
 
   const birthdayGirl = await mkStudent("birthday@verify.test", birthday);
   const ordinary = await mkStudent("ordinary@verify.test", otherDay);

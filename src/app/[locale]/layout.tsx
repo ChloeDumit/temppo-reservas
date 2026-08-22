@@ -28,13 +28,44 @@ const body = Karla({
   display: "swap",
 });
 
+/*
+  Absolute URLs for Open Graph. Without a base, a shared link renders with no
+  image at all — and this gets shared into WhatsApp groups of studio owners,
+  which is a channel worth more than any ad.
+*/
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reservas.temppo.uy";
+
+const description =
+  "Cupos fijos, packs y lista de espera para estudios de pilates, yoga y fitness. " +
+  "Precio fijo por estudio, sin costo por alumno.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "TEMPPO Reservas",
+    default: "TEMPPO Reservas — cupos fijos, packs y lista de espera",
     template: "%s · TEMPPO Reservas",
   },
-  description:
-    "Gestión de reservas, alumnos y pagos para estudios de pilates, yoga y fitness.",
+  description,
+  keywords: [
+    "software gestión estudio pilates",
+    "sistema de reservas pilates",
+    "reservas yoga Uruguay",
+    "cupos fijos pilates",
+    "agenda para estudios de pilates",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "TEMPPO Reservas",
+    title: "TEMPPO Reservas — cupos fijos, packs y lista de espera",
+    description,
+    images: [{ url: "/temppo-reservas-poster.jpg", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TEMPPO Reservas",
+    description,
+    images: ["/temppo-reservas-poster.jpg"],
+  },
   applicationName: "TEMPPO Reservas",
   // Lets iOS run the installed app standalone, like a native one.
   appleWebApp: {

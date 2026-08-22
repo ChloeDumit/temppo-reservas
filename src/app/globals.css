@@ -267,3 +267,29 @@
     .pressable:active { transform: none; }
   }
 }
+
+/*
+  The waitlist sequence on the landing page: three steps that arrive in order.
+  Animating *from* hidden rather than to it — an element whose resting state is
+  invisible disappears entirely wherever the animation does not run.
+*/
+@keyframes seq-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.seq-step {
+  animation: seq-in 520ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seq-step {
+    animation: none;
+  }
+}
