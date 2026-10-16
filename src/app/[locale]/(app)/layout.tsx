@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
+import { brandByKey, brandOverrideAllowed, getBrand } from "@/lib/brand/server";
+import { appUrlFor } from "@/lib/brand/url";
 import { accentVars } from "@/lib/color";
 import { Brand, BrandMark } from "@/components/brand";
 import { SidebarNav, MobileTabBar } from "@/components/app/sidebar-nav";
@@ -45,8 +48,17 @@ export default async function AppLayout({
     />
   );
 
-  const { primary, overflow } = splitNav(user.role);
-  const home = user.role === "STUDENT" ? "/my" : "/dashboard";
+  const { primary, overflow } = splitNav(user.role, studio.vertical);
+  const beauty = studio.vertical === "APPOINTMENTS";
+  const home = user.role === "STUDENT" ? (beauty ? "/appointments" : "/my") : beauty ? "/agenda" : "/dashboard";
+
+  // A studio lives on its own brand's domain. Signed in on the other one — an
+  // old bookmark, a shared device — send them home rather than dress one
+  // product in the other's colours.
+  const brand = await getBrand();
+  if (brand.key !== brandByKey(studio.brand).key && !brandOverrideAllowed()) {
+    redirect(`${appUrlFor(studio)}/${locale}${home}`);
+  }
 
   const StudioAvatar = () =>
     studio.logoUrl ? (
@@ -85,7 +97,7 @@ export default async function AppLayout({
 
           <div className="mb-4 px-1">{locationSwitcher("w-full")}</div>
 
-          <SidebarNav items={navFor(user.role)} />
+          <SidebarNav items={navFor(user.role, studio.vertical)} />
 
           <div className="mt-auto space-y-3 pt-4">
             <div className="px-3">

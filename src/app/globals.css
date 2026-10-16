@@ -124,6 +124,23 @@
   }
 
   /*
+    The beauty brand: a rose clay instead of terracotta, on a cooler blush
+    paper. Same structure, so every screen works unchanged; a studio's own
+    accent still wins inside the app.
+  */
+  [data-brand="beauty"] {
+    --color-paper: #fbf7f8;
+    --color-blush: #f7ecef;
+    --color-sunken: #f3eaed;
+    --color-accent-ink: #3b1622;
+  }
+  [data-brand="beauty"] .accent-scope {
+    --color-accent: var(--studio-accent, #b5536f);
+    --color-accent-hover: var(--studio-accent-hover, #973f59);
+    --color-accent-soft: var(--studio-accent-soft, #f8e8ed);
+  }
+
+  /*
     Cards sit on the page with a warm lift rather than a hard outline. The
     border is barely there — it only stops white-on-white from dissolving.
   */

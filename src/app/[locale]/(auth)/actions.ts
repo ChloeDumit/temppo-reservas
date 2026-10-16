@@ -19,6 +19,9 @@ import { normalizeDocumentId, PIN_MIN_LENGTH, PIN_MAX_LENGTH } from "@/lib/auth/
 import { notify, notifyPlatformAdmins } from "@/lib/notifications";
 import { recordAudit } from "@/lib/audit";
 import { localePath } from "@/i18n/routing";
+import { getBrand } from "@/lib/brand/server";
+import { appUrlFor } from "@/lib/brand/url";
+import { seedAppointmentStudio } from "@/lib/appointments/seed";
 
 export type AuthState = { error?: string; sent?: boolean } | null;
 
@@ -192,6 +195,11 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   // Hashed before the transaction — bcrypt is slow and would hold the tx open.
   const passwordHash = await hashPassword(password);
 
+  // The domain someone signs up on decides what they are buying: a class
+  // studio on TEMPPO, an appointment business on the beauty brand.
+  const brand = await getBrand();
+  const appointments = brand.vertical === "APPOINTMENTS";
+
   const user = await db.$transaction(async (tx) => {
     const studio = await tx.studio.create({
       data: {
@@ -200,12 +208,15 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
         locale,
         plan: "TRIAL",
         trialEndsAt,
+        brand: brand.key,
+        vertical: brand.vertical,
+        accentColor: brand.accent,
         // Every new studio gets a default location so the schedule works immediately.
         locations: { create: { name: studioName } },
       },
     });
 
-    return tx.user.create({
+    const owner = await tx.user.create({
       data: {
         studioId: studio.id,
         email,
@@ -216,6 +227,13 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
         locale,
       },
     });
+
+    // An appointment business is usually one person: she is the first
+    // professional, open Monday to Saturday until she says otherwise, so the
+    // booking page works the moment she adds a service.
+    if (appointments) await seedAppointmentStudio(tx, studio.id, owner.id);
+
+    return owner;
   });
 
   await createSession(user.id, await requestMeta());
@@ -229,15 +247,18 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     metadata: { studioName, slug },
   });
 
-  const base = process.env.APP_URL || "http://localhost:3000";
+  const base = appUrlFor({ brand: brand.key });
 
   await notify({
     studioId: user.studioId,
     to: user.email,
     template: "welcome",
-    subject: `${studioName} — TEMPPO Reservas`,
-    body:
-      locale === "en"
+    subject: `${studioName} — ${brand.name}`,
+    body: appointments
+      ? locale === "en"
+        ? `Hi ${name}, ${studioName} is ready on ${brand.name}.\n\nYour trial runs until ${trialEndsAt.toLocaleDateString("en")}. Add your services and opening hours:\n${base}${localePath(locale, "/services")}\n\nYour booking page is ${base}${localePath(locale, `/b/${slug}`)} — put it in your Instagram bio and your WhatsApp status.`
+        : `Hola ${name}, ${studioName} ya está listo en ${brand.name}.\n\nTu prueba va hasta el ${trialEndsAt.toLocaleDateString("es")}. Cargá tus servicios y tus horarios:\n${base}${localePath(locale, "/services")}\n\nTu página de reservas es ${base}${localePath(locale, `/b/${slug}`)} — ponela en la bio de Instagram y en tu estado de WhatsApp.`
+      : locale === "en"
         ? `Hi ${name}, ${studioName} is ready on TEMPPO Reservas.\n\nYour trial runs until ${trialEndsAt.toLocaleDateString("en")}. Start by adding your classes and packs:\n${base}${localePath(locale, "/dashboard")}\n\nYour public booking page is ${base}${localePath(locale, `/t/${slug}`)} — share it wherever your students find you.`
         : `Hola ${name}, ${studioName} ya está listo en TEMPPO Reservas.\n\nTu prueba va hasta el ${trialEndsAt.toLocaleDateString("es")}. Empezá cargando tus clases y packs:\n${base}${localePath(locale, "/dashboard")}\n\nTu página pública de reservas es ${base}${localePath(locale, `/t/${slug}`)} — compartila donde te encuentren tus alumnas.`,
     relatedType: "Studio",
@@ -252,7 +273,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   */
   await notifyPlatformAdmins(user.studioId, {
     template: "signup_ops",
-    subject: `Nueva cuenta — ${studioName}`,
+    subject: `Nueva cuenta — ${studioName}${appointments ? ` (${brand.name})` : ""}`,
     body: [
       `${name} <${email}> creó ${studioName}.`,
       "",

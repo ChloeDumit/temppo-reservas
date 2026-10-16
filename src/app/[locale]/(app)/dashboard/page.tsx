@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { ADMIN_ROLES, requireStaff } from "@/lib/auth/guards";
 import { BILLING_UI_ENABLED, billingWarning, subscriptionFor } from "@/lib/billing";
@@ -22,6 +23,9 @@ export default async function DashboardPage({
 
   const user = await requireStaff();
   const studio = user.studio;
+  // Everywhere that says "home" means the dashboard; for an appointment
+  // business home is the agenda.
+  if (studio.vertical === "APPOINTMENTS") redirect({ href: "/agenda", locale });
   const t = await getTranslations("dashboard");
   const ts = await getTranslations("schedule");
   const tb = await getTranslations("billing");

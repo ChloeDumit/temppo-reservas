@@ -51,7 +51,12 @@
     "account": "Account",
     "availability": "Spots",
     "replayTour": "Replay the tour",
-    "billing": "Subscription"
+    "billing": "Subscription",
+    "agenda": "Agenda",
+    "clients": "Clients",
+    "services": "Services",
+    "hours": "Hours",
+    "myAppointments": "My appointments"
   },
   "auth": {
     "loginTitle": "Log in",

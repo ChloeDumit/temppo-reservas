@@ -2,13 +2,18 @@ import "server-only";
 import { db } from "@/lib/db";
 import type { NotificationPayload, NotificationTransport } from "./types";
 import { renderEmail, type EmailBranding } from "./email-template";
+import { brandByKey } from "@/lib/brand/registry";
+import { appUrlFor } from "@/lib/brand/url";
 
 const FALLBACK: EmailBranding = {
   studioName: "TEMPPO Reservas",
   accentColor: "#E07A5F",
   logoUrl: null,
   locale: "es",
+  productName: "TEMPPO Reservas",
 };
+
+type Sender = EmailBranding & { from: string; appUrl: string };
 
 /**
  * Looks up the studio so its own name, colour and logo carry into the email.
@@ -18,23 +23,34 @@ const FALLBACK: EmailBranding = {
  * studio cannot dress up itself. A failed lookup falls back to TEMPPO's own
  * branding rather than blocking the send.
  */
-async function brandingFor(studioId: string): Promise<EmailBranding> {
+async function brandingFor(studioId: string): Promise<Sender> {
+  const fallback: Sender = {
+    ...FALLBACK,
+    from: brandByKey("temppo").emailFrom,
+    appUrl: appUrlFor({ brand: "temppo" }),
+  };
   try {
     const studio = await db.studio.findUnique({
       where: { id: studioId },
-      select: { name: true, accentColor: true, logoUrl: true, locale: true },
+      select: { name: true, accentColor: true, logoUrl: true, locale: true, brand: true },
     });
 
-    if (!studio) return FALLBACK;
+    if (!studio) return fallback;
+    // The sender and the footer follow the studio's brand, not whichever
+    // host triggered the send — a cron job has no host at all.
+    const brand = brandByKey(studio.brand);
 
     return {
       studioName: studio.name,
-      accentColor: studio.accentColor || FALLBACK.accentColor,
+      accentColor: studio.accentColor || brand.accent,
       logoUrl: studio.logoUrl,
       locale: studio.locale,
+      productName: brand.name,
+      from: brand.emailFrom,
+      appUrl: appUrlFor(studio),
     };
   } catch {
-    return FALLBACK;
+    return fallback;
   }
 }
 
@@ -46,8 +62,6 @@ export const emailTransport: NotificationTransport = {
   channel: "EMAIL",
   async send(payload: NotificationPayload) {
     const apiKey = process.env.RESEND_API_KEY;
-    const from = process.env.EMAIL_FROM || "TEMPPO Reservas <no-reply@reservas.temppo.uy>";
-    const appUrl = process.env.APP_URL || "http://localhost:3000";
 
     // In development always echo the message to the console, even when a real
     // key is configured: a magic link is far easier to follow from the terminal
@@ -59,8 +73,9 @@ export const emailTransport: NotificationTransport = {
       if (!apiKey) return { ok: true };
     }
 
-    const subject = payload.subject ?? "TEMPPO Reservas";
     const branding = await brandingFor(payload.studioId);
+    const { from, appUrl } = branding;
+    const subject = payload.subject ?? branding.productName ?? "TEMPPO Reservas";
 
     try {
       const res = await fetch("https://api.resend.com/emails", {
