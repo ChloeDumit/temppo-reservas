@@ -3,6 +3,7 @@ import { ensureInstances } from "@/lib/classes";
 import { db } from "@/lib/db";
 import { notifyPreferred, notifyOwners } from "@/lib/notifications";
 import { sweepExpiredOffers } from "@/lib/waitlist";
+import { expireHolds, sendAppointmentReminders, sendRebookNudges } from "@/lib/appointments/cron";
 import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
 
 /**
@@ -19,8 +20,17 @@ export async function sendDueReminders(now = new Date()) {
   let sent = 0;
   let classes = 0;
   let birthdays = 0;
+  const appointments = { expired: 0, reminded: 0, nudged: 0 };
 
   for (const studio of studios) {
+    // Appointment businesses have no classes, waitlists or birthdays to keep.
+    if (studio.vertical === "APPOINTMENTS") {
+      appointments.expired += await expireHolds(studio, now);
+      appointments.reminded += await sendAppointmentReminders(studio, now);
+      appointments.nudged += await sendRebookNudges(studio, now);
+      continue;
+    }
+
     /*
       Keep every studio calendar current here rather than on page views. This
       runs on the same 15-minute schedule as the generation TTL, so by the time
@@ -93,7 +103,7 @@ export async function sendDueReminders(now = new Date()) {
     }
   }
 
-  return { studios: studios.length, classes, sent, birthdays };
+  return { studios: studios.length, classes, sent, birthdays, appointments };
 }
 
 type BirthdayStudio = { id: string; name: string; timezone: string; locale: string };
