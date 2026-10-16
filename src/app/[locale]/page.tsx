@@ -4,6 +4,8 @@ import { Brand } from "@/components/brand";
 import { Icon } from "@/components/app/icon";
 import { buttonClass } from "@/components/ui/button";
 import { whatsappLink } from "@/lib/payment-code";
+import { getBrand } from "@/lib/brand/server";
+import { BeautyLanding } from "@/components/landing/beauty";
 
 export default async function LandingPage({
   params,
@@ -12,6 +14,11 @@ export default async function LandingPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  // The same address serves two products; the domain decides which front door.
+  const brand = await getBrand();
+  if (brand.key === "beauty") return <BeautyLanding brand={brand} />;
+
   const t = await getTranslations("marketing");
 
   const pain = [t("pain1"), t("pain2"), t("pain3"), t("pain4")];

@@ -128,7 +128,9 @@ export function BeautyWordmark({
   return (
     <span
       className={cn(
-        "font-brand text-lg leading-none",
+        "font-brand leading-none",
+        // A size passed in replaces the default rather than fighting it.
+        !/\btext-(xs|sm|base|lg|xl|\dxl)\b/.test(className ?? "") && "text-lg",
         subdued ? "text-muted" : "text-accent",
         className,
       )}

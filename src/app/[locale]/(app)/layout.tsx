@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { brandByKey, brandOverrideAllowed, getBrand } from "@/lib/brand/server";
 import { appUrlFor } from "@/lib/brand/url";
 import { accentVars } from "@/lib/color";
-import { Brand, BrandMark } from "@/components/brand";
+import { BeautyWordmark, Brand, BrandMark } from "@/components/brand";
 import { SidebarNav, MobileTabBar } from "@/components/app/sidebar-nav";
 import { LocaleSwitch } from "@/components/app/locale-switch";
 import { LogoutButton } from "@/components/app/logout-button";
@@ -64,6 +64,11 @@ export default async function AppLayout({
     studio.logoUrl ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={studio.logoUrl} alt="" className="size-8 rounded-lg object-contain" />
+    ) : beauty ? (
+      // No TEMPPO mascot on the other brand: the studio's initial instead.
+      <span className="grid size-8 place-items-center rounded-lg bg-accent-soft font-display text-sm font-semibold text-accent-ink">
+        {studio.name.charAt(0).toUpperCase()}
+      </span>
     ) : (
       <BrandMark className="rounded-lg" />
     );
@@ -109,7 +114,7 @@ export default async function AppLayout({
               <LocaleSwitch />
             </div>
             <div className="px-3 pt-2">
-              <Brand subdued className="text-xs" />
+              {beauty ? <BeautyWordmark name={brandByKey(studio.brand).name} subdued className="text-sm" /> : <Brand subdued className="text-xs" />}
             </div>
           </div>
         </aside>

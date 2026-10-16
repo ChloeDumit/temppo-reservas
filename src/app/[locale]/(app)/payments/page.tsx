@@ -273,7 +273,7 @@ export default async function PaymentsPage({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                    <th className="px-5 py-2 font-medium">{t("student")}</th>
+                    <th className="px-5 py-2 font-medium">{t(beauty ? "client" : "student")}</th>
                     <th className="px-4 py-2 font-medium">{t("amount")}</th>
                     <th className="px-4 py-2 font-medium">{t("method")}</th>
                     <th className="px-4 py-2 font-medium">{t("date")}</th>

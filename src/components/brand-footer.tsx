@@ -13,3 +13,13 @@ export async function BrandFooter() {
     </footer>
   );
 }
+
+/** The product's own mark, in whichever brand the request is served as. */
+export async function ProductBrand({ subdued, className }: { subdued?: boolean; className?: string }) {
+  const brand = await getBrand();
+  return brand.key === "temppo" ? (
+    <Brand subdued={subdued} className={className} />
+  ) : (
+    <BeautyWordmark name={brand.name} subdued={subdued} className={className ?? "text-xl"} />
+  );
+}
