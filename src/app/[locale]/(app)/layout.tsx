@@ -121,8 +121,9 @@ export default async function AppLayout({
         </main>
       </div>
 
-      {/* Runs once on first sign-in; replayable from the account sheet. */}
-      <GuidedTour role={user.role} alreadySeen={Boolean(user.tourSeenAt)} />
+      {/* Runs once on first sign-in; replayable from the account sheet. The
+          tour walks through classes and packs, so appointment businesses skip it. */}
+      {!beauty && <GuidedTour role={user.role} alreadySeen={Boolean(user.tourSeenAt)} />}
 
       <MobileTabBar
         primary={primary}
