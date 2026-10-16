@@ -13,6 +13,14 @@ datasource db {
 
 // ---------------------------------------------------------------- tenancy
 
+/// What a studio sells. Classes are the original group-capacity model; appointments
+/// are 1:1 services of variable length (nails, lashes, hair) and live in their own
+/// tables so neither side has to carry the other's rules.
+enum Vertical {
+  CLASSES
+  APPOINTMENTS
+}
+
 enum Plan {
   TRIAL
   ESSENTIAL
@@ -61,9 +69,40 @@ model Studio {
   /// skip the whole job without spending a single query to find out.
   instancesSyncedAt DateTime?
 
+  /// Which product the studio signed up to, and which brand (domain, name,
+  /// colours, sender) it belongs to. Fixed at signup by the host it came from.
+  vertical Vertical @default(CLASSES)
+  brand    String   @default("temppo")
+
+  // Appointment rules — ignored by class studios.
+  /// How long an unpaid booking holds its slot before it is released.
+  holdMinutes       Int     @default(15)
+  /// The soonest a client may book online, in minutes from now.
+  minNoticeMinutes  Int     @default(120)
+  /// Granularity of offered start times.
+  slotStepMinutes   Int     @default(15)
+  /// Whether an in-time cancellation gives the deposit back. When false the
+  /// deposit is kept as credit towards the next visit instead.
+  depositRefundable Boolean @default(false)
+
+  /// LINK: staff send reminders from their own WhatsApp (wa.me). CLOUD: the
+  /// platform sends them automatically, within a monthly quota.
+  waMode           String    @default("LINK")
+  waMonthlyQuota   Int       @default(0)
+  waSentThisPeriod Int       @default(0)
+  waPeriodStart    DateTime?
+
   onboardingCompletedAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+
+  serviceCategories ServiceCategory[]
+  services          Service[]
+  addOns            AddOn[]
+  workingHours      WorkingHours[]
+  timeOff           TimeOff[]
+  appointments      Appointment[]
+  payouts           StudioPayout[]
 
   locations         Location[]
   users             User[]
@@ -158,12 +197,19 @@ model User {
   approvedPayments   Payment[]           @relation("PaymentApprover")
   pushSubscriptions  PushSubscription[]
 
+  // As a professional on an appointment studio.
+  servicesOffered   ServiceStaff[]
+  workingHours      WorkingHours[]
+  timeOff           TimeOff[]
+  staffAppointments Appointment[]  @relation("AppointmentStaff")
+
   // The same person can train at several studios, so identity is scoped to
   // the studio rather than global. One row per person per studio, which is
   // also what makes their history (packs, no-shows, notes) studio-local.
   @@unique([studioId, email])
   @@unique([studioId, documentId])
   @@index([studioId, role])
+  @@index([studioId, phone])
   @@index([email])
   @@index([documentId])
 }
@@ -178,6 +224,10 @@ model StudentProfile {
   emergencyContact String?
   emergencyPhone   String?
   notes            String?
+  /// Appointment studios: what a technician must know before touching
+  /// someone — latex, acetone, lash glue.
+  allergies        String?
+  lastVisitAt      DateTime?
 
   // Rolling counter maintained on attendance marking; reset by admins.
   noShowCount    Int     @default(0)
@@ -196,6 +246,7 @@ model StudentProfile {
   payments          Payment[]
   leads             Lead[]
   recurringBookings RecurringBooking[]
+  appointments      Appointment[]
 }
 
 model InstructorProfile {
@@ -506,6 +557,16 @@ model Payment {
   studentPackId String?
   studentPack   StudentPack? @relation(fields: [studentPackId], references: [id], onDelete: SetNull)
 
+  /// A deposit (seña) for an appointment rather than a pack purchase.
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  /// Set once the platform has passed this money on to the studio. Only
+  /// online deposits are collected by the platform; transfers and cash go
+  /// straight to the studio and never appear in a payout.
+  payoutId String?
+  payout   StudioPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
   amountCents Int
   currency    String        @default("UYU")
   method      PaymentMethod
@@ -534,6 +595,8 @@ model Payment {
   @@index([studioId, status])
   @@index([studentId])
   @@index([studioId, shortCode])
+  @@index([appointmentId])
+  @@index([studioId, payoutId])
 }
 
 enum TransactionType {
@@ -565,9 +628,8 @@ model Transaction {
 
 enum NotificationChannel {
   EMAIL
-  /// Retired: nothing sends over this any more. The value stays because
-  /// existing log rows reference it, and Prisma cannot read a row whose
-  /// enum value it does not know.
+  /// Automatic WhatsApp through the Cloud API, a paid add-on for appointment
+  /// studios. Class studios never send on it.
   WHATSAPP
 }
 
@@ -805,4 +867,262 @@ model PlanPrice {
   amountCents Int
   updatedAt   DateTime @updatedAt
   updatedById String?
+}
+
+// ------------------------------------------------------------ appointments
+
+model ServiceCategory {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  name     String
+  position Int    @default(0)
+
+  services Service[]
+
+  @@index([studioId, position])
+}
+
+enum DepositType {
+  NONE
+  PERCENT
+  FIXED
+}
+
+model Service {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  name        String
+  description String?
+  durationMin Int
+  priceCents  Int
+
+  depositType  DepositType @default(NONE)
+  /// Percent (0–100) for PERCENT, cents for FIXED.
+  depositValue Int         @default(0)
+
+  /// Prep before and cleanup after. Not shown to the client, but it keeps the
+  /// professional's chair blocked.
+  bufferBeforeMin Int @default(0)
+  bufferAfterMin  Int @default(0)
+
+  /// "Te toca volver": nudge the client this many days after a visit when she
+  /// has not booked again. Null turns it off for this service.
+  rebookAfterDays Int?
+
+  colorHex String?
+  position Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff        ServiceStaff[]
+  addOns       AddOn[]
+  appointments Appointment[]
+
+  @@index([studioId, isActive])
+}
+
+/// Who performs a service, optionally at their own pace or price — a senior
+/// colourist is slower and dearer than a junior one.
+model ServiceStaff {
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     User    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  durationMin Int?
+  priceCents  Int?
+
+  @@id([serviceId, staffId])
+  @@index([staffId])
+}
+
+/// An extra that lengthens and adds to a service: nail art, removal of the old
+/// set. Null serviceId offers it with every service.
+model AddOn {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  name        String
+  durationMin Int     @default(0)
+  priceCents  Int     @default(0)
+  isActive    Boolean @default(true)
+
+  @@index([studioId, isActive])
+}
+
+/// One shift on one weekday. Two rows on the same day make a split shift.
+model WorkingHours {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  staffId  String
+  staff    User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  weekday  Int // 0=Sunday..6=Saturday, studio time
+  startMin Int // minutes since local midnight
+  endMin   Int
+
+  @@index([staffId, weekday])
+  @@index([studioId])
+}
+
+/// A block on the agenda: holidays, a doctor's appointment, lunch. No staffId
+/// closes the whole business.
+model TimeOff {
+  id       String  @id @default(cuid())
+  studioId String
+  studio   Studio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  staffId  String?
+  staff    User?   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([studioId, startsAt])
+  @@index([staffId, startsAt])
+}
+
+enum AppointmentStatus {
+  /// Holding the slot until the deposit arrives or holdExpiresAt passes.
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  LATE_CANCELLED
+  COMPLETED
+  NO_SHOW
+  /// The hold ran out unpaid.
+  EXPIRED
+}
+
+enum AppointmentSource {
+  CLIENT_PUBLIC
+  STAFF
+}
+
+enum DepositStatus {
+  NONE
+  PENDING
+  PAID
+  /// Kept by the studio: a late cancellation or a no-show.
+  FORFEITED
+  /// Owed back to the client. Refunds are settled by hand for now.
+  REFUNDED
+  /// Kept as credit towards a future visit.
+  CREDIT
+}
+
+/// A 1:1 booking with one professional.
+///
+/// Double-booking is prevented in the database, not just in code: the
+/// migration adds an exclusion constraint (appointment_no_overlap) over
+/// (staffId, [startsAt, blockedUntil)) for live statuses. Prisma does not model
+/// it, so it lives only in the migration SQL — do not remove it there.
+model Appointment {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  staffId   String
+  staff     User           @relation("AppointmentStaff", fields: [staffId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    StudentProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  serviceId String?
+  service   Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  /// Snapshot, so renaming or repricing the service leaves history alone.
+  serviceName  String
+  startsAt     DateTime
+  endsAt       DateTime
+  /// endsAt plus the cleanup buffer: when the chair is actually free again.
+  blockedUntil DateTime
+
+  status AppointmentStatus @default(CONFIRMED)
+  source AppointmentSource @default(STAFF)
+
+  priceCents    Int
+  depositCents  Int           @default(0)
+  depositStatus DepositStatus @default(NONE)
+  holdExpiresAt DateTime?
+
+  /// sha256 of the token in the client's manage link.
+  manageTokenHash String @unique
+
+  clientNotes  String?
+  staffNotes   String?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  remindersSentAt DateTime?
+  rebookNudgedAt  DateTime?
+
+  rescheduledFromId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addOns   AppointmentAddOn[]
+  payments Payment[]
+
+  @@index([studioId, startsAt])
+  @@index([staffId, startsAt])
+  @@index([clientId, startsAt])
+  @@index([status, holdExpiresAt])
+}
+
+model AppointmentAddOn {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  addOnId       String?
+
+  name        String
+  durationMin Int
+  priceCents  Int
+
+  @@index([appointmentId])
+}
+
+enum PayoutStatus {
+  PENDING
+  PAID
+}
+
+/// Deposits the platform collected online on a studio's behalf, handed over in
+/// one transfer. The payments it settles point back at it through payoutId.
+model StudioPayout {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  amountCents Int
+  currency    String       @default("UYU")
+  status      PayoutStatus @default(PAID)
+  paidAt      DateTime?
+  /// "transferencia BROU 21/08"
+  reference   String?
+  notes       String?
+  /// Platform admin. Not a relation — User rows are tenant-scoped.
+  createdById String?
+
+  createdAt DateTime @default(now())
+
+  payments Payment[]
+
+  @@index([studioId, createdAt])
 }
