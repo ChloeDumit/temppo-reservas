@@ -40,10 +40,12 @@ const STUDENT_NAV: NavItem[] = [
 ];
 
 /*
-  An appointment business works from its agenda: who is in the chair and
-  when. Nothing about classes, packs or check-in applies.
+  An appointment business starts from its home panel and works from its
+  agenda: who is in the chair and when. Nothing about classes, packs or
+  check-in applies.
 */
 const BEAUTY_STAFF_NAV: NavItem[] = [
+  { href: "/dashboard", label: "home", icon: "grid" },
   { href: "/agenda", label: "agenda", icon: "calendar" },
   { href: "/clients", label: "clients", icon: "users" },
   { href: "/services", label: "services", icon: "spark" },
@@ -54,7 +56,7 @@ const BEAUTY_STAFF_NAV: NavItem[] = [
   { href: "/billing", label: "billing", icon: "card" },
 ];
 
-const BEAUTY_INSTRUCTOR_ALLOWED = ["/agenda", "/clients", "/hours"];
+const BEAUTY_INSTRUCTOR_ALLOWED = ["/dashboard", "/agenda", "/clients", "/hours"];
 
 const BEAUTY_CLIENT_NAV: NavItem[] = [{ href: "/appointments", label: "myAppointments", icon: "calendar" }];
 

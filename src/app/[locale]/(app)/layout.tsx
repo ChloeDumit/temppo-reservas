@@ -50,7 +50,7 @@ export default async function AppLayout({
 
   const { primary, overflow } = splitNav(user.role, studio.vertical);
   const beauty = studio.vertical === "APPOINTMENTS";
-  const home = user.role === "STUDENT" ? (beauty ? "/appointments" : "/my") : beauty ? "/agenda" : "/dashboard";
+  const home = user.role === "STUDENT" ? (beauty ? "/appointments" : "/my") : "/dashboard";
 
   // A studio lives on its own brand's domain. Signed in on the other one — an
   // old bookmark, a shared device — send them home rather than dress one
@@ -80,7 +80,7 @@ export default async function AppLayout({
         Phone header: compact and identity-only. Navigation lives at the
         bottom where the thumb is, so nothing important sits up here.
       */}
-      <header className="sticky top-0 z-20 border-b border-line bg-paper/90 pt-safe backdrop-blur-md lg:hidden">
+      <header className="sticky top-0 z-20 border-b border-line bg-paper/90 pt-safe backdrop-blur-md md:hidden">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <Link href={home} className="pressable flex min-w-0 items-center gap-2.5">
             <StudioAvatar />
@@ -93,33 +93,38 @@ export default async function AppLayout({
         </div>
       </header>
 
-      <div className="lg:flex">
-        <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-5 lg:flex">
-          <Link href={home} className="mb-6 flex items-center gap-2.5 px-2">
+      <div className="md:flex">
+        {/*
+          Tablets get a rail: icons with their names underneath, so the agenda
+          keeps its width in portrait. From desktop width it opens into the
+          full sidebar. Phones keep the bottom tab bar.
+        */}
+        <aside className="sticky top-0 hidden h-dvh w-[5.5rem] shrink-0 flex-col overflow-y-auto border-r border-line bg-surface px-2 py-5 md:flex lg:w-60 lg:px-3">
+          <Link href={home} className="mb-6 flex items-center justify-center gap-2.5 px-2 lg:justify-start" title={studio.name}>
             <StudioAvatar />
-            <span className="truncate text-sm font-semibold">{studio.name}</span>
+            <span className="hidden truncate text-sm font-semibold lg:inline">{studio.name}</span>
           </Link>
 
-          <div className="mb-4 px-1">{locationSwitcher("w-full")}</div>
+          <div className="mb-4 hidden px-1 lg:block">{locationSwitcher("w-full")}</div>
 
           <SidebarNav items={navFor(user.role, studio.vertical)} />
 
           <div className="mt-auto space-y-3 pt-4">
-            <div className="px-3">
+            <div className="hidden px-3 lg:block">
               <p className="truncate text-sm font-medium text-ink">{user.name}</p>
               <p className="truncate text-xs text-muted">{user.email}</p>
             </div>
             <LogoutButton />
-            <div className="px-3 pt-1">
+            <div className="flex justify-center pt-1 lg:block lg:px-3">
               <LocaleSwitch />
             </div>
-            <div className="px-3 pt-2">
+            <div className="hidden px-3 pt-2 lg:block">
               {beauty ? <BeautyWordmark name={brandByKey(studio.brand).name} subdued className="text-sm" /> : <Brand subdued className="text-xs" />}
             </div>
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 pb-tabbar pt-5 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
+        <main className="min-w-0 flex-1 px-4 pb-tabbar pt-5 sm:px-6 md:pb-10 md:pt-6 lg:px-8 lg:pt-8">
           {/* Dismissible, and hides itself once the app is installed. */}
           <InstallPrompt />
           {children}

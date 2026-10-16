@@ -56,7 +56,8 @@
     "clients": "Clientas",
     "services": "Servicios",
     "hours": "Horarios",
-    "myAppointments": "Mis turnos"
+    "myAppointments": "Mis turnos",
+    "home": "Inicio"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -1038,7 +1039,12 @@
     "clientName": "Nombre",
     "clientPhone": "Celular",
     "service": "Servicio",
-    "book": "Agendar"
+    "book": "Agendar",
+    "month": "Mes",
+    "everyone": "Todas",
+    "copy": "Copiar link",
+    "copied": "¡Copiado!",
+    "more": "+{count} más"
   },
   "clients": {
     "title": "Clientas",
@@ -1128,5 +1134,46 @@
     "faq5Q": "¿Puedo seguir anotando turnos que me piden por mensaje?",
     "faq5A": "Sí. Los cargás en tu agenda en segundos y el sistema no te deja superponer dos clientas.",
     "closeTitle": "Probala un mes con tus clientas de verdad."
+  },
+  "home": {
+    "hello": "Hola, {name}",
+    "today": "Hoy",
+    "thisWeek": "Esta semana",
+    "appointments": "{count, plural, =0 {Sin turnos} one {# turno} other {# turnos}}",
+    "pendingDeposit": "{count, plural, one {# espera la seña} other {# esperan la seña}}",
+    "occupancy": "ocupada · {count, plural, one {# turno} other {# turnos}}",
+    "income": "Ingresos del mes",
+    "incomeHint": "Señas y pagos registrados",
+    "toApprove": "Señas por aprobar",
+    "review": "Revisar",
+    "allClear": "Todo al día",
+    "noShows": "Faltas",
+    "thisMonth": "Este mes",
+    "todayTitle": "Turnos de hoy",
+    "openAgenda": "Agenda",
+    "nothingToday": "Hoy no tenés turnos. Buen día para compartir tu link.",
+    "now": "Ahora",
+    "next": "Próximo",
+    "statusPENDING_PAYMENT": "Falta la seña",
+    "statusCOMPLETED": "Vino",
+    "statusNO_SHOW": "No vino",
+    "shortcuts": "Accesos rápidos",
+    "newAppointment": "Nuevo turno",
+    "blockTime": "Bloquear horario",
+    "viewPage": "Ver mi página",
+    "findClient": "Buscar clienta",
+    "shareHint": "Tu link de reservas, para Instagram y WhatsApp:",
+    "copyLink": "Copiar link",
+    "copied": "¡Copiado!",
+    "nextDays": "Próximos 7 días",
+    "week": "Semana",
+    "nothingNextDays": "Nada reservado todavía.",
+    "comeBack": "Para invitar a volver",
+    "comeBackEmpty": "Nadie para invitar por ahora. Aparecen cuando les toca volver según cada servicio.",
+    "lastService": "{service} hace {days} días",
+    "thisMonthTitle": "Este mes",
+    "done": "Realizados",
+    "newClients": "Clientas nuevas",
+    "avgTicket": "Ticket promedio"
   }
 }

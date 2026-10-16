@@ -56,7 +56,8 @@
     "clients": "Clients",
     "services": "Services",
     "hours": "Hours",
-    "myAppointments": "My appointments"
+    "myAppointments": "My appointments",
+    "home": "Home"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -1038,7 +1039,12 @@
     "clientName": "Name",
     "clientPhone": "Mobile",
     "service": "Service",
-    "book": "Book"
+    "book": "Book",
+    "month": "Month",
+    "everyone": "Everyone",
+    "copy": "Copy link",
+    "copied": "Copied!",
+    "more": "+{count} more"
   },
   "clients": {
     "title": "Clients",
@@ -1128,5 +1134,46 @@
     "faq5Q": "Can I still add bookings people send me by message?",
     "faq5A": "Yes. Add them to your agenda in seconds, and it won't let you double-book.",
     "closeTitle": "Try it for a month with your real clients."
+  },
+  "home": {
+    "hello": "Hi, {name}",
+    "today": "Today",
+    "thisWeek": "This week",
+    "appointments": "{count, plural, =0 {No appointments} one {# appointment} other {# appointments}}",
+    "pendingDeposit": "{count, plural, one {# waiting for a deposit} other {# waiting for a deposit}}",
+    "occupancy": "booked · {count, plural, one {# appointment} other {# appointments}}",
+    "income": "Income this month",
+    "incomeHint": "Deposits and recorded payments",
+    "toApprove": "Deposits to approve",
+    "review": "Review",
+    "allClear": "All clear",
+    "noShows": "No-shows",
+    "thisMonth": "This month",
+    "todayTitle": "Today's appointments",
+    "openAgenda": "Agenda",
+    "nothingToday": "No appointments today. A good day to share your link.",
+    "now": "Now",
+    "next": "Next",
+    "statusPENDING_PAYMENT": "Deposit due",
+    "statusCOMPLETED": "Came",
+    "statusNO_SHOW": "No-show",
+    "shortcuts": "Shortcuts",
+    "newAppointment": "New appointment",
+    "blockTime": "Block time",
+    "viewPage": "View my page",
+    "findClient": "Find a client",
+    "shareHint": "Your booking link, for Instagram and WhatsApp:",
+    "copyLink": "Copy link",
+    "copied": "Copied!",
+    "nextDays": "Next 7 days",
+    "week": "Week",
+    "nothingNextDays": "Nothing booked yet.",
+    "comeBack": "To invite back",
+    "comeBackEmpty": "Nobody to invite yet. They show up when each service's cycle comes round.",
+    "lastService": "{service} {days} days ago",
+    "thisMonthTitle": "This month",
+    "done": "Done",
+    "newClients": "New clients",
+    "avgTicket": "Average ticket"
   }
 }
