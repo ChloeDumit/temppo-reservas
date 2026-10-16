@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
@@ -15,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const studio = await db.studio.findUnique({ where: { slug } });
-  if (!studio) return { title: "TEMPPO Reservas" };
+  if (!studio) return {};
   return {
     title: `${studio.name} — clase de prueba`,
     description: `Reservá tu clase de prueba gratis en ${studio.name}.`,
@@ -35,6 +36,8 @@ export default async function TrialPage({
 
   const studio = await db.studio.findUnique({ where: { slug } });
   if (!studio) notFound();
+  // An appointment business has a booking page, not a trial-class form.
+  if (studio.vertical === "APPOINTMENTS") redirect({ href: `/b/${slug}`, locale });
 
   const t = await getTranslations("trial");
   await ensureInstances(studio);

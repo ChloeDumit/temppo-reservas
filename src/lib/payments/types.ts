@@ -4,7 +4,8 @@
  */
 export type CheckoutRequest = {
   studioId: string;
-  studentPackId: string;
+  /** What this pays for, as built by paymentRef() — "pack:…" or "appt:…". */
+  externalReference: string;
   title: string;
   amountCents: number;
   currency: string;
@@ -28,7 +29,7 @@ export type ProviderPayment = {
   providerPaymentId: string;
   status: ProviderPaymentStatus;
   amountCents: number;
-  /** Our StudentPack id, round-tripped through the provider. */
+  /** Our paymentRef(), round-tripped through the provider. */
   externalReference: string | null;
 };
 

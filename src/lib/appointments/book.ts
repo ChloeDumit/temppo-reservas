@@ -2,7 +2,10 @@ import "server-only";
 import { db } from "@/lib/db";
 import { generateToken, hashToken } from "@/lib/auth/tokens";
 import { dateKeyInZone } from "@/lib/dates";
-import type { AppointmentSource, DepositStatus, DepositType } from "@/generated/prisma/enums";
+import type { AppointmentSource, DepositStatus } from "@/generated/prisma/enums";
+import { depositFor } from "./deposit";
+
+export { depositFor };
 import { availabilityQuery, liveAppointmentFilter, type AvailabilityStudio } from "./availability";
 import { isSlotOpen, pickStaff } from "./slots";
 
@@ -34,12 +37,6 @@ export type BookAppointmentResult =
   | { ok: false; code: AppointmentErrorCode };
 
 const MINUTE = 60_000;
-
-export function depositFor(type: DepositType, value: number, priceCents: number) {
-  if (type === "PERCENT") return Math.round((priceCents * Math.min(100, Math.max(0, value))) / 100);
-  if (type === "FIXED") return Math.min(Math.max(0, value), priceCents);
-  return 0;
-}
 
 /**
  * Postgres refused the row because it overlaps another live appointment for
