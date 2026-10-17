@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { requireStudentProfile } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { creditsRemaining } from "@/lib/booking";
@@ -24,6 +24,7 @@ export default async function MyClassesPage({
   setRequestLocale(locale);
 
   const { user, profile } = await requireStudentProfile();
+  if (user.studio.vertical === "APPOINTMENTS") redirect({ href: "/appointments", locale });
 
   const studio = user.studio;
   const t = await getTranslations("booking");

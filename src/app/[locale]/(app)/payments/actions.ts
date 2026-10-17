@@ -7,6 +7,8 @@ import { assertAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { parseMoneyToCents } from "@/lib/money";
 import { notifyPreferred } from "@/lib/notifications";
+import { approveDepositByStaff } from "@/lib/appointments/payments";
+import { afterDepositSettled } from "@/lib/appointments/notify";
 
 export type ActionState = { error?: string; ok?: boolean } | null;
 
@@ -29,6 +31,15 @@ export async function approvePaymentAction(formData: FormData) {
     include: { student: { include: { user: true } }, studentPack: true },
   });
   if (!payment || payment.status === "APPROVED") return;
+
+  // A deposit for an appointment: confirming it confirms the appointment.
+  if (payment.appointmentId) {
+    const outcome = await approveDepositByStaff(payment.id, user.id);
+    if (outcome) await afterDepositSettled(payment.appointmentId, outcome, user.name);
+    revalidateMoney();
+    revalidatePath("/[locale]/(app)/agenda", "page");
+    return;
+  }
 
   const now = new Date();
 

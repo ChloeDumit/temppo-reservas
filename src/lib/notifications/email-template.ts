@@ -18,6 +18,8 @@ export type EmailBranding = {
   accentColor: string;
   logoUrl: string | null;
   locale: string;
+  /** The product the studio is on — "TEMPPO Reservas" or the beauty brand. */
+  productName?: string;
 };
 
 const BRAND_ORANGE = "#E07A5F";
@@ -109,12 +111,13 @@ export function renderEmail({
   appUrl: string;
 }) {
   const isEnglish = branding.locale === "en";
+  const productName = branding.productName ?? "TEMPPO Reservas";
   const accent = branding.accentColor || BRAND_ORANGE;
   const { text, link } = extractLink(body);
 
   const ctaLabel =
     CTA_LABELS[template]?.[isEnglish ? "en" : "es"] ??
-    (isEnglish ? "Open TEMPPO Reservas" : "Abrir TEMPPO Reservas");
+    (isEnglish ? `Open ${productName}` : `Abrir ${productName}`);
 
   // A studio logo when there is one, otherwise the mascot from the app itself.
   const logo = branding.logoUrl || `${appUrl}/icon-192.png`;
@@ -196,7 +199,7 @@ export function renderEmail({
             <p style="margin:0;font-family:${SANS};font-size:12px;color:${MUTED};">
               ${isEnglish ? "Sent by" : "Enviado con"}
               <a href="${escapeHtml(appUrl)}" style="color:${accent};text-decoration:none;">
-                TEMPPO Reservas</a>
+                ${escapeHtml(productName)}</a>
             </p>
           </td>
         </tr>

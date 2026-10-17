@@ -111,3 +111,31 @@ export function Brand({ className, subdued }: { className?: string; subdued?: bo
 export function BrandMark({ className }: { className?: string }) {
   return <Mascot size={32} className={cn("shrink-0", className)} />;
 }
+
+/**
+ * The beauty product's wordmark. It has no logo yet, so this is its name in
+ * the brand typeface; swap in artwork here once there is some.
+ */
+export function BeautyWordmark({
+  name,
+  className,
+  subdued,
+}: {
+  name: string;
+  className?: string;
+  subdued?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "font-brand leading-none",
+        // A size passed in replaces the default rather than fighting it.
+        !/\btext-(xs|sm|base|lg|xl|\dxl)\b/.test(className ?? "") && "text-lg",
+        subdued ? "text-muted" : "text-accent",
+        className,
+      )}
+    >
+      {name}
+    </span>
+  );
+}

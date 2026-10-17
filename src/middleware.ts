@@ -3,12 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { routing, localePath } from "@/i18n/routing";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 
+const BRAND_COOKIE = "brand_override";
+const BRAND_OVERRIDE_ALLOWED = process.env.NODE_ENV !== "production" || process.env.BRAND_OVERRIDE === "1";
+
 const intlMiddleware = createIntlMiddleware(routing);
 
 // Segments that require a session. The cookie is only checked for presence here —
 // middleware runs on the edge and cannot reach the database. Real authorization
 // happens in the server components behind these routes.
-const PROTECTED = ["/dashboard", "/schedule", "/students", "/packs", "/payments", "/settings", "/classes", "/my", "/checkin", "/buy", "/leads", "/reports", "/availability", "/admin", "/suspended", "/password"];
+const PROTECTED = ["/dashboard", "/schedule", "/students", "/packs", "/payments", "/settings", "/classes", "/my", "/checkin", "/buy", "/leads", "/reports", "/availability", "/admin", "/suspended", "/password", "/agenda", "/services", "/clients", "/hours", "/appointments"];
 
 /** Splits "/es/schedule" into its locale and the route beneath it. */
 function splitLocale(pathname: string) {
@@ -31,6 +34,19 @@ export default function middleware(request: NextRequest) {
       url.searchParams.set("next", request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
+  }
+
+  // `?brand=beauty` while developing: stored in a cookie and the param
+  // dropped with a redirect, so the page that renders already sees it and
+  // every later link keeps the same brand. `?brand=` with no value clears it.
+  const forced = request.nextUrl.searchParams.get("brand");
+  if (BRAND_OVERRIDE_ALLOWED && forced !== null) {
+    const clean = request.nextUrl.clone();
+    clean.searchParams.delete("brand");
+    const response = NextResponse.redirect(clean);
+    if (forced) response.cookies.set(BRAND_COOKIE, forced, { path: "/", sameSite: "lax" });
+    else response.cookies.delete(BRAND_COOKIE);
+    return response;
   }
 
   return intlMiddleware(request);

@@ -13,6 +13,7 @@ import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { SheetForm } from "@/components/app/sheet-form";
 import { ExpenseForm, RecordPaymentForm, RejectForm } from "./payment-forms";
 import { approvePaymentAction, rejectPaymentAction } from "./actions";
+import { owedToStudio } from "@/lib/appointments/payments";
 
 export default async function PaymentsPage({
   params,
@@ -36,8 +37,19 @@ export default async function PaymentsPage({
 
   const [pending, history, monthTx, students, packs] = await Promise.all([
     db.payment.findMany({
-      where: { studioId: studio.id, status: "PENDING", ...(locationId ? { student: atLocation } : {}) },
-      include: { student: { include: { user: true } }, studentPack: { include: { pack: true } } },
+      where: {
+        studioId: studio.id,
+        status: "PENDING",
+        ...(locationId ? { student: atLocation } : {}),
+        // An online deposit settles itself through the provider; only what a
+        // person has to check by hand belongs in this queue.
+        NOT: { appointmentId: { not: null }, method: "MERCADO_PAGO" },
+      },
+      include: {
+        student: { include: { user: true } },
+        studentPack: { include: { pack: true } },
+        appointment: { select: { serviceName: true, startsAt: true } },
+      },
       orderBy: { createdAt: "asc" },
     }),
     db.payment.findMany({
@@ -69,10 +81,34 @@ export default async function PaymentsPage({
   const income = monthTx.find((r) => r.type === "INCOME")?._sum.amountCents ?? 0;
   const expenses = monthTx.find((r) => r.type === "EXPENSE")?._sum.amountCents ?? 0;
   const money = (cents: number) => formatMoney(cents, studio.currency, locale);
+  const beauty = studio.vertical === "APPOINTMENTS";
+  const peopleBase = beauty ? "/clients" : "/students";
+
+  // Online deposits are collected by the platform and handed over in payouts.
+  const [owed, lastPayout] = beauty
+    ? await Promise.all([
+        owedToStudio(studio.id),
+        db.studioPayout.findFirst({ where: { studioId: studio.id }, orderBy: { createdAt: "desc" } }),
+      ])
+    : [null, null];
 
   return (
     <>
       <PageHeader title={t("title")} />
+
+      {owed && (owed.count > 0 || lastPayout) && (
+        <Card className="mb-5">
+          <CardBody className="space-y-1">
+            <p className="text-sm font-medium text-ink">{t("depositsHeld")}</p>
+            <p className="font-display text-2xl font-semibold tabular-nums">{money(owed.amountCents)}</p>
+            <p className="text-xs text-muted">
+              {t("depositsHeldHint", { count: owed.count })}
+              {lastPayout?.paidAt &&
+                ` ${t("lastPayout", { amount: money(lastPayout.amountCents), date: formatDate(lastPayout.paidAt, studio.timezone, locale) })}`}
+            </p>
+          </CardBody>
+        </Card>
+      )}
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
         <Stat label={td("income")} value={money(income)} tone="positive" />
@@ -113,7 +149,7 @@ export default async function PaymentsPage({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
-                      href={`/students/${payment.studentId}`}
+                      href={`${peopleBase}/${payment.studentId}`}
                       className="text-sm font-medium text-ink hover:text-accent"
                     >
                       {payment.student.user.name}
@@ -131,6 +167,14 @@ export default async function PaymentsPage({
                     </p>
                     {payment.studentPack && (
                       <p className="text-xs text-muted">{payment.studentPack.pack.name}</p>
+                    )}
+                    {payment.appointment && (
+                      <p className="text-xs text-muted">
+                        {t("depositFor", {
+                          service: payment.appointment.serviceName,
+                          when: formatDate(payment.appointment.startsAt, studio.timezone, locale),
+                        })}
+                      </p>
                     )}
                   </div>
                   <p className="shrink-0 font-display text-lg font-semibold tabular-nums">
@@ -152,7 +196,7 @@ export default async function PaymentsPage({
                 <div className="flex flex-wrap items-end gap-3">
                   <form action={approvePaymentAction} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="paymentId" value={payment.id} />
-                    {!payment.studentPackId && (
+                    {!payment.studentPackId && !payment.appointmentId && (
                       <select
                         name="packId"
                         required
@@ -195,7 +239,7 @@ export default async function PaymentsPage({
                 <li key={payment.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <Link
-                      href={`/students/${payment.studentId}`}
+                      href={`${peopleBase}/${payment.studentId}`}
                       className="block truncate text-[15px] font-medium text-ink"
                     >
                       {payment.student.user.name}
@@ -229,7 +273,7 @@ export default async function PaymentsPage({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                    <th className="px-5 py-2 font-medium">{t("student")}</th>
+                    <th className="px-5 py-2 font-medium">{t(beauty ? "client" : "student")}</th>
                     <th className="px-4 py-2 font-medium">{t("amount")}</th>
                     <th className="px-4 py-2 font-medium">{t("method")}</th>
                     <th className="px-4 py-2 font-medium">{t("date")}</th>
@@ -240,7 +284,7 @@ export default async function PaymentsPage({
                   {history.map((payment) => (
                     <tr key={payment.id}>
                       <td className="px-5 py-2.5">
-                        <Link href={`/students/${payment.studentId}`} className="hover:text-accent">
+                        <Link href={`${peopleBase}/${payment.studentId}`} className="hover:text-accent">
                           {payment.student.user.name}
                         </Link>
                       </td>

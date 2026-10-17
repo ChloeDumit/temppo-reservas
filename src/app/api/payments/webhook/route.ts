@@ -9,6 +9,9 @@ import {
 } from "@/lib/billing";
 import { recordAudit } from "@/lib/audit";
 import { notifyPreferred } from "@/lib/notifications";
+import { parsePaymentRef } from "@/lib/payments/reference";
+import { settleDeposit } from "@/lib/appointments/payments";
+import { afterDepositSettled } from "@/lib/appointments/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -80,10 +83,23 @@ export async function POST(request: NextRequest) {
   });
 
   // Always 200 on anything we can't act on, so the provider stops retrying.
-  if (!resolved?.externalReference) return NextResponse.json({ ok: true });
+  const ref = parsePaymentRef(resolved?.externalReference);
+  if (!resolved || !ref) return NextResponse.json({ ok: true });
+
+  // A deposit for an appointment rather than a pack.
+  if (ref.kind === "appt") {
+    const outcome = await settleDeposit({
+      appointmentId: ref.id,
+      providerPaymentId: resolved.providerPaymentId,
+      status: resolved.status,
+      amountCents: resolved.amountCents,
+    });
+    await afterDepositSettled(ref.id, outcome, `${provider.name} webhook`);
+    return NextResponse.json({ ok: true });
+  }
 
   const studentPack = await db.studentPack.findUnique({
-    where: { id: resolved.externalReference },
+    where: { id: ref.id },
     include: {
       pack: true,
       student: { include: { user: true } },

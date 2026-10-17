@@ -10,10 +10,12 @@ export function LogoutButton() {
     <form action={logoutAction}>
       <button
         type="submit"
-        className="pressable touch-target flex w-full items-center gap-3 rounded-md px-3 text-sm text-ink-soft transition-colors hover:bg-sunken hover:text-ink"
+        title={t("logout")}
+        className="pressable touch-target flex w-full items-center gap-3 rounded-md px-3 text-sm text-ink-soft transition-colors hover:bg-sunken hover:text-ink md:max-lg:justify-center"
       >
         <Icon name="logout" className="size-[18px]" />
-        {t("logout")}
+        {/* The tablet rail has room for the icon only. */}
+        <span className="md:max-lg:sr-only">{t("logout")}</span>
       </button>
     </form>
   );

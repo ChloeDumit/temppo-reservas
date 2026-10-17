@@ -16,6 +16,7 @@ import {
   voidManualCharge,
 } from "@/lib/billing";
 import { slugify } from "@/lib/slug";
+import { createPayout } from "@/lib/appointments/payments";
 import { parseMoneyToCents } from "@/lib/money";
 import type { Plan } from "@/generated/prisma/enums";
 
@@ -342,4 +343,32 @@ export async function updateStudioConfigAction(formData: FormData) {
   });
 
   await finishAdminAction(formData.get("returnTo"));
+}
+
+/**
+ * Records that the platform transferred a studio the online deposits it was
+ * holding. Covers everything approved so far; the payments it settles drop
+ * out of the studio's balance.
+ */
+export async function createPayoutAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const studioId = String(formData.get("studioId") ?? "");
+  const reference = String(formData.get("reference") ?? "").trim().slice(0, 120);
+
+  const studio = await db.studio.findUnique({ where: { id: studioId } });
+  if (!studio) return;
+
+  const payout = await createPayout({ studioId, createdById: admin.id, reference: reference || null });
+  if (!payout) return;
+
+  await recordAudit({
+    studioId,
+    actorLabel: `platform:${admin.email}`,
+    action: "payout.create",
+    entityType: "StudioPayout",
+    entityId: payout.id,
+    metadata: { amountCents: payout.amountCents, reference },
+  });
+
+  revalidatePath("/[locale]/(admin)/admin/payouts", "page");
 }

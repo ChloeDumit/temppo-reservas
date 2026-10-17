@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { assertUser } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { paymentProvider } from "@/lib/payments";
+import { paymentRef } from "@/lib/payments/reference";
 import { generatePaymentCode } from "@/lib/payment-code";
 import { notifyOwners } from "@/lib/notifications";
 import { formatMoney } from "@/lib/money";
@@ -170,7 +171,7 @@ export async function startCheckoutAction(formData: FormData) {
 
   const session = await provider.createCheckout({
     studioId: user.studioId,
-    studentPackId: created.studentPack.id,
+    externalReference: paymentRef("pack", created.studentPack.id),
     title: `${user.studio.name} — ${created.pack.name}`,
     amountCents: created.payment.amountCents,
     currency: user.studio.currency,

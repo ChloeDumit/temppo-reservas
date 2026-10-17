@@ -1,16 +1,20 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
+import { getBrand } from "@/lib/brand/server";
 
 /**
  * Installable on iOS and Android straight from the browser — "Add to home
  * screen" gives a standalone, chrome-less app pointing at the studio dashboard.
  */
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const brand = await getBrand();
   return {
-    name: "TEMPPO Reservas",
-    short_name: "TEMPPO",
+    name: brand.name,
+    short_name: brand.shortName,
     description:
-      "Gestión de reservas, alumnos y pagos para estudios de pilates, yoga y fitness.",
+      brand.key === "temppo"
+        ? "Gestión de reservas, alumnos y pagos para estudios de pilates, yoga y fitness."
+        : brand.description,
     // Locale-prefixed: routing always carries a prefix, so an unprefixed
     // start_url would cost a redirect on every launch of the installed app.
     // Staff land on the dashboard; students are forwarded to their own screen.
@@ -18,8 +22,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#fbf8f5",
-    theme_color: "#c0563c",
+    background_color: brand.background,
+    theme_color: brand.themeColor,
     lang: "es",
     categories: ["business", "productivity", "health"],
     icons: [

@@ -95,7 +95,7 @@ export const mercadoPago: PaymentProvider = {
         ],
         payer: { email: request.payerEmail },
         // Our own id comes back on the webhook, which is how we match it up.
-        external_reference: request.studentPackId,
+        external_reference: request.externalReference,
         back_urls: {
           success: request.successUrl,
           failure: request.failureUrl,

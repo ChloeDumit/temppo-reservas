@@ -6,8 +6,10 @@ import { Field, Input } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { registerAction, type AuthState } from "../actions";
 
-export function RegisterForm() {
+/** `beauty` swaps the studio vocabulary for a beauty business's. */
+export function RegisterForm({ beauty = false }: { beauty?: boolean }) {
   const t = useTranslations("auth");
+  const k = (key: string) => (beauty ? `${key}Beauty` : key) as "registerTitle";
   const tc = useTranslations("common");
   const te = useTranslations("errors");
   const [state, submit] = useActionState<AuthState, FormData>(registerAction, null);
@@ -21,12 +23,12 @@ export function RegisterForm() {
 
   return (
     <div className="card px-5 py-6">
-      <h1 className="text-xl">{t("registerTitle")}</h1>
+      <h1 className="text-xl">{t(k("registerTitle"))}</h1>
       <p className="mt-1 text-sm text-muted">{t("registerSubtitle")}</p>
 
       <form action={submit} className="mt-5 space-y-4">
-        <Field label={t("studioName")} htmlFor="studioName">
-          <Input id="studioName" name="studioName" required maxLength={80} placeholder="Estudio Ánima" />
+        <Field label={t(k("studioName"))} htmlFor="studioName">
+          <Input id="studioName" name="studioName" required maxLength={80} placeholder={beauty ? "Uñas de Lu" : "Estudio Ánima"} />
         </Field>
         <Field label={t("yourName")} htmlFor="name">
           <Input id="name" name="name" required maxLength={80} autoComplete="name" />
@@ -50,7 +52,7 @@ export function RegisterForm() {
           />
         </Field>
         <SubmitButton className="w-full" pendingLabel={tc("loading")}>
-          {t("createStudio")}
+          {t(k("createStudio"))}
         </SubmitButton>
       </form>
     </div>

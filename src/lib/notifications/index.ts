@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { brandByKey } from "@/lib/brand/registry";
 import { emailTransport } from "./email";
 import { pushToUser, isPushConfigured } from "./push";
 import type { NotificationPayload } from "./types";
@@ -53,11 +54,31 @@ export async function notifyPreferred(
     userId?: string | null;
     /** Where tapping the push notification should land. */
     url?: string;
+    /** Also leave it under the bell in the staff panel. */
+    inbox?: boolean;
   },
 ): Promise<boolean> {
+  if (payload.inbox && payload.userId) {
+    await db.inboxItem
+      .create({
+        data: {
+          studioId: payload.studioId,
+          userId: payload.userId,
+          kind: payload.template,
+          title: payload.subject ?? "",
+          body: payload.body.slice(0, 1000),
+          url: payload.url ?? null,
+        },
+      })
+      .catch((error) => console.error("[notify] inbox failed", error));
+  }
+
   if (payload.userId && isPushConfigured()) {
+    const studio = await db.studio
+      .findUnique({ where: { id: payload.studioId }, select: { brand: true } })
+      .catch(() => null);
     await pushToUser(payload.userId, {
-      title: payload.subject ?? "TEMPPO Reservas",
+      title: payload.subject ?? brandByKey(studio?.brand).name,
       body: payload.body,
       url: payload.url,
       tag: payload.template,
@@ -86,6 +107,7 @@ export async function notifyOwners(
       studioId,
       to: owner.email,
       userId: owner.id,
+      inbox: true,
     });
   }
 }

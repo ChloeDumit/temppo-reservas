@@ -27,15 +27,18 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+              // Rail on tablets (icon over a small label, thumb-sized),
+              // a row from desktop width.
+              "flex flex-col items-center gap-1 rounded-md px-1 py-2.5 text-center text-[11px] leading-tight transition-colors lg:flex-row lg:gap-3 lg:px-3 lg:py-2 lg:text-left lg:text-sm",
               active
                 ? "bg-accent-soft font-medium text-accent-ink"
                 : "text-ink-soft hover:bg-sunken hover:text-ink",
             )}
           >
-            <Icon name={item.icon} className="size-[18px]" />
-            {t(item.label)}
+            <Icon name={item.icon} className="size-5 lg:size-[18px]" />
+            <span className="max-w-full truncate">{t(item.label)}</span>
           </Link>
         );
       })}
@@ -67,7 +70,7 @@ export function MobileTabBar({
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md md:hidden">
         <div className="flex pb-nav-safe">
           {primary.map((item) => {
             const active = isActive(pathname, item.href);

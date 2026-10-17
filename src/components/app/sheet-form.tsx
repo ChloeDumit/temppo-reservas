@@ -15,6 +15,11 @@ export function useSheetClose() {
   return useContext(SheetCloseContext);
 }
 
+/** For sheets opened by something other than a button — a card, a calendar block. */
+export function SheetCloseProvider({ close, children }: { close: () => void; children: ReactNode }) {
+  return <SheetCloseContext.Provider value={close}>{children}</SheetCloseContext.Provider>;
+}
+
 /**
  * Opens a form in a bottom sheet. Replaces the inline accordions the app used
  * to use: on a phone a sheet keeps the form in the thumb zone and stops long
