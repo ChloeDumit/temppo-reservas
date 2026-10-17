@@ -320,7 +320,6 @@
 html[data-brand="beauty"] {
   --font-sans: var(--font-beauty-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-beauty-display), Georgia, serif;
-  --font-brand: var(--font-beauty-display), Georgia, serif;
   /* Garamond defaults to old-style figures, which bob up and down in prices,
      times and counts. Lining figures everywhere; inherited, and independent
      of Tailwind's tabular-nums. */
@@ -328,7 +327,7 @@ html[data-brand="beauty"] {
 }
 /* Garamond has a small x-height: scale it up to sit level with the sans
    beside it, without touching any size set in the markup. */
-html[data-brand="beauty"] :is(h1, h2, h3, .font-display, .font-brand) {
+html[data-brand="beauty"] :is(h1, h2, h3, .font-display) {
   font-size-adjust: 0.5;
   letter-spacing: -0.005em;
 }

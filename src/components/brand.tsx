@@ -179,7 +179,12 @@ export function BeautyMascot({ className, size = 32 }: { className?: string; siz
   );
 }
 
-/** Temppo Beauty's lockup: the mascot beside the name in the brand serif. */
+/**
+ * Temppo Beauty's lockup, built like TEMPPO's: the mascot, "temppo" in the
+ * rounded face from temppo.uy, and the product name beside it in the
+ * interface sans — "Beauty" where TEMPPO says "Reservas". A name that does
+ * not start with Temppo (an override) is set whole in the rounded face.
+ */
 export function BeautyWordmark({
   name,
   className,
@@ -195,18 +200,24 @@ export function BeautyWordmark({
   mascotSize?: number;
 }) {
   const sized = /\btext-(xs|sm|base|lg|xl|\dxl)\b/.test(className ?? "");
+  const [, family, product] = /^(temppo)\s+(.+)$/i.exec(name) ?? [null, name, null];
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span className={cn("inline-flex items-center gap-2", !sized && "text-xl", className)}>
       {mascot && <BeautyMascot size={mascotSize ?? (subdued ? 22 : 30)} className="shrink-0" />}
-      <span
-        className={cn(
-          "font-brand leading-none",
-          // A size passed in replaces the default rather than fighting it.
-          !sized && "text-lg",
-          subdued ? "text-muted" : "text-accent",
+      <span className="inline-flex items-baseline gap-1.5 leading-none">
+        <span
+          // TEMPPO's own wordmark face, named directly: the beauty brand
+          // swaps the display font, but this stays the family's.
+          style={{ fontFamily: "var(--font-brand-face), ui-rounded, system-ui, sans-serif", fontWeight: 500 }}
+          className={cn(subdued ? "text-muted" : "text-accent")}
+        >
+          {product ? family!.toLowerCase() : family}
+        </span>
+        {product && (
+          <span className={cn("font-sans text-[0.62em] font-normal", subdued ? "text-muted" : "text-ink-soft")}>
+            {product}
+          </span>
         )}
-      >
-        {name}
       </span>
     </span>
   );
