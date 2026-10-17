@@ -12,6 +12,7 @@ import { SheetCloseProvider, useSheetClose } from "@/components/app/sheet-form";
 import {
   cancelStaffAppointmentAction,
   markAppointmentAction,
+  markDepositPaidAction,
   moveAppointmentAction,
   saveStaffNoteAction,
   type AgendaState,
@@ -36,6 +37,10 @@ export type AgendaAppointment = {
   price: string;
   deposit: string | null;
   depositStatus: string;
+  /** A deposit is owed and has not been received. */
+  depositDue: boolean;
+  /** The code of the transfer the client said she made, if she did. */
+  transferCode: string | null;
   started: boolean;
   reminderLink: string | null;
   callLink: string | null;
@@ -111,6 +116,10 @@ function Details({ appt, staff }: { appt: AgendaAppointment; staff: { id: string
           </>
         )}
       </dl>
+
+      {appt.depositDue && (appt.status === "PENDING_PAYMENT" || appt.status === "EXPIRED") && (
+        <DepositPaid appt={appt} />
+      )}
 
       {appt.allergies && (
         <p className="rounded-[var(--radius-md)] bg-critical-soft px-3 py-2 text-sm text-critical">
@@ -256,5 +265,33 @@ function CancelForm({ appt, onBack }: { appt: AgendaAppointment; onBack: () => v
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Staff saw the money arrive: confirm the appointment in one tap. */
+export function DepositPaid({ appt, compact }: { appt: Pick<AgendaAppointment, "id" | "deposit" | "transferCode">; compact?: boolean }) {
+  const t = useTranslations("agenda");
+  return (
+    <div className={cn(!compact && "space-y-2 rounded-[var(--radius-md)] bg-caution-soft p-3")}>
+      {!compact && (
+        <p className="text-sm text-caution">
+          {appt.transferCode
+            ? t("depositAnnounced", { amount: appt.deposit ?? "", code: appt.transferCode })
+            : t("depositMissing", { amount: appt.deposit ?? "" })}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {!compact && <span className="text-sm font-medium text-ink">{t("markPaid")}</span>}
+        {(["BANK_TRANSFER", "CASH"] as const).map((method) => (
+          <form key={method} action={markDepositPaidAction}>
+            <input type="hidden" name="id" value={appt.id} />
+            <input type="hidden" name="method" value={method} />
+            <Button type="submit" size="sm" variant={method === "BANK_TRANSFER" ? "primary" : "secondary"}>
+              {method === "BANK_TRANSFER" ? t("paidTransfer") : t("paidCash")}
+            </Button>
+          </form>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -8,6 +8,41 @@ import { appUrlFor } from "@/lib/brand/url";
 import { confirmationText, whenText } from "./whatsapp-text";
 import type { SettleOutcome } from "./payments";
 
+async function announcedTransfer(appointmentId: string) {
+  return db.payment.findFirst({
+    where: { appointmentId, method: "BANK_TRANSFER", status: "PENDING" },
+    select: { shortCode: true, amountCents: true },
+  });
+}
+
+/** What to do with a transfer that is on its way. */
+function transferLine(code: string | null, en: boolean) {
+  return en
+    ? `She'll pay by transfer and send the receipt on WhatsApp with code ${code}. When you see the money, tap "Paid" under Pending deposits on your home screen, or on the appointment in the agenda.`
+    : `Va a pagar por transferencia y mandarte el comprobante por WhatsApp con el código ${code}. Cuando veas la plata, tocá "Pagada" en Señas pendientes, en Inicio, o en el turno desde la Agenda.`;
+}
+
+/**
+ * The client chose to pay by transfer after booking, from her link. The
+ * studio hears it then, with the code to match against the receipt.
+ */
+export async function notifyTransferAnnounced(appointmentId: string) {
+  const appt = await load(appointmentId);
+  const transfer = appt && (await announcedTransfer(appt.id));
+  if (!appt || !transfer) return;
+  const { studio } = appt;
+  const en = studio.locale === "en";
+  const client = appt.client.user;
+  await notifyOwners(studio.id, {
+    url: "/dashboard",
+    template: "appointment_transfer",
+    subject: en ? `Deposit by transfer — ${client.name}` : `Seña por transferencia — ${client.name}`,
+    body: `${en ? `${client.name}, ${appt.serviceName} on` : `${client.name}, ${appt.serviceName} el`} ${whenText(appt.startsAt, studio)}: ${formatMoney(transfer.amountCents, studio.currency, studio.locale)}.\n\n${transferLine(transfer.shortCode, en)}`,
+    relatedType: "Appointment",
+    relatedId: appt.id,
+  });
+}
+
 export function manageUrlFor(studio: { brand: string; locale: string }, token: string) {
   return `${appUrlFor(studio)}${localePath(studio.locale, `/m/${token}`)}`;
 }
@@ -53,12 +88,22 @@ export async function notifyBooked(appointmentId: string, manageToken: string) {
   const staffLine = en
     ? `${client.name} booked ${appt.serviceName} with ${appt.staff.name}: ${when}.`
     : `${client.name} reservó ${appt.serviceName} con ${appt.staff.name}: ${when}.`;
-  const body = `${staffLine}${appt.depositCents ? `\n${en ? "Deposit" : "Seña"}: ${formatMoney(appt.depositCents, studio.currency, studio.locale)}${appt.status === "PENDING_PAYMENT" ? (en ? " (pending)" : " (pendiente)") : ""}` : ""}${client.phone ? `\nTel: ${client.phone}` : ""}`;
+  const transfer = appt.status === "PENDING_PAYMENT" ? await announcedTransfer(appt.id) : null;
+  const deposit = appt.depositCents
+    ? `\n${en ? "Deposit" : "Seña"}: ${formatMoney(appt.depositCents, studio.currency, studio.locale)}${appt.status === "PENDING_PAYMENT" ? (en ? " (pending)" : " (pendiente)") : ""}`
+    : "";
+  const body = `${staffLine}${deposit}${transfer ? `\n\n${transferLine(transfer.shortCode, en)}` : ""}${client.phone ? `\nTel: ${client.phone}` : ""}`;
 
   await notifyOwners(studio.id, {
-    url: "/agenda",
+    url: transfer ? "/dashboard" : "/agenda",
     template: "appointment_new",
-    subject: en ? `New booking — ${appt.serviceName}` : `Nueva reserva — ${appt.serviceName}`,
+    subject: transfer
+      ? en
+        ? `New booking, deposit by transfer — ${client.name}`
+        : `Nueva reserva con seña por transferencia — ${client.name}`
+      : en
+        ? `New booking — ${appt.serviceName}`
+        : `Nueva reserva — ${appt.serviceName}`,
     body,
     relatedType: "Appointment",
     relatedId: appt.id,

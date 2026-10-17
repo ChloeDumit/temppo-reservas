@@ -1044,7 +1044,12 @@
     "everyone": "Everyone",
     "copy": "Copy link",
     "copied": "Copied!",
-    "more": "+{count} more"
+    "more": "+{count} more",
+    "depositAnnounced": "The {amount} deposit is due. She said she'd pay by transfer: look for code {code} on the receipt.",
+    "depositMissing": "The {amount} deposit is due. She hasn't chosen how to pay yet.",
+    "markPaid": "Received it?",
+    "paidTransfer": "Paid by transfer",
+    "paidCash": "Paid in cash"
   },
   "clients": {
     "title": "Clients",
@@ -1174,6 +1179,8 @@
     "thisMonthTitle": "This month",
     "done": "Done",
     "newClients": "New clients",
-    "avgTicket": "Average ticket"
+    "avgTicket": "Average ticket",
+    "depositsTitle": "{count, plural, one {Pending deposit} other {Pending deposits}} ({count})",
+    "noMethodYet": "no payment method yet"
   }
 }

@@ -8,6 +8,8 @@ import { recordAudit } from "@/lib/audit";
 import { wallTimeToUtc } from "@/lib/dates";
 import { bookAppointment, cancelAppointment, markAppointment, rescheduleAppointment } from "@/lib/appointments/book";
 import { findOrCreateClient } from "@/lib/appointments/clients";
+import { markDepositReceived } from "@/lib/appointments/payments";
+import { afterDepositSettled } from "@/lib/appointments/notify";
 
 export type AgendaState = { error?: string; ok?: boolean } | null;
 
@@ -157,4 +159,16 @@ export async function saveStaffNoteAction(formData: FormData) {
   const note = String(formData.get("staffNotes") ?? "").slice(0, 1000);
   await db.appointment.updateMany({ where: { id, studioId: user.studioId }, data: { staffNotes: note || null } });
   revalidatePath(PAGE, "page");
+}
+
+/** The deposit came in by transfer or cash: confirm the appointment. */
+export async function markDepositPaidAction(formData: FormData) {
+  const user = await staffOnAppointmentStudio();
+  const id = String(formData.get("id") ?? "");
+  const method = formData.get("method") === "CASH" ? "CASH" : "BANK_TRANSFER";
+  const outcome = await markDepositReceived({ studioId: user.studioId, appointmentId: id, method, approvedById: user.id });
+  if (outcome) await afterDepositSettled(id, outcome, user.name);
+  revalidatePath(PAGE, "page");
+  revalidatePath("/[locale]/(app)/dashboard", "page");
+  revalidatePath("/[locale]/(app)/payments", "page");
 }

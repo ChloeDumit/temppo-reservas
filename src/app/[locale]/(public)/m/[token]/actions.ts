@@ -10,7 +10,7 @@ import { isOnlinePaymentEnabled } from "@/lib/payments";
 import { appUrlFor } from "@/lib/brand/url";
 import { cancelAppointment, findByManageToken, rescheduleAppointment } from "@/lib/appointments/book";
 import { startDepositCheckout, submitDepositTransfer } from "@/lib/appointments/payments";
-import { manageUrlFor } from "@/lib/appointments/notify";
+import { manageUrlFor, notifyTransferAnnounced } from "@/lib/appointments/notify";
 import { whenText } from "@/lib/appointments/whatsapp-text";
 
 export type ManageState = { error?: string; ok?: boolean } | null;
@@ -98,6 +98,7 @@ export async function payDepositAction(_prev: ManageState, formData: FormData): 
 
   if (method === "transfer" && appt.studio.whatsappNumber) {
     await submitDepositTransfer(appt.id);
+    await notifyTransferAnnounced(appt.id);
     revalidatePath(PAGE, "page");
     return { ok: true };
   }

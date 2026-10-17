@@ -19,7 +19,7 @@ import { Stat } from "@/components/ui/stat";
 import { SheetForm } from "@/components/app/sheet-form";
 import { CopyButton } from "@/components/app/copy-button";
 import { Icon } from "@/components/app/icon";
-import { AppointmentSheet, STATUS_TONE } from "../agenda/appointment-sheet";
+import { AppointmentSheet, DepositPaid, STATUS_TONE } from "../agenda/appointment-sheet";
 import { NewAppointmentForm } from "../agenda/new-appointment-form";
 import { TimeOffForm } from "../hours/time-off-form";
 
@@ -70,7 +70,7 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
   const staffIds = (isAdmin ? working : working.filter((s) => s.id === user.id)).map((s) => s.id);
   const mineOnly = { staffId: { in: staffIds } };
 
-  const [todays, week, upcoming7, hours, monthDone, monthNoShows, newClients, monthIncome, pendingTransfers, rebookCandidates, options] =
+  const [todays, week, upcoming7, hours, monthDone, monthNoShows, newClients, monthIncome, pendingDeposits, rebookCandidates, options] =
     await Promise.all([
       db.appointment.findMany({
         where: { studioId: studio.id, ...mineOnly, startsAt: { gte: dayStart, lt: addDays(dayStart, 1) }, status: { notIn: ["CANCELLED", "LATE_CANCELLED", "EXPIRED"] } },
@@ -95,9 +95,14 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
       isAdmin
         ? db.transaction.aggregate({ where: { studioId: studio.id, type: "INCOME", occurredAt: { gte: monthStart } }, _sum: { amountCents: true } })
         : null,
-      isAdmin
-        ? db.payment.count({ where: { studioId: studio.id, status: "PENDING", appointmentId: { not: null }, method: { not: "MERCADO_PAGO" } } })
-        : 0,
+      // Every appointment still owing its deposit, whether or not the client
+      // said how she would pay.
+      db.appointment.findMany({
+        where: { studioId: studio.id, ...mineOnly, status: "PENDING_PAYMENT", startsAt: { gte: addDays(dayStart, -1) } },
+        include: agendaInclude,
+        orderBy: { startsAt: "asc" },
+        take: 20,
+      }),
       db.appointment.findMany({
         where: {
           studioId: studio.id,
@@ -188,13 +193,13 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
         {isAdmin ? (
           <Stat
             label={t("toApprove")}
-            value={String(pendingTransfers)}
-            tone={pendingTransfers ? "critical" : undefined}
+            value={String(pendingDeposits.length)}
+            tone={pendingDeposits.length ? "critical" : undefined}
             href={
-              pendingTransfers ? (
-                <Link href="/payments" className="mt-1 inline-block text-xs font-medium text-accent">
+              pendingDeposits.length ? (
+                <a href="#senas" className="mt-1 inline-block text-xs font-medium text-accent">
                   {t("review")} →
-                </Link>
+                </a>
               ) : (
                 <p className="mt-0.5 text-xs text-muted">{t("allClear")}</p>
               )
@@ -206,6 +211,37 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {/* --------------------------------------------- deposits owed: the most urgent thing on the page */}
+        {pendingDeposits.length > 0 && (
+          <Widget title={t("depositsTitle", { count: pendingDeposits.length })} className="scroll-mt-20 md:col-span-2 xl:col-span-3">
+            <ul id="senas" className="divide-y divide-line">
+              {pendingDeposits.map((a) => {
+                const v = toAgendaView(a, studio, locale, now);
+                return (
+                  <li key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+                    <AppointmentSheet appt={v} staff={staffOptions} className="min-w-0 flex-1 text-left">
+                      <span className="block truncate text-sm font-medium text-ink">{v.clientName}</span>
+                      <span className="block truncate text-xs text-muted">
+                        {new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", timeZone: tz }).format(a.startsAt)},{" "}
+                        {formatTime(a.startsAt, tz, locale)} · {v.serviceName}
+                      </span>
+                    </AppointmentSheet>
+                    <span className="text-sm tabular-nums text-ink">
+                      {v.deposit}
+                      {v.transferCode ? (
+                        <span className="ml-2 rounded bg-sunken px-1.5 py-0.5 font-mono text-xs text-ink-soft">{v.transferCode}</span>
+                      ) : (
+                        <span className="ml-2 text-xs text-muted">{t("noMethodYet")}</span>
+                      )}
+                    </span>
+                    <DepositPaid appt={v} compact />
+                  </li>
+                );
+              })}
+            </ul>
+          </Widget>
+        )}
+
         {/* ------------------------------------------------------- today */}
         <Widget
           title={t("todayTitle")}

@@ -27,7 +27,7 @@ function check(label: string, actual: unknown, expected: unknown) {
 async function main() {
   const { parsePaymentRef, paymentRef } = await import("../src/lib/payments/reference");
   const { bookAppointment } = await import("../src/lib/appointments/book");
-  const { settleDeposit, submitDepositTransfer, approveDepositByStaff, owedToStudio, createPayout } = await import(
+  const { settleDeposit, submitDepositTransfer, approveDepositByStaff, owedToStudio, createPayout, markDepositReceived } = await import(
     "../src/lib/appointments/payments"
   );
   const { wallTimeToUtc } = await import("../src/lib/dates");
@@ -164,6 +164,47 @@ async function main() {
   check("the hold stretches to give her time", held.holdExpiresAt && (held.holdExpiresAt.getTime() - now.getTime()) / 60_000, 120);
   check("asking twice reuses the same payment", (await submitDepositTransfer(d.appointmentId, now))?.id, transfer?.id);
   check("staff approval confirms it", await approveDepositByStaff(transfer!.id, pro.id, now), "confirmed");
+
+  console.log("\nMarked as received from the agenda");
+  const e = await book("09:00");
+  if (!e.ok) throw new Error(`booking failed: ${e.code}`);
+  const announced = await submitDepositTransfer(e.appointmentId, now);
+  check(
+    "a transfer she announced is the one confirmed",
+    await markDepositReceived({ studioId: studio.id, appointmentId: e.appointmentId, method: "BANK_TRANSFER", approvedById: pro.id, now }),
+    "confirmed",
+  );
+  check("…using her payment, code and all", (await db.payment.findUniqueOrThrow({ where: { id: announced!.id } })).status, "APPROVED");
+  check(
+    "marking it again does nothing",
+    await markDepositReceived({ studioId: studio.id, appointmentId: e.appointmentId, method: "CASH", approvedById: pro.id, now }),
+    null,
+  );
+
+  const f = await book("13:30");
+  if (!f.ok) throw new Error(`booking failed: ${f.code}`);
+  const said = await submitDepositTransfer(f.appointmentId, now);
+  check(
+    "she said transfer but paid cash: confirmed",
+    await markDepositReceived({ studioId: studio.id, appointmentId: f.appointmentId, method: "CASH", approvedById: pro.id, now }),
+    "confirmed",
+  );
+  check("the announced transfer is set aside", (await db.payment.findUniqueOrThrow({ where: { id: said!.id } })).status, "REJECTED");
+  const cash = await db.payment.findFirst({ where: { appointmentId: f.appointmentId, method: "CASH" } });
+  check("and the cash is what counts", [cash?.status, cash?.amountCents], ["APPROVED", 50000]);
+
+  const g = await book("11:00");
+  if (!g.ok) throw new Error(`booking failed: ${g.code}`);
+  check(
+    "never said how she'd pay: still confirmable",
+    await markDepositReceived({ studioId: studio.id, appointmentId: g.appointmentId, method: "BANK_TRANSFER", approvedById: pro.id, now }),
+    "confirmed",
+  );
+  check(
+    "another studio cannot touch it",
+    await markDepositReceived({ studioId: "someone-else", appointmentId: g.appointmentId, method: "CASH", approvedById: pro.id, now }),
+    null,
+  );
 
   console.log("\nWhat the platform owes");
   const owed = await owedToStudio(studio.id);

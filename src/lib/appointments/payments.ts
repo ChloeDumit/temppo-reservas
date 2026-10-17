@@ -235,6 +235,52 @@ export async function approveDepositByStaff(paymentId: string, approvedById: str
 }
 
 /**
+ * Staff mark an appointment's deposit as received, from the agenda: the
+ * transfer showed up in the bank, or she paid in cash at the counter. Uses
+ * the transfer the client already announced when there is one, so the code
+ * and the payment stay one record; otherwise records a new one.
+ */
+export async function markDepositReceived(opts: {
+  studioId: string;
+  appointmentId: string;
+  method: "BANK_TRANSFER" | "CASH";
+  approvedById: string;
+  now?: Date;
+}) {
+  const now = opts.now ?? new Date();
+  const appt = await db.appointment.findFirst({
+    where: { id: opts.appointmentId, studioId: opts.studioId },
+    include: { studio: { select: { currency: true } } },
+  });
+  if (!appt || appt.depositCents <= 0 || appt.depositStatus === "PAID") return null;
+  if (!["PENDING_PAYMENT", "EXPIRED", "CONFIRMED"].includes(appt.status)) return null;
+
+  const announced = await db.payment.findFirst({
+    where: { appointmentId: appt.id, status: "PENDING", method: { not: "MERCADO_PAGO" } },
+    orderBy: { createdAt: "desc" },
+  });
+  const payment =
+    announced && announced.method === opts.method
+      ? announced
+      : await db.payment.create({
+          data: {
+            studioId: appt.studioId,
+            studentId: appt.clientId,
+            appointmentId: appt.id,
+            amountCents: appt.depositCents,
+            currency: appt.studio.currency,
+            method: opts.method,
+            status: "PENDING",
+          },
+        });
+  // A transfer announced but paid in cash instead: the announcement is void.
+  if (announced && announced.id !== payment.id) {
+    await db.payment.update({ where: { id: announced.id }, data: { status: "REJECTED", rejectedReason: "Pagó por otro medio" } });
+  }
+  return approveDepositByStaff(payment.id, opts.approvedById, now);
+}
+
+/**
  * What the platform holds for a studio: online deposits approved and not yet
  * handed over. Transfers and cash never pass through the platform.
  */

@@ -1044,7 +1044,12 @@
     "everyone": "Todas",
     "copy": "Copiar link",
     "copied": "¡Copiado!",
-    "more": "+{count} más"
+    "more": "+{count} más",
+    "depositAnnounced": "Falta la seña de {amount}. Dijo que paga por transferencia: buscá el código {code} en el comprobante.",
+    "depositMissing": "Falta la seña de {amount}. Todavía no eligió cómo pagar.",
+    "markPaid": "¿Ya la cobraste?",
+    "paidTransfer": "Pagada por transferencia",
+    "paidCash": "Pagada en efectivo"
   },
   "clients": {
     "title": "Clientas",
@@ -1174,6 +1179,8 @@
     "thisMonthTitle": "Este mes",
     "done": "Realizados",
     "newClients": "Clientas nuevas",
-    "avgTicket": "Ticket promedio"
+    "avgTicket": "Ticket promedio",
+    "depositsTitle": "{count, plural, one {Seña pendiente} other {Señas pendientes}} ({count})",
+    "noMethodYet": "sin elegir cómo pagar"
   }
 }
