@@ -1177,10 +1177,28 @@
     "comeBackEmpty": "Nadie para invitar por ahora. Aparecen cuando les toca volver según cada servicio.",
     "lastService": "{service} hace {days} días",
     "thisMonthTitle": "Este mes",
-    "done": "Realizados",
+    "done": "Listo",
     "newClients": "Clientas nuevas",
     "avgTicket": "Ticket promedio",
     "depositsTitle": "{count, plural, one {Seña pendiente} other {Señas pendientes}} ({count})",
-    "noMethodYet": "sin elegir cómo pagar"
+    "noMethodYet": "sin elegir cómo pagar",
+    "customize": "Personalizar",
+    "arrangeHint": "Movelos con las flechas u ocultá los que no usás.",
+    "reset": "Restablecer",
+    "moveUp": "Subir {name}",
+    "moveDown": "Bajar {name}",
+    "hide": "Ocultar {name}",
+    "emptyNow": "sin nada por ahora",
+    "hiddenWidgets": "Ocultos — tocá para volver a mostrarlos",
+    "depositsWidget": "Señas pendientes"
+  },
+  "inbox": {
+    "label": "Notificaciones",
+    "labelUnread": "{count, plural, one {Notificaciones, # sin leer} other {Notificaciones, # sin leer}}",
+    "title": "Notificaciones",
+    "empty": "Nada nuevo por ahora. Acá aparecen las reservas, cancelaciones y señas.",
+    "pushHint": "Para que te lleguen al celular o la tablet aunque no tengas el panel abierto:",
+    "open": "Ver",
+    "dismiss": "Cerrar"
   }
 }

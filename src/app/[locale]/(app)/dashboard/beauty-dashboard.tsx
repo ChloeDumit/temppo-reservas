@@ -22,6 +22,7 @@ import { Icon } from "@/components/app/icon";
 import { AppointmentSheet, DepositPaid, STATUS_TONE } from "../agenda/appointment-sheet";
 import { NewAppointmentForm } from "../agenda/new-appointment-form";
 import { TimeOffForm } from "../hours/time-off-form";
+import { HomeGrid, HomeSlot, type HomeLayout } from "./home-grid";
 
 const DAY = 86_400_000;
 
@@ -38,7 +39,7 @@ function Widget({
   children: ReactNode;
 }) {
   return (
-    <section className={cn("card flex flex-col", className)}>
+    <section className={cn("card flex flex-1 flex-col", className)}>
       <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
         <h2 className="text-sm font-semibold text-ink">{title}</h2>
         {action}
@@ -210,10 +211,11 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <HomeGrid layout={(user.homeLayout as HomeLayout) ?? null}>
         {/* --------------------------------------------- deposits owed: the most urgent thing on the page */}
+        <HomeSlot id="deposits" title={t("depositsWidget")} span="md:col-span-2 xl:col-span-3" empty={pendingDeposits.length === 0}>
         {pendingDeposits.length > 0 && (
-          <Widget title={t("depositsTitle", { count: pendingDeposits.length })} className="scroll-mt-20 md:col-span-2 xl:col-span-3">
+          <Widget title={t("depositsTitle", { count: pendingDeposits.length })} className="scroll-mt-20">
             <ul id="senas" className="divide-y divide-line">
               {pendingDeposits.map((a) => {
                 const v = toAgendaView(a, studio, locale, now);
@@ -241,11 +243,13 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             </ul>
           </Widget>
         )}
+        </HomeSlot>
 
         {/* ------------------------------------------------------- today */}
+        <HomeSlot id="today" title={t("todayTitle")} span="md:row-span-2 xl:col-span-2">
         <Widget
           title={t("todayTitle")}
-          className="md:row-span-2 xl:col-span-2"
+
           action={
             <Link href="/agenda" className="text-sm font-medium text-accent">
               {t("openAgenda")} →
@@ -288,8 +292,10 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             </ul>
           )}
         </Widget>
+        </HomeSlot>
 
         {/* ---------------------------------------------------- shortcuts */}
+        <HomeSlot id="shortcuts" title={t("shortcuts")}>
         <Widget title={t("shortcuts")}>
           <div className="grid grid-cols-2 gap-2 p-3">
             <SheetForm label={t("newAppointment")} title={t("newAppointment")} variant="primary" size="md" className="min-h-16! w-full flex-col gap-1 whitespace-normal! rounded-[var(--radius-md)]! py-3">
@@ -330,8 +336,10 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             <CopyButton value={bookingUrl} label={t("copyLink")} copiedLabel={t("copied")} />
           </div>
         </Widget>
+        </HomeSlot>
 
         {/* ---------------------------------------------------- next days */}
+        <HomeSlot id="nextDays" title={t("nextDays")}>
         <Widget
           title={t("nextDays")}
           action={
@@ -344,9 +352,11 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             <BarChart bars={bars} formatValue={(v) => String(v)} emptyLabel={t("nothingNextDays")} />
           </div>
         </Widget>
+        </HomeSlot>
 
         {/* ------------------------------------------------- come back */}
-        <Widget title={t("comeBack")} className="xl:col-span-2">
+        <HomeSlot id="comeBack" title={t("comeBack")} span="xl:col-span-2" empty={dueBack.length === 0}>
+        <Widget title={t("comeBack")}>
           {dueBack.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted">{t("comeBackEmpty")}</p>
           ) : (
@@ -372,8 +382,10 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             </ul>
           )}
         </Widget>
+        </HomeSlot>
 
         {/* ---------------------------------------------------- the month */}
+        <HomeSlot id="month" title={t("thisMonthTitle")}>
         <Widget title={t("thisMonthTitle")}>
           <dl className="grid grid-cols-2 gap-px bg-line">
             {[
@@ -389,7 +401,8 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             ))}
           </dl>
         </Widget>
-      </div>
+        </HomeSlot>
+      </HomeGrid>
     </>
   );
 }

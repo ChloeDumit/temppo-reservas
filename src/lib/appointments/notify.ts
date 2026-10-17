@@ -113,6 +113,7 @@ export async function notifyBooked(appointmentId: string, manageToken: string) {
       studioId: studio.id,
       to: appt.staff.email,
       userId: appt.staff.id,
+      inbox: true,
       url: "/agenda",
       template: "appointment_new",
       subject: en ? `New booking — ${appt.serviceName}` : `Nueva reserva — ${appt.serviceName}`,
@@ -181,4 +182,29 @@ export async function afterDepositSettled(appointmentId: string, outcome: Settle
       relatedId: appt.id,
     });
   }
+}
+
+/**
+ * Someone at the studio booked a client in for another professional: she
+ * should not find out by opening her agenda.
+ */
+export async function notifyStaffBookedForYou(appointmentId: string, byUserId: string) {
+  const appt = await load(appointmentId);
+  if (!appt || appt.staffId === byUserId) return;
+  const { studio } = appt;
+  const en = studio.locale === "en";
+  await notifyPreferred({
+    studioId: studio.id,
+    to: appt.staff.email,
+    userId: appt.staff.id,
+    inbox: true,
+    url: "/agenda",
+    template: "appointment_new",
+    subject: en ? `New appointment — ${appt.client.user.name}` : `Nuevo turno — ${appt.client.user.name}`,
+    body: en
+      ? `${appt.serviceName}, ${whenText(appt.startsAt, studio)}.`
+      : `${appt.serviceName}, ${whenText(appt.startsAt, studio)}.`,
+    relatedType: "Appointment",
+    relatedId: appt.id,
+  });
 }

@@ -103,6 +103,7 @@ model Studio {
   timeOff           TimeOff[]
   appointments      Appointment[]
   payouts           StudioPayout[]
+  inboxItems        InboxItem[]
 
   locations         Location[]
   users             User[]
@@ -180,6 +181,10 @@ model User {
 
   tourSeenAt DateTime?
 
+  /// The home panel as this person arranged it: { order: string[], hidden: string[] }.
+  /// Kept on the account so the same layout follows her to every device.
+  homeLayout Json?
+
   /// Platform operator, not a studio role. Grants access to /admin across
   /// every studio. Deliberately a flag rather than a Role: Role describes what
   /// someone does inside their studio, and this cuts across all of them.
@@ -196,6 +201,7 @@ model User {
   auditLogs          AuditLog[]          @relation("AuditActor")
   approvedPayments   Payment[]           @relation("PaymentApprover")
   pushSubscriptions  PushSubscription[]
+  inbox              InboxItem[]
 
   // As a professional on an appointment studio.
   servicesOffered   ServiceStaff[]
@@ -1125,4 +1131,27 @@ model StudioPayout {
   payments Payment[]
 
   @@index([studioId, createdAt])
+}
+
+/// What staff see under the bell in the panel: new bookings, cancellations,
+/// deposits, leads. Written alongside the email and push for the same event,
+/// so nothing depends on a device having push switched on.
+model InboxItem {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// The notification template, e.g. "appointment_new".
+  kind  String
+  title String
+  body  String
+  url   String?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
 }

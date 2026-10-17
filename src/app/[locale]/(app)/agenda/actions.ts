@@ -9,7 +9,7 @@ import { wallTimeToUtc } from "@/lib/dates";
 import { bookAppointment, cancelAppointment, markAppointment, rescheduleAppointment } from "@/lib/appointments/book";
 import { findOrCreateClient } from "@/lib/appointments/clients";
 import { markDepositReceived } from "@/lib/appointments/payments";
-import { afterDepositSettled } from "@/lib/appointments/notify";
+import { afterDepositSettled, notifyStaffBookedForYou } from "@/lib/appointments/notify";
 
 export type AgendaState = { error?: string; ok?: boolean } | null;
 
@@ -72,6 +72,7 @@ export async function createStaffAppointmentAction(_prev: AgendaState, formData:
     entityType: "Appointment",
     entityId: result.appointmentId,
   });
+  await notifyStaffBookedForYou(result.appointmentId, user.id);
   revalidatePath(PAGE, "page");
   return { ok: true };
 }

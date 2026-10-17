@@ -1181,6 +1181,24 @@
     "newClients": "New clients",
     "avgTicket": "Average ticket",
     "depositsTitle": "{count, plural, one {Pending deposit} other {Pending deposits}} ({count})",
-    "noMethodYet": "no payment method yet"
+    "noMethodYet": "no payment method yet",
+    "customize": "Customize",
+    "arrangeHint": "Move them with the arrows or hide the ones you do not use.",
+    "reset": "Reset",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "hide": "Hide {name}",
+    "emptyNow": "nothing right now",
+    "hiddenWidgets": "Hidden — tap to show again",
+    "depositsWidget": "Pending deposits"
+  },
+  "inbox": {
+    "label": "Notifications",
+    "labelUnread": "{count, plural, one {Notifications, # unread} other {Notifications, # unread}}",
+    "title": "Notifications",
+    "empty": "Nothing new yet. Bookings, cancellations and deposits show up here.",
+    "pushHint": "To get them on your phone or tablet even with the panel closed:",
+    "open": "Open",
+    "dismiss": "Dismiss"
   }
 }

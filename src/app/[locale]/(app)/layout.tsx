@@ -12,6 +12,7 @@ import { LocaleSwitch } from "@/components/app/locale-switch";
 import { LogoutButton } from "@/components/app/logout-button";
 import { navFor, splitNav } from "@/components/app/nav-items";
 import { InstallPrompt } from "@/components/app/install-prompt";
+import { InboxBell, InboxProvider } from "@/components/app/inbox-bell";
 import { GuidedTour } from "@/components/app/guided-tour";
 import { LocationSwitcher } from "@/components/app/location-switcher";
 import { locationsFor, currentLocationId } from "@/lib/locations";
@@ -50,6 +51,8 @@ export default async function AppLayout({
 
   const { primary, overflow } = splitNav(user.role, studio.vertical);
   const beauty = studio.vertical === "APPOINTMENTS";
+  const isStaff = user.role !== "STUDENT";
+  const pushKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
   const home = user.role === "STUDENT" ? (beauty ? "/appointments" : "/my") : "/dashboard";
 
   // A studio lives on its own brand's domain. Signed in on the other one — an
@@ -75,6 +78,7 @@ export default async function AppLayout({
 
   return (
     // Studio branding is applied here, on every plan.
+    <InboxProvider pushKey={pushKey} enabled={isStaff}>
     <div className="accent-scope min-h-dvh" style={accentVars(studio.accentColor)}>
       {/*
         Phone header: compact and identity-only. Navigation lives at the
@@ -88,6 +92,7 @@ export default async function AppLayout({
           </Link>
           <div className="flex shrink-0 items-center gap-2">
             {locationSwitcher("max-w-[9rem] truncate")}
+            {isStaff && <InboxBell />}
             <LocaleSwitch />
           </div>
         </div>
@@ -100,10 +105,13 @@ export default async function AppLayout({
           full sidebar. Phones keep the bottom tab bar.
         */}
         <aside className="sticky top-0 hidden h-dvh w-[5.5rem] shrink-0 flex-col overflow-y-auto border-r border-line bg-surface px-2 py-5 md:flex lg:w-60 lg:px-3">
-          <Link href={home} className="mb-6 flex items-center justify-center gap-2.5 px-2 lg:justify-start" title={studio.name}>
-            <StudioAvatar />
-            <span className="hidden truncate text-sm font-semibold lg:inline">{studio.name}</span>
-          </Link>
+          <div className="mb-6 flex flex-col items-center gap-2 lg:flex-row lg:gap-1">
+            <Link href={home} className="flex min-w-0 flex-1 items-center justify-center gap-2.5 px-2 lg:justify-start" title={studio.name}>
+              <StudioAvatar />
+              <span className="hidden truncate text-sm font-semibold lg:inline">{studio.name}</span>
+            </Link>
+            {isStaff && <InboxBell className="shrink-0" />}
+          </div>
 
           <div className="mb-4 hidden px-1 lg:block">{locationSwitcher("w-full")}</div>
 
@@ -145,5 +153,6 @@ export default async function AppLayout({
         }}
       />
     </div>
+    </InboxProvider>
   );
 }
