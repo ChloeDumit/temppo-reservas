@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Historias destacadas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Jost:wght@400;500;600&family=Fredoka:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fbf7f8; --blush: #f4e6ea; --rose: #b5536f; --rose-deep: #973f59; --plum: #3b1622;
+    --ink: #1c1917; --ink-soft: #57534e; --muted: #8a827a; --line: #ecdfe3;
+    --serif: "Cormorant Garamond", Georgia, serif; --sans: "Jost", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ccc; font-family: var(--sans); color: var(--ink); font-feature-settings: "lnum" 1; }
+  #board { display: flex; flex-wrap: wrap; gap: 30px; padding: 30px; }
+
+  /* Instagram covers roughly the top and bottom 250px with its own chrome:
+     everything that matters stays between them. */
+  .story { width: 1080px; height: 1920px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 300px 96px 300px; background: var(--paper); }
+  .story.dark { background: var(--rose); color: #fff; }
+  .story.blush { background: var(--blush); }
+  .step { font-size: 30px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rose); }
+  .dark .step { color: #f6d3dd; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 118px; line-height: .98; letter-spacing: -.02em; margin-top: 30px; }
+  h1 em { font-style: italic; font-weight: 500; color: var(--rose); }
+  .dark h1 em { color: #f6d3dd; }
+  p.lead { font-size: 40px; line-height: 1.45; color: var(--ink-soft); margin-top: 40px; }
+  .dark p.lead { color: #fbe4ea; }
+  .stage { margin-top: 70px; flex: 1; display: flex; flex-direction: column; gap: 26px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 40px; padding: 38px 44px; box-shadow: 0 30px 80px rgba(87, 30, 50, .10); color: var(--ink); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 36px; }
+  .row + .row { margin-top: 26px; padding-top: 26px; border-top: 1px solid var(--line); }
+  .row small { display: block; font-size: 28px; color: var(--muted); margin-top: 4px; }
+  .chip { display: inline-block; border-radius: 999px; padding: 10px 24px; font-size: 26px; font-weight: 600; background: var(--blush); color: var(--rose-deep); }
+  .chip.ok { background: #e6efe9; color: #4a7c62; }
+  .chip.no { background: #fae4e1; color: #a3352b; }
+  .brand { position: absolute; left: 96px; bottom: 300px; display: flex; align-items: center; gap: 16px; }
+  .brand img { width: 84px; height: 84px; }
+  .brand b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 50px; color: var(--rose); }
+  .brand small { font-size: 30px; color: var(--muted); }
+  .dark .brand b, .dark .brand small { color: #fff; }
+  .dark .brand img { background: #fff; border-radius: 50%; padding: 6px; }
+  .mascot-big { width: 520px; height: 520px; align-self: center; margin-top: 40px; filter: drop-shadow(0 30px 60px rgba(40,10,20,.25)); }
+  .cta { align-self: flex-start; margin-top: 50px; background: #fff; color: var(--rose-deep); border-radius: 999px; padding: 26px 46px; font-size: 38px; font-weight: 600; }
+  .light .cta, .story:not(.dark) .cta { background: var(--rose); color: #fff; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .two .card { padding: 34px 34px; }
+  .two h3 { font-size: 36px; font-weight: 600; margin: 18px 0 10px; }
+  .two p { font-size: 30px; line-height: 1.4; color: var(--ink-soft); }
+  .bio { background: #fff; border-radius: 40px; padding: 40px 44px; border: 1px solid var(--line); }
+  .bio .top { display: flex; align-items: center; gap: 28px; }
+  .bio .avatar { width: 150px; height: 150px; border-radius: 50%; background: var(--blush); display: grid; place-items: center; }
+  .bio .avatar span { font-family: var(--serif); font-size: 64px; font-weight: 600; color: var(--rose); }
+  .bio b { font-size: 36px; }
+  .bio p { font-size: 32px; color: var(--ink-soft); margin-top: 20px; line-height: 1.4; }
+  .bio .link { color: #00376b; font-weight: 500; }
+  .pointer { font-size: 34px; color: var(--rose); font-weight: 600; margin-top: 18px; }
+  .notif { display: flex; gap: 24px; align-items: flex-start; }
+  .notif .icon { width: 80px; height: 80px; flex-shrink: 0; border-radius: 22px; background: var(--blush); display: grid; place-items: center; }
+  .notif h3 { font-size: 36px; font-weight: 600; }
+  .notif p { font-size: 32px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+  .q { font-family: var(--serif); font-size: 104px; line-height: 1; font-weight: 600; margin-top: 30px; }
+  .a { margin-top: 60px; font-size: 44px; line-height: 1.45; }
+  .a strong { color: var(--rose); }
+  .faq-mascot { width: 380px; height: 380px; align-self: flex-end; margin-top: auto; margin-bottom: 40px; filter: drop-shadow(0 24px 50px rgba(40,10,20,.18)); }
+  .counter { position: absolute; right: 96px; top: 300px; font-size: 28px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="board"></div>
+<script>
+  const M = "../../mascot/mascota-b-calendario.svg";
+  const brand = '<div class="brand"><img src="' + M + '" alt=""><span><b>temppo</b> <small>Beauty</small></span></div>';
+  const bell = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#b5536f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg>';
+
+  // Each highlight is a short sequence. id → file name.
+  const stories = [
+    // ---------------------------------------------------- Cómo funciona
+    { id: "como-funciona-1", cls: "dark", html: `
+      <p class="step">Cómo funciona</p>
+      <h1>Tu agenda online, <em>en 3 pasos.</em></h1>
+      <img class="mascot-big" src="${M}" alt="">
+      <p class="lead" style="text-align:center">Pasá para ver 👉</p>` },
+    { id: "como-funciona-2", html: `
+      <p class="step">Paso 1 de 3</p>
+      <h1>Cargás tus <em>servicios.</em></h1>
+      <p class="lead">Cuánto dura cada uno, cuánto cuesta y cuánto de seña. Más tus días y horarios.</p>
+      <div class="stage"><div class="card">
+        <div class="row"><span>Semipermanente<small>1 h · limpieza 15 min</small></span><span>$ 1.200 <span class="chip">Seña 30%</span></span></div>
+        <div class="row"><span>Kapping<small>1 h 30 min</small></span><span>$ 1.500 <span class="chip">Seña $400</span></span></div>
+        <div class="row"><span>Lifting de pestañas<small>1 h 30 min</small></span><span>$ 1.800</span></div>
+        <div class="row"><span>+ Nail art<small>adicional · +30 min</small></span><span>+ $ 300</span></div>
+      </div></div>` },
+    { id: "como-funciona-3", html: `
+      <p class="step">Paso 2 de 3</p>
+      <h1>Ponés tu link <em>en la bio.</em></h1>
+      <p class="lead">Tus clientas eligen servicio, día y hora. No bajan ninguna app ni crean cuenta.</p>
+      <div class="stage"><div class="bio">
+        <div class="top"><div class="avatar"><span>L</span></div><div><b>Uñas de Lu</b><p style="margin-top:6px">Manicura · Montevideo</p></div></div>
+        <p>💅 Semipermanente · kapping · nail art<br>📍 Pocitos<br><span class="link">beauty.temppo.uy/b/unas-de-lu</span></p>
+      </div><p class="pointer">↑ ese link es tu agenda, abierta las 24 horas</p></div>` },
+    { id: "como-funciona-4", html: `
+      <p class="step">Paso 3 de 3</p>
+      <h1>Te llegan turnos <em>con seña.</em></h1>
+      <p class="lead">Aparecen solos en tu agenda. A la clienta le llega el recordatorio; a vos, el aviso.</p>
+      <div class="stage">
+        <div class="card notif"><div class="icon">${bell}</div><div><h3>Nueva reserva — Martina P.</h3><p>Semipermanente · sábado 10:00<br>Seña $ 360 · pagada ✓</p></div></div>
+        <div class="card notif"><div class="icon">${bell}</div><div><h3>Nueva reserva — Valentina G.</h3><p>Lifting de pestañas · lunes 15:30<br>Seña por transferencia · TP-F76DWH</p></div></div>
+      </div>` },
+    { id: "como-funciona-5", cls: "dark", html: `
+      <p class="step">Probala</p>
+      <h1>Un mes gratis, <em>sin tarjeta.</em></h1>
+      <p class="lead">Te ayudamos a cargar tus servicios en 10 minutos. Escribinos o entrá al link de la bio.</p>
+      <span class="cta">beauty.temppo.uy</span>` },
+
+    // ------------------------------------------------------------- Señas
+    { id: "senas-1", html: `
+      <p class="step">Señas</p>
+      <h1>La seña se paga <em>al reservar.</em></h1>
+      <p class="lead">Vos elegís por servicio: un porcentaje o un monto fijo. Tu clienta la paga en el momento:</p>
+      <div class="stage"><div class="card">
+        <div class="row"><span>Mercado Pago<small>con tarjeta o dinero en cuenta</small></span><span class="chip ok">Al instante</span></div>
+        <div class="row"><span>Transferencia<small>te manda el comprobante por WhatsApp con un código</small></span><span class="chip">La confirmás vos</span></div>
+      </div></div>` },
+    { id: "senas-2", html: `
+      <p class="step">Señas</p>
+      <h1>¿Y si <em>cancela?</em></h1>
+      <p class="lead">Las reglas las ponés vos, y la clienta las ve antes de reservar.</p>
+      <div class="stage"><div class="two">
+        <div class="card"><span class="chip ok">A tiempo</span><h3>Antes del plazo</h3><p>Queda como crédito para el próximo turno, o se la devolvés. Vos elegís.</p></div>
+        <div class="card"><span class="chip no">Tarde o no vino</span><h3>Fuera de plazo</h3><p>La seña queda para vos. Tu tiempo también vale.</p></div>
+      </div></div>` },
+    { id: "senas-3", html: `
+      <p class="step">Señas</p>
+      <h1>¿Y si reserva <em>y no paga?</em></h1>
+      <p class="lead">El horario se le guarda un rato. Si la seña no llega, se libera solo para otra clienta.</p>
+      <div class="stage"><div class="card">
+        <div class="row"><span>Lucía F. · sábado 15:30<small>esperando la seña</small></span><span class="chip">⏳ 15 min</span></div>
+        <div class="row"><span>Horario liberado<small>disponible otra vez en tu página</small></span><span class="chip ok">Libre</span></div>
+      </div></div>` },
+
+    // ---------------------------------------------------- Te toca volver
+    { id: "te-toca-volver-1", cls: "blush", html: `
+      <p class="step">Te toca volver</p>
+      <h1>Cada servicio <em>tiene su ciclo.</em></h1>
+      <p class="lead">Le decís cada cuántos días vuelve una clienta, y la agenda lleva la cuenta.</p>
+      <div class="stage"><div class="card">
+        <div class="row"><span>Semipermanente</span><span class="chip">cada 21 días</span></div>
+        <div class="row"><span>Extensión de pestañas</span><span class="chip">cada 15 días</span></div>
+        <div class="row"><span>Lifting de pestañas</span><span class="chip">cada 6 semanas</span></div>
+        <div class="row"><span>Color</span><span class="chip">cada 5 semanas</span></div>
+      </div></div>` },
+    { id: "te-toca-volver-2", cls: "blush", html: `
+      <p class="step">Te toca volver</p>
+      <h1>Un toque <em>y le escribís.</em></h1>
+      <p class="lead">Cuando a una clienta le toca y no reservó, te aparece en tu inicio con el mensaje ya armado.</p>
+      <div class="stage">
+        <div class="card"><div class="row"><span>Valentina G.<small>Semipermanente hace 21 días</small></span><span class="chip" style="background:var(--rose);color:#fff">WhatsApp →</span></div>
+        <div class="row"><span>Camila R.<small>Lifting hace 43 días</small></span><span class="chip" style="background:var(--rose);color:#fff">WhatsApp →</span></div></div>
+        <p class="lead" style="margin-top:10px">Tu mejor clienta es la que vuelve. 💗</p>
+      </div>` },
+
+    // --------------------------------------------------------- Preguntas
+    { id: "preguntas-1", html: `<span class="counter">1/5</span><p class="step">Preguntas</p>
+      <p class="q">¿Mis clientas tienen que bajar una app?</p>
+      <p class="a"><strong>No.</strong> Entran a tu link, eligen y reservan con su nombre y celular. Les llega un link para cambiar o cancelar.</p>
+      <img class="faq-mascot" src="${M}" alt="">` },
+    { id: "preguntas-2", html: `<span class="counter">2/5</span><p class="step">Preguntas</p>
+      <p class="q">¿Cobran comisión por reserva?</p>
+      <p class="a"><strong>No.</strong> Ni por reserva ni por clienta nueva. Si cobrás la seña con Mercado Pago, Mercado Pago cobra su comisión habitual.</p>
+      <img class="faq-mascot" src="${M}" alt="">` },
+    { id: "preguntas-3", html: `<span class="counter">3/5</span><p class="step">Preguntas</p>
+      <p class="q">¿Sirve si somos varias en el salón?</p>
+      <p class="a"><strong>Sí.</strong> Cada profesional tiene su agenda y sus servicios, y la clienta elige con quién — o “la primera libre”.</p>
+      <img class="faq-mascot" src="${M}" alt="">` },
+    { id: "preguntas-4", html: `<span class="counter">4/5</span><p class="step">Preguntas</p>
+      <p class="q">¿Puedo seguir anotando turnos que me piden por mensaje?</p>
+      <p class="a"><strong>Sí.</strong> Los cargás en segundos desde el celular o la tablet, y no te deja superponer dos clientas.</p>
+      <img class="faq-mascot" src="${M}" alt="">` },
+    { id: "preguntas-5", cls: "dark", html: `<span class="counter" style="color:#f6d3dd">5/5</span><p class="step">Preguntas</p>
+      <p class="q">¿Cómo empiezo?</p>
+      <p class="a">Probala <strong style="color:#fff">gratis un mes</strong>, sin tarjeta. Entrá al link de la bio o escribinos y te la dejamos armada.</p>
+      <span class="cta">beauty.temppo.uy</span>` },
+  ];
+
+  const board = document.getElementById("board");
+  for (const s of stories) {
+    const el = document.createElement("section");
+    el.className = "story " + (s.cls ?? "");
+    el.id = s.id;
+    el.innerHTML = s.html + brand;
+    board.appendChild(el);
+  }
+  window.STORY_IDS = stories.map((s) => s.id);
+</script>
+</body>
+</html>
