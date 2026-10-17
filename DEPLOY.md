@@ -52,6 +52,27 @@ local development — where Postgres is reached directly — needs only the one.
 6. **Verify temppo.uy in Resend** before using an `@temppo.uy` sender, or the
    send is rejected and students get no email.
 
+## Temppo Beauty at beauty.temppo.uy
+
+Temppo Beauty — appointments for beauty professionals — is **the same Netlify
+site**, not a second one. The app reads the host of each request to decide
+which brand to show, and a studio signing up on `beauty.temppo.uy` becomes an
+appointment business.
+
+1. Netlify → this site → **Domain management** → *Add a domain alias* →
+   `beauty.temppo.uy`.
+2. DNS for `temppo.uy`: a `CNAME` from `beauty` to `<site>.netlify.app`, the
+   same target as `reservas`. Netlify issues the certificate once it resolves.
+3. Nothing else is required: the name and domain default to Temppo Beauty and
+   `beauty.temppo.uy`. Links in a beauty studio's emails and payment returns are
+   built on that domain, whatever `APP_URL` says.
+4. The first deploy runs a migration that creates the `btree_gist` extension
+   (it stops one professional from being double-booked). Supabase and Neon allow
+   it; on another host, check the database user may create extensions.
+
+Sessions are per host, so someone signed in on one brand is signed out on the
+other — intended, since an account belongs to one studio and one brand.
+
 ## Optional
 
 - **Mercado Pago.** Set `MERCADOPAGO_ACCESS_TOKEN` and the button appears by

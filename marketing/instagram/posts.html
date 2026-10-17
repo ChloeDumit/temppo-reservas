@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Posts Instagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fbf7f8;
+    --blush: #f4e6ea;
+    --rose: #b5536f;
+    --rose-deep: #973f59;
+    --plum: #3b1622;
+    --ink: #1c1917;
+    --ink-soft: #57534e;
+    --muted: #8a827a;
+    --line: #ecdfe3;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --sans: "Jost", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ddd; font-family: var(--sans); color: var(--ink); font-feature-settings: "lnum" 1; }
+  .board { display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; }
+
+  /* 4:5, the format that takes the most room in the feed */
+  .post { width: 1080px; height: 1350px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 96px 96px 84px; }
+  .serif { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em; }
+  .eyebrow { font-size: 26px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
+  .headline { font-family: var(--serif); font-weight: 600; font-size: 112px; line-height: 0.98; letter-spacing: -0.02em; }
+  .headline em { font-style: italic; font-weight: 500; }
+  .body { font-size: 34px; line-height: 1.45; }
+  .footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-size: 26px; }
+  .brand { font-family: var(--serif); font-size: 40px; font-weight: 600; }
+  .pill { border-radius: 999px; padding: 18px 34px; font-weight: 500; font-size: 28px; }
+
+  /* 1 — the 23:47 problem */
+  .p1 { background: var(--plum); color: #fff; }
+  .p1 .eyebrow { color: #e7a9bb; }
+  .chat { margin: 64px 0 0; display: flex; flex-direction: column; gap: 22px; }
+  .bubble { align-self: flex-start; max-width: 74%; background: #fff; color: var(--ink); border-radius: 28px 28px 28px 8px; padding: 22px 30px 16px; font-size: 32px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+  .bubble small { display: block; text-align: right; font-size: 20px; color: var(--muted); margin-top: 6px; }
+  .bubble.b2 { margin-left: 40px; opacity: .92; }
+  .bubble.b3 { margin-left: 80px; opacity: .84; }
+  .bubble.b4 { margin-left: 120px; opacity: .76; }
+  .p1 .headline { margin-top: auto; font-size: 104px; }
+  .p1 .headline em { color: #e7a9bb; }
+  .p1 .footer { margin-top: 48px; color: rgba(255,255,255,.75); }
+
+  /* 2 — the deposit */
+  .p2 { background: var(--paper); }
+  .p2 .eyebrow { color: var(--rose); }
+  .p2 .headline { margin-top: 40px; }
+  .p2 .headline em { color: var(--rose); }
+  .receipt { margin: 70px 0 0; background: #fff; border: 1px solid var(--line); border-radius: 40px; padding: 44px 48px; box-shadow: 0 30px 80px rgba(87, 30, 50, .10); }
+  .receipt .row { display: flex; align-items: center; justify-content: space-between; }
+  .check { width: 64px; height: 64px; border-radius: 50%; background: #e6efe9; display: grid; place-items: center; }
+  .receipt .title { font-size: 30px; color: var(--muted); }
+  .receipt .amount { font-family: var(--serif); font-size: 92px; font-weight: 600; margin-top: 10px; }
+  .receipt .meta { margin-top: 26px; padding-top: 26px; border-top: 1px dashed var(--line); font-size: 30px; color: var(--ink-soft); line-height: 1.5; }
+  .badge { display: inline-block; background: #e6efe9; color: #4a7c62; border-radius: 999px; padding: 8px 22px; font-size: 24px; font-weight: 600; }
+  .p2 .body { margin-top: 56px; color: var(--ink-soft); }
+  .p2 .footer { color: var(--muted); }
+
+  /* 3 — time to come back */
+  .p3 { background: var(--blush); }
+  .p3 .eyebrow { color: var(--rose); }
+  .p3 .headline { margin-top: 40px; }
+  .p3 .headline em { color: var(--rose); }
+  .notif { margin-top: 80px; background: #fff; border-radius: 40px; padding: 40px 44px; box-shadow: 0 30px 80px rgba(87, 30, 50, .12); }
+  .notif .top { display: flex; align-items: center; gap: 22px; font-size: 26px; color: var(--muted); }
+  .bell { width: 60px; height: 60px; border-radius: 50%; background: var(--blush); display: grid; place-items: center; }
+  .notif h3 { font-family: var(--sans); font-size: 36px; font-weight: 600; margin-top: 26px; }
+  .notif p { font-size: 32px; color: var(--ink-soft); margin-top: 10px; line-height: 1.4; }
+  .wa { margin-top: 30px; display: inline-flex; align-items: center; gap: 14px; background: var(--rose); color: #fff; }
+  .p3 .body { margin-top: 56px; color: var(--ink-soft); }
+  .p3 .footer { color: var(--muted); }
+
+  /* 4 — how it works */
+  .p4 { background: var(--paper); }
+  .p4 .eyebrow { color: var(--rose); }
+  .p4 .headline { margin-top: 40px; font-size: 104px; }
+  .steps { margin-top: 84px; display: flex; flex-direction: column; gap: 64px; }
+  .chips { margin-top: auto; display: flex; flex-wrap: wrap; gap: 16px; }
+  .chip { border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: 14px 28px; font-size: 26px; color: var(--ink-soft); }
+  .step { display: flex; gap: 40px; align-items: flex-start; }
+  .num { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 140px; line-height: .8; color: var(--rose); width: 100px; flex-shrink: 0; }
+  .step h3 { font-family: var(--sans); font-size: 38px; font-weight: 600; }
+  .step p { font-size: 30px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+  .p4 .footer { color: var(--muted); }
+
+  /* 5 — call to action with the booking page */
+  .p5 { background: var(--rose); color: #fff; padding-bottom: 0; }
+  .p5 .eyebrow { color: #f6d3dd; }
+  .p5 .headline { margin-top: 36px; font-size: 108px; }
+  .p5 .cta { margin-top: 44px; display: flex; gap: 20px; align-items: center; }
+  .p5 .pill.light { background: #fff; color: var(--rose-deep); }
+  .p5 .note { font-size: 28px; color: #f6d3dd; }
+  .p5 .corner { position: absolute; top: 88px; right: 96px; font-family: var(--serif); font-size: 40px; font-weight: 600; color: #fff; }
+  .p5 .eyebrow { max-width: 620px; }
+  .phone { position: absolute; left: 50%; bottom: -240px; transform: translateX(-50%); width: 560px; height: 900px; background: #fff; border-radius: 76px; border: 14px solid #2a1018; box-shadow: 0 40px 120px rgba(40, 10, 20, .45); padding: 70px 40px 0; color: var(--ink); }
+  .phone .studio { text-align: center; font-family: var(--serif); font-size: 46px; font-weight: 600; }
+  .phone .sub { text-align: center; font-size: 22px; color: var(--muted); margin-top: 4px; }
+  .phone .svc { margin-top: 30px; border: 1px solid var(--line); border-radius: 24px; padding: 20px 24px; display: flex; justify-content: space-between; font-size: 24px; }
+  .phone .svc b { font-weight: 600; }
+  .phone .days { margin-top: 26px; display: flex; gap: 10px; }
+  .phone .day { flex: 1; border: 1px solid var(--line); border-radius: 18px; text-align: center; padding: 10px 0; font-size: 18px; color: var(--muted); }
+  .phone .day b { display: block; font-size: 30px; color: var(--ink); font-weight: 600; }
+  .phone .day.on { background: var(--rose); border-color: var(--rose); color: #f6d3dd; }
+  .phone .day.on b { color: #fff; }
+  .phone .slots { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .phone .slot { border: 1px solid var(--line); border-radius: 16px; text-align: center; padding: 14px 0; font-size: 24px; font-weight: 500; }
+  .phone .slot.on { background: var(--rose); color: #fff; border-color: var(--rose); }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <!-- 1 -->
+  <section class="post p1" id="post-1">
+    <p class="eyebrow">¿Te suena?</p>
+    <div class="chat">
+      <div class="bubble">Holaa! tenés lugar el jueves? 💅<small>23:41</small></div>
+      <div class="bubble b2">o el viernes a la tarde<small>23:43</small></div>
+      <div class="bubble b3">cuánto sale con nail art?<small>23:46</small></div>
+      <div class="bubble b4">holaa?? 🙈<small>23:47</small></div>
+    </div>
+    <h1 class="headline">Son las 23:47 y seguís <em>dando turnos.</em></h1>
+    <div class="footer"><span>Tus clientas pueden reservar solas.</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="post p2" id="post-2">
+    <p class="eyebrow">Señas automáticas</p>
+    <h1 class="headline">La que no viene, <em>igual te paga.</em></h1>
+    <div class="receipt">
+      <div class="row">
+        <span class="title">Seña recibida</span>
+        <span class="check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#4a7c62" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></span>
+      </div>
+      <div class="amount">$ 400</div>
+      <div class="meta">
+        Martina P. · Semipermanente<br>
+        Sábado 10:00 &nbsp;<span class="badge">Confirmado</span>
+      </div>
+    </div>
+    <p class="body">Tu clienta paga la seña al reservar, con Mercado Pago o transferencia. Si cancela tarde o no viene, la seña queda para vos.</p>
+    <div class="footer"><span>Sin comisión por reserva</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="post p3" id="post-3">
+    <p class="eyebrow">Te toca volver</p>
+    <h1 class="headline">Tu mejor clienta es <em>la que vuelve.</em></h1>
+    <div class="notif">
+      <div class="top">
+        <span class="bell"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b5536f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg></span>
+        Para invitar a volver · hoy
+      </div>
+      <h3>Valentina G.</h3>
+      <p>Vino hace 21 días por Semipermanente y todavía no reservó.</p>
+      <span class="pill wa">Escribirle por WhatsApp →</span>
+    </div>
+    <p class="body">Cada servicio tiene su ciclo. Cuando a una clienta le toca volver y no reservó, te avisamos y le escribís con un toque, con tu link de reservas ya armado.</p>
+    <div class="footer"><span>Agenda llena, sin perseguir a nadie</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="post p4" id="post-4">
+    <p class="eyebrow">Así de simple</p>
+    <h1 class="headline">Lista en diez minutos.</h1>
+    <div class="steps">
+      <div class="step"><span class="num">1</span><div><h3>Cargás servicios y horarios</h3><p>Duración, precio, seña, y los días que atendés. Con tiempo de limpieza entre clientas.</p></div></div>
+      <div class="step"><span class="num">2</span><div><h3>Ponés tu link en la bio</h3><p>Tus clientas eligen servicio, día y hora. Sin bajar apps, sin crear cuentas.</p></div></div>
+      <div class="step"><span class="num">3</span><div><h3>Te llegan turnos con seña</h3><p>Aparecen en tu agenda, con recordatorio para la clienta y aviso para vos.</p></div></div>
+    </div>
+    <div class="chips"><span class="chip">Sin apps para tus clientas</span><span class="chip">Sin comisión por reserva</span><span class="chip">Celular o tablet</span></div>
+    <div class="footer" style="margin-top: 48px"><span>Probala gratis un mes</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="post p5" id="post-5">
+    <span class="corner" data-brand></span>
+    <p class="eyebrow">Para profesionales de belleza</p>
+    <h1 class="headline">Tu agenda, abierta las 24 horas.</h1>
+    <div class="cta"><span class="pill light">Probala gratis un mes</span><span class="note">Link en la bio · sin tarjeta</span></div>
+    <div class="phone">
+      <div class="studio">Uñas de Lu</div>
+      <div class="sub">Reservá tu turno online</div>
+      <div class="svc"><b>Semipermanente</b><span>1 h · $ 1.200</span></div>
+      <div class="days">
+        <div class="day">jue<b>15</b></div><div class="day">vie<b>16</b></div><div class="day on">sáb<b>17</b></div><div class="day">lun<b>19</b></div><div class="day">mar<b>20</b></div>
+      </div>
+      <div class="slots">
+        <div class="slot">09:00</div><div class="slot">10:00</div><div class="slot on">11:00</div>
+        <div class="slot">12:00</div><div class="slot">15:00</div><div class="slot">16:00</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script>
+  // The brand has no final name yet: change it here, re-export, done.
+  const BRAND = new URLSearchParams(location.search).get("brand") || "Temppo Beauty";
+  document.querySelectorAll("[data-brand]").forEach((el) => (el.textContent = BRAND));
+</script>
+</body>
+</html>

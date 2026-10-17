@@ -3,9 +3,10 @@
  * palette and sender, and decides which vertical a studio signs up to.
  *
  * Plain data with no server imports, so client components can read it too.
- * The beauty brand has no name yet: everything that will change once it has
- * one comes from the environment, so naming it is a config change, not a
- * deploy of new code.
+ * Both run on the same deployment: TEMPPO Reservas at reservas.temppo.uy for
+ * class studios, Temppo Beauty at beauty.temppo.uy for appointments. The
+ * environment can override names and domains (previews, a future own domain)
+ * without a code change.
  */
 
 export type BrandKey = "temppo" | "beauty";
@@ -32,7 +33,18 @@ function list(value: string | undefined) {
     .filter(Boolean);
 }
 
-const beautyName = process.env.NEXT_PUBLIC_BEAUTY_BRAND_NAME || "Agenda Belleza";
+const beautyName = process.env.NEXT_PUBLIC_BEAUTY_BRAND_NAME || "Temppo Beauty";
+
+/**
+ * The beauty brand's sender: its own name over whatever address is already
+ * verified for sending, so it never signs as "TEMPPO Reservas" just because
+ * only EMAIL_FROM was configured.
+ */
+function beautySender() {
+  if (process.env.BEAUTY_EMAIL_FROM) return process.env.BEAUTY_EMAIL_FROM;
+  const address = /<([^>]+)>/.exec(process.env.EMAIL_FROM ?? "")?.[1] ?? process.env.EMAIL_FROM;
+  return `${beautyName} <${address || "no-reply@reservas.temppo.uy"}>`;
+}
 
 export const BRANDS: Record<BrandKey, Brand> = {
   temppo: {
@@ -53,13 +65,12 @@ export const BRANDS: Record<BrandKey, Brand> = {
     key: "beauty",
     name: beautyName,
     shortName: process.env.NEXT_PUBLIC_BEAUTY_BRAND_SHORT || beautyName,
-    domains: list(process.env.NEXT_PUBLIC_BEAUTY_DOMAINS),
+    domains: list(process.env.NEXT_PUBLIC_BEAUTY_DOMAINS || "beauty.temppo.uy"),
     vertical: "APPOINTMENTS",
     accent: "#B5536F",
     themeColor: "#8f3d55",
     background: "#fbf7f8",
-    emailFrom:
-      process.env.BEAUTY_EMAIL_FROM || process.env.EMAIL_FROM || `${beautyName} <no-reply@reservas.temppo.uy>`,
+    emailFrom: beautySender(),
     description:
       "Agenda online para profesionales de belleza: reservas 24 horas, señas con Mercado Pago, " +
       "recordatorios y ficha de cada clienta.",

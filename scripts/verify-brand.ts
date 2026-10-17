@@ -10,6 +10,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 process.env.NEXT_PUBLIC_BEAUTY_DOMAINS = "agenda.example.uy, belleza.example.com";
 process.env.NEXT_PUBLIC_BEAUTY_BRAND_NAME = "Agenda Prueba";
 process.env.NEXT_PUBLIC_TEMPPO_DOMAINS = "reservas.temppo.uy";
+process.env.EMAIL_FROM = "TEMPPO Reservas <no-reply@reservas.temppo.uy>";
+delete process.env.BEAUTY_EMAIL_FROM;
 
 const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -40,6 +42,11 @@ async function main() {
   check("the beauty brand sells appointments", brandForHost("agenda.example.uy").vertical, "APPOINTMENTS");
   check("the name comes from the environment", brandByKey("beauty").name, "Agenda Prueba");
   check("a studio from before brands is TEMPPO", brandByKey(null).key, "temppo");
+  check(
+    "beauty emails keep the verified address but sign with their own name",
+    brandByKey("beauty").emailFrom,
+    "Agenda Prueba <no-reply@reservas.temppo.uy>",
+  );
   check("garbage in the column is TEMPPO", brandByKey("nope").key, "temppo");
 
   console.log("\nA new appointment business");
