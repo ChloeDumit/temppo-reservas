@@ -93,6 +93,11 @@ export async function generateMetadata(): Promise<Metadata> {
       images: poster ? [poster] : undefined,
     },
     applicationName: brand.name,
+    // Each brand's own mascot in the tab and on the home screen.
+    icons: {
+      icon: [{ url: `${brand.iconBase}/favicon.svg`, type: "image/svg+xml" }],
+      apple: `${brand.iconBase}/apple-icon.png`,
+    },
     // Lets iOS run the installed app standalone, like a native one.
     appleWebApp: {
       capable: true,

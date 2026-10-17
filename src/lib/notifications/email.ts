@@ -46,6 +46,7 @@ async function brandingFor(studioId: string): Promise<Sender> {
       logoUrl: studio.logoUrl,
       locale: studio.locale,
       productName: brand.name,
+      iconBase: brand.iconBase,
       from: brand.emailFrom,
       appUrl: appUrlFor(studio),
     };
