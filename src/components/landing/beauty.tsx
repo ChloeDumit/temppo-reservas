@@ -42,7 +42,7 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
   return (
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-5">
-        <BeautyWordmark name={brand.name} className="text-2xl" />
+        <BeautyWordmark name={brand.name} className="text-2xl" mascotSize={44} />
         <nav className="flex w-full items-center gap-2 sm:w-auto">
           <Link href="/login" className={buttonClass("ghost", "sm", "flex-1 sm:flex-none")}>
             {t("login")}

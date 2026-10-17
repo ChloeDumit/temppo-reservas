@@ -27,9 +27,9 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     lang: "es",
     categories: ["business", "productivity", "health"],
     icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: `${brand.iconBase}/icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: `${brand.iconBase}/icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: `${brand.iconBase}/icon-maskable.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

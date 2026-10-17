@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Posts Instagram</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&family=Fredoka:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
     --paper: #fbf7f8;
@@ -31,7 +31,12 @@
   .headline em { font-style: italic; font-weight: 500; }
   .body { font-size: 34px; line-height: 1.45; }
   .footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-size: 26px; }
-  .brand { font-family: var(--serif); font-size: 40px; font-weight: 600; }
+  .brand { display: inline-flex; align-items: center; gap: 14px; }
+  .brand b, .corner b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 46px; letter-spacing: -.01em; }
+  .p2 .brand b, .p3 .brand b, .p4 .brand b { color: var(--rose); }
+  .p1 .brand b { color: #f3b8c8; }
+  .brand small, .corner small { font-family: var(--sans); font-size: 28px; margin-left: 8px; opacity: .8; }
+  .brand img, .corner img { width: 72px; height: 72px; }
   .pill { border-radius: 999px; padding: 18px 34px; font-weight: 500; font-size: 28px; }
 
   /* 1 — the 23:47 problem */
@@ -96,9 +101,11 @@
   .p5 .cta { margin-top: 44px; display: flex; gap: 20px; align-items: center; }
   .p5 .pill.light { background: #fff; color: var(--rose-deep); }
   .p5 .note { font-size: 28px; color: #f6d3dd; }
-  .p5 .corner { position: absolute; top: 88px; right: 96px; font-family: var(--serif); font-size: 40px; font-weight: 600; color: #fff; }
+  .p5 .corner { margin: -24px 0 36px; color: #fff; display: inline-flex; align-items: center; gap: 16px; }
+  .p5 .corner img { background: #fff; border-radius: 50%; padding: 6px; width: 80px; height: 80px; }
+  .p5 .peek { position: absolute; left: 70px; bottom: 120px; width: 300px; height: 300px; z-index: 2; filter: drop-shadow(0 20px 40px rgba(40,10,20,.35)); }
   .p5 .eyebrow { max-width: 620px; }
-  .phone { position: absolute; left: 50%; bottom: -240px; transform: translateX(-50%); width: 560px; height: 900px; background: #fff; border-radius: 76px; border: 14px solid #2a1018; box-shadow: 0 40px 120px rgba(40, 10, 20, .45); padding: 70px 40px 0; color: var(--ink); }
+  .phone { position: absolute; left: 58%; bottom: -240px; transform: translateX(-50%); width: 560px; height: 900px; background: #fff; border-radius: 76px; border: 14px solid #2a1018; box-shadow: 0 40px 120px rgba(40, 10, 20, .45); padding: 70px 40px 0; color: var(--ink); }
   .phone .studio { text-align: center; font-family: var(--serif); font-size: 46px; font-weight: 600; }
   .phone .sub { text-align: center; font-size: 22px; color: var(--muted); margin-top: 4px; }
   .phone .svc { margin-top: 30px; border: 1px solid var(--line); border-radius: 24px; padding: 20px 24px; display: flex; justify-content: space-between; font-size: 24px; }
@@ -181,6 +188,7 @@
   <!-- 5 -->
   <section class="post p5" id="post-5">
     <span class="corner" data-brand></span>
+    <img class="peek" src="../mascot/mascota-b-calendario.svg" alt="">
     <p class="eyebrow">Para profesionales de belleza</p>
     <h1 class="headline">Tu agenda, abierta las 24 horas.</h1>
     <div class="cta"><span class="pill light">Probala gratis un mes</span><span class="note">Link en la bio · sin tarjeta</span></div>
@@ -202,7 +210,14 @@
 <script>
   // The brand has no final name yet: change it here, re-export, done.
   const BRAND = new URLSearchParams(location.search).get("brand") || "Temppo Beauty";
-  document.querySelectorAll("[data-brand]").forEach((el) => (el.textContent = BRAND));
+  // Mascot beside the name, everywhere the brand is signed.
+  document.querySelectorAll("[data-brand]").forEach((el) => {
+    // Built like TEMPPO's: "temppo" in the rounded face, the product beside it.
+    const [, family, product] = /^(temppo)\s+(.+)$/i.exec(BRAND) ?? [null, BRAND, ""];
+    el.innerHTML = '<img src="../mascot/mascota-b-calendario.svg" alt=""><span><b></b><small></small></span>';
+    el.querySelector("b").textContent = product ? family.toLowerCase() : family;
+    el.querySelector("small").textContent = product;
+  });
 </script>
 </body>
 </html>

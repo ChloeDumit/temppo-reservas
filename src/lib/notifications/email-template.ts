@@ -20,6 +20,8 @@ export type EmailBranding = {
   locale: string;
   /** The product the studio is on — "TEMPPO Reservas" or the beauty brand. */
   productName?: string;
+  /** Where this brand's icon set lives, "" for TEMPPO's. */
+  iconBase?: string;
 };
 
 const BRAND_ORANGE = "#E07A5F";
@@ -120,7 +122,7 @@ export function renderEmail({
     (isEnglish ? `Open ${productName}` : `Abrir ${productName}`);
 
   // A studio logo when there is one, otherwise the mascot from the app itself.
-  const logo = branding.logoUrl || `${appUrl}/icon-192.png`;
+  const logo = branding.logoUrl || `${appUrl}${branding.iconBase ?? ""}/icon-192.png`;
 
   const button = link
     ? `

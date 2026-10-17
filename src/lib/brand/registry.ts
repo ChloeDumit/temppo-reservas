@@ -24,6 +24,8 @@ export type Brand = {
   background: string;
   emailFrom: string;
   description: string;
+  /** Where this brand's icon set lives under public/. */
+  iconBase: string;
 };
 
 function list(value: string | undefined) {
@@ -60,6 +62,7 @@ export const BRANDS: Record<BrandKey, Brand> = {
     description:
       "Software de reservas y gestión para estudios. Cupos fijos, packs, lista de espera, " +
       "control de asistencia y registro de pagos.",
+    iconBase: "",
   },
   beauty: {
     key: "beauty",
@@ -74,6 +77,7 @@ export const BRANDS: Record<BrandKey, Brand> = {
     description:
       "Agenda online para profesionales de belleza: reservas 24 horas, señas con Mercado Pago, " +
       "recordatorios y ficha de cada clienta.",
+    iconBase: "/beauty",
   },
 };
 
