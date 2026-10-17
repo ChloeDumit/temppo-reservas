@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { Fraunces, Karla, Fredoka } from "next/font/google";
+import { Cormorant_Garamond, Fraunces, Jost, Karla, Fredoka } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import { getBrand } from "@/lib/brand/server";
 import "../globals.css";
@@ -20,6 +20,27 @@ const brand = Fredoka({
   subsets: ["latin"],
   weight: ["500"],
   variable: "--font-brand-face",
+  display: "swap",
+});
+
+/*
+  The beauty brand's type: a high-contrast Garamond for headings and the
+  wordmark — the register of a fashion magazine or a skincare label — over a
+  clean geometric sans that stays legible on small buttons. Only downloaded
+  by pages that use it.
+*/
+const beautyDisplay = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-beauty-display",
+  display: "swap",
+});
+
+const beautyBody = Jost({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-beauty-body",
   display: "swap",
 });
 
@@ -113,7 +134,7 @@ export default async function LocaleLayout({
   const activeBrand = await getBrand();
 
   return (
-    <html lang={locale} data-brand={activeBrand.key} className={`${display.variable} ${body.variable} ${brand.variable}`}>
+    <html lang={locale} data-brand={activeBrand.key} className={`${display.variable} ${body.variable} ${brand.variable} ${beautyDisplay.variable} ${beautyBody.variable}`}>
       <body className="accent-scope min-h-dvh">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

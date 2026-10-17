@@ -310,3 +310,25 @@
     animation: none;
   }
 }
+
+/*
+  Type for the beauty brand. Deliberately outside every @layer: next/font sets
+  --font-display on <html> in an unlayered rule, and an unlayered rule beats
+  any layered one whatever its specificity. Scoped to html[data-brand] so it
+  then outranks that class.
+*/
+html[data-brand="beauty"] {
+  --font-sans: var(--font-beauty-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-beauty-display), Georgia, serif;
+  --font-brand: var(--font-beauty-display), Georgia, serif;
+  /* Garamond defaults to old-style figures, which bob up and down in prices,
+     times and counts. Lining figures everywhere; inherited, and independent
+     of Tailwind's tabular-nums. */
+  font-feature-settings: "lnum" 1;
+}
+/* Garamond has a small x-height: scale it up to sit level with the sans
+   beside it, without touching any size set in the markup. */
+html[data-brand="beauty"] :is(h1, h2, h3, .font-display, .font-brand) {
+  font-size-adjust: 0.5;
+  letter-spacing: -0.005em;
+}
