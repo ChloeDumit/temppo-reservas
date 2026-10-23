@@ -22,6 +22,7 @@ import { localePath } from "@/i18n/routing";
 import { getBrand } from "@/lib/brand/server";
 import { appUrlFor } from "@/lib/brand/url";
 import { seedAppointmentStudio } from "@/lib/appointments/seed";
+import { BEAUTY_TRIAL_WA_QUOTA, WA_AUTO_LIVE } from "@/lib/brand/pricing";
 
 export type AuthState = { error?: string; sent?: boolean } | null;
 
@@ -211,6 +212,8 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
         brand: brand.key,
         vertical: brand.vertical,
         accentColor: brand.accent,
+        // The trial includes a taste of automatic WhatsApp, once it sends.
+        ...(appointments && WA_AUTO_LIVE ? { waMode: "CLOUD", waMonthlyQuota: BEAUTY_TRIAL_WA_QUOTA } : {}),
         // Every new studio gets a default location so the schedule works immediately.
         locations: { create: { name: studioName } },
       },

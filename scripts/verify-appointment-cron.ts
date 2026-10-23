@@ -97,6 +97,69 @@ async function main() {
   check("and only once", await sendAppointmentReminders(studio, now), 0);
   check("it is stamped", Boolean((await db.appointment.findUniqueOrThrow({ where: { id: tomorrow.id } })).remindersSentAt), true);
 
+  console.log("\nWhatsApp automático");
+  await db.appointment.deleteMany({ where: { studioId: studio.id } });
+  process.env.WHATSAPP_TOKEN = "test-token";
+  process.env.WHATSAPP_PHONE_NUMBER_ID = "123";
+  const realFetch = globalThis.fetch;
+  const sent: { to: string; template: string; params: string[] }[] = [];
+  let failNext = false;
+  globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
+    if (!String(url).includes("graph.facebook.com")) return realFetch(url, init);
+    if (failNext) {
+      failNext = false;
+      return new Response(JSON.stringify({ error: { message: "Recipient not on WhatsApp" } }), { status: 400 });
+    }
+    const body = JSON.parse(String(init?.body));
+    sent.push({
+      to: body.to,
+      template: body.template.name,
+      params: body.template.components[0].parameters.map((p: { text: string }) => p.text),
+    });
+    return new Response(JSON.stringify({ messages: [{ id: `wamid.${sent.length}` }] }), { status: 200 });
+  }) as typeof fetch;
+  const waUsed = async () => (await db.studio.findUniqueOrThrow({ where: { id: studio.id } })).waSentThisPeriod;
+  const soon = (h: number) => new Date(now.getTime() + h * 3_600_000);
+
+  await appt(ana.id, soon(2));
+  check("a LINK studio sends no WhatsApp", (await sendAppointmentReminders(studio, now), sent.length), 0);
+
+  const cloud = await db.studio.update({ where: { id: studio.id }, data: { waMode: "CLOUD", waMonthlyQuota: 3 } });
+  await db.user.update({ where: { id: bea.userId }, data: { phone: "+598 99 000 222" } });
+  const eva = await mkClient("Eva", null);
+  await db.user.update({ where: { id: eva.userId }, data: { phone: "no tiene" } });
+  const fay = await mkClient("Fay", null);
+  await db.user.update({ where: { id: fay.userId }, data: { phone: "099 000 333" } });
+  await db.whatsAppOptOut.upsert({ where: { phone: "59899000333" }, create: { phone: "59899000333" }, update: {} });
+  for (const [i, c] of [ana, bea, eva, fay].entries()) await appt(c.id, soon(4 + i * 1.5));
+  await sendAppointmentReminders(cloud, now);
+  check("only valid numbers that did not opt out get one", sent.map((m) => m.to), ["59899123456", "59899000222"]);
+  check("the approved template, filled in", sent[0].template === "appointment_reminder" && sent[0].params.slice(0, 3), [
+    "Ana",
+    "Uñas",
+    "Cron Verify",
+  ]);
+  check("two taken from the quota", await waUsed(), 2);
+  check("the delivery id is kept for the webhook", await db.notificationLog.count({ where: { studioId: studio.id, channel: "WHATSAPP", providerMessageId: "wamid.1" } }), 1);
+
+  await appt(ana.id, soon(12));
+  await appt(bea.id, soon(14));
+  await sendAppointmentReminders(cloud, now);
+  check("the quota stops the fourth", [sent.length, await waUsed()], [3, 3]);
+
+  const nextMonth = new Date(now.getTime() + 32 * DAY);
+  await appt(ana.id, new Date(nextMonth.getTime() + 3_600_000));
+  failNext = true;
+  await sendAppointmentReminders(cloud, nextMonth);
+  check("a new month starts from zero, and a failed send gives its message back", await waUsed(), 0);
+  check("the failure is logged", await db.notificationLog.count({ where: { studioId: studio.id, channel: "WHATSAPP", status: "FAILED" } }), 1);
+
+  globalThis.fetch = realFetch;
+  delete process.env.WHATSAPP_TOKEN;
+  delete process.env.WHATSAPP_PHONE_NUMBER_ID;
+  await db.whatsAppOptOut.delete({ where: { phone: "59899000333" } });
+  await db.studio.update({ where: { id: studio.id }, data: { waMode: "LINK" } });
+
   console.log("\nTe toca volver");
   await db.appointment.deleteMany({ where: { studioId: studio.id } });
   // Ana came 22 days ago: due. Bea came 22 days ago but has booked again.

@@ -400,6 +400,36 @@ export default async function AdminStudioPage({
             ))}
           </div>
 
+          {studio.vertical === "APPOINTMENTS" && (
+            <div className="grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-3">
+              <label className="text-xs text-white/40">
+                WhatsApp
+                <select name="waMode" defaultValue={studio.waMode} className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white">
+                  <option value="LINK" className="bg-ink">
+                    Botón manual (wa.me)
+                  </option>
+                  <option value="CLOUD" className="bg-ink">
+                    Automático (Cloud API)
+                  </option>
+                </select>
+              </label>
+              <label className="text-xs text-white/40">
+                Mensajes por mes
+                <input
+                  name="waMonthlyQuota"
+                  type="number"
+                  min={0}
+                  max={100000}
+                  defaultValue={studio.waMonthlyQuota}
+                  className="mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
+                />
+              </label>
+              <p className="self-end pb-2 text-xs text-white/40">
+                Usados este mes: <span className="tabular-nums text-white/70">{studio.waSentThisPeriod}</span>
+              </p>
+            </div>
+          )}
+
           <button
             type="submit"
             className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20"

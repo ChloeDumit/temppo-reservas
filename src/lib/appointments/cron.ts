@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { notify, notifyOwners, notifyPreferred } from "@/lib/notifications";
+import { notifyWhatsApp } from "@/lib/notifications/whatsapp";
 import { appUrlFor } from "@/lib/brand/url";
 import { localePath } from "@/i18n/routing";
 import { rebookText, reminderText, waLink, whenText } from "./whatsapp-text";
@@ -18,6 +19,7 @@ type CronStudio = {
   timezone: string;
   locale: string;
   reminderHoursBefore: number;
+  waMode: string;
 };
 
 const DAY = 86_400_000;
@@ -59,7 +61,10 @@ export async function expireHolds(studio: CronStudio, now: Date) {
   return stale.length;
 }
 
-/** The reminder before each confirmed appointment, by email and push. */
+/**
+ * The reminder before each confirmed appointment, by email and push, and by
+ * automatic WhatsApp when the studio has it.
+ */
 export async function sendAppointmentReminders(studio: CronStudio, now: Date) {
   const windowEnd = new Date(now.getTime() + studio.reminderHoursBefore * 3_600_000);
   const due = await db.appointment.findMany({
@@ -70,6 +75,9 @@ export async function sendAppointmentReminders(studio: CronStudio, now: Date) {
       startsAt: { gt: now, lte: windowEnd },
     },
     include: { client: { include: { user: true } } },
+    // Soonest first, so when the WhatsApp quota runs short it is the
+    // appointments still days away that miss out.
+    orderBy: { startsAt: "asc" },
   });
 
   for (const appt of due) {
@@ -85,6 +93,20 @@ export async function sendAppointmentReminders(studio: CronStudio, now: Date) {
       relatedType: "Appointment",
       relatedId: appt.id,
     });
+    if (studio.waMode === "CLOUD") {
+      // Template "appointment_reminder", approved in Meta's console with
+      // {{1}} first name, {{2}} service, {{3}} studio, {{4}} day and time.
+      await notifyWhatsApp({
+        studioId: studio.id,
+        phone: client.phone,
+        template: "appointment_reminder",
+        language: studio.locale,
+        params: [client.name.split(" ")[0], appt.serviceName, studio.name, whenText(appt.startsAt, studio)],
+        relatedType: "Appointment",
+        relatedId: appt.id,
+        now,
+      });
+    }
     // Marked even when she has no email or device: staff still have the
     // WhatsApp button, and the job should not keep reconsidering her.
     await db.appointment.update({ where: { id: appt.id }, data: { remindersSentAt: now } });

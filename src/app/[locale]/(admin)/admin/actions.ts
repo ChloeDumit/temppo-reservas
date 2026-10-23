@@ -299,6 +299,9 @@ const studioConfigSchema = z.object({
   noShowLimit: z.coerce.number().int().min(0).max(50),
   monthlyChangesAllowed: z.coerce.number().int().min(0).max(31),
   bookingOpensDaysAhead: z.coerce.number().int().min(1).max(365),
+  // Appointment studios only; absent from a class studio's form.
+  waMode: z.enum(["LINK", "CLOUD"]).optional(),
+  waMonthlyQuota: z.coerce.number().int().min(0).max(100_000).optional(),
 });
 
 /**

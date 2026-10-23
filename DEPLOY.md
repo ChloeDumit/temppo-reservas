@@ -80,6 +80,29 @@ other — intended, since an account belongs to one studio and one brand.
   *Pagos*) and put its signing secret in `MERCADOPAGO_WEBHOOK_SECRET`.
   Webhooks cannot reach localhost — tunnel with
   `npx untun@latest tunnel http://localhost:3000` to test first.
+- **Automatic WhatsApp (Temppo Beauty).** Every studio sends from one
+  platform number through Meta's Cloud API; each message costs about US$0.011
+  to Uruguay and counts against the studio's monthly quota.
+  1. A Meta Business account, verified, and an app at developers.facebook.com
+     with the WhatsApp product added.
+  2. A number of our own that is not in use on the WhatsApp app. Its *Phone
+     number ID* goes in `WHATSAPP_PHONE_NUMBER_ID`.
+  3. A System User with the `whatsapp_business_messaging` permission; its
+     permanent token goes in `WHATSAPP_TOKEN`. The app secret goes in
+     `WHATSAPP_APP_SECRET`. Add a payment method in WhatsApp Manager.
+  4. A *Utility* template named `appointment_reminder`, in Spanish (`es`), and
+     in English (`en`) if any studio uses it. Four variables, in this order:
+
+     > Hola {{1}}, te recordamos tu turno de {{2}} en {{3}}: {{4}}. ¡Te
+     > esperamos! Si no querés recibir más estos mensajes, respondé BAJA.
+
+  5. Webhook: callback `{APP_URL}/api/whatsapp/webhook`, verify token the same
+     string as `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, subscribed to `messages`. It
+     marks failed deliveries and handles BAJA / ALTA replies.
+  6. Turn a studio on from the platform console (studio → WhatsApp →
+     Automático, with its monthly messages). Once it sends for real, set
+     `WA_AUTO_LIVE` in `src/lib/brand/pricing.ts` so the landing stops saying
+     "coming soon" and new trials start with their 50 messages.
 - **Entry point from the marketing site.** A plain redirect, never a proxy:
 
   ```toml
