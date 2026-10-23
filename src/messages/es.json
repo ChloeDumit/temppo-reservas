@@ -883,7 +883,14 @@
     "hold": "Tiempo para pagar la seña",
     "holdHint": "Minutos que se guarda el horario esperando el pago.",
     "refundable": "Devolver la seña si cancela a tiempo",
-    "refundableHint": "Si no, queda como crédito para el próximo turno."
+    "refundableHint": "Si no, queda como crédito para el próximo turno.",
+    "payMethods": "Cómo pueden pagar la seña",
+    "acceptMp": "Mercado Pago",
+    "acceptMpHint": "Se acredita al instante. Mercado Pago cobra su comisión.",
+    "acceptTransfer": "Transferencia",
+    "acceptTransferHint": "La clienta te manda el comprobante por WhatsApp y vos la confirmás.",
+    "acceptTransferNeedsWhatsapp": "Cargá tu WhatsApp en Ajustes para poder usarla.",
+    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña."
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",

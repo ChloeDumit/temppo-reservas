@@ -883,7 +883,14 @@
     "hold": "Time to pay the deposit",
     "holdHint": "Minutes the slot is kept waiting for payment.",
     "refundable": "Refund the deposit on an in-time cancellation",
-    "refundableHint": "Otherwise it stays as credit for the next visit."
+    "refundableHint": "Otherwise it stays as credit for the next visit.",
+    "payMethods": "How clients can pay the deposit",
+    "acceptMp": "Mercado Pago",
+    "acceptMpHint": "Credited instantly. Mercado Pago charges its fee.",
+    "acceptTransfer": "Bank transfer",
+    "acceptTransferHint": "The client sends you the receipt on WhatsApp and you confirm it.",
+    "acceptTransferNeedsWhatsapp": "Add your WhatsApp in Settings to use it.",
+    "noMethodsHint": "With both off, bookings come in confirmed with no deposit."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",

@@ -84,6 +84,11 @@ model Studio {
   /// Whether an in-time cancellation gives the deposit back. When false the
   /// deposit is kept as credit towards the next visit instead.
   depositRefundable Boolean @default(false)
+  /// Which ways a client may pay a deposit. A studio that does not want Mercado
+  /// Pago's fee can take transfers only; with both off, bookings confirm
+  /// straight away and no deposit is asked.
+  acceptMercadoPago Boolean @default(true)
+  acceptTransfer    Boolean @default(true)
 
   /// LINK: staff send reminders from their own WhatsApp (wa.me). CLOUD: the
   /// platform sends them automatically, within a monthly quota.

@@ -134,6 +134,9 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                   cancellationCutoffHours: studio.cancellationCutoffHours,
                   holdMinutes: studio.holdMinutes,
                   depositRefundable: studio.depositRefundable,
+                  acceptMercadoPago: studio.acceptMercadoPago,
+                  acceptTransfer: studio.acceptTransfer,
+                  hasWhatsapp: Boolean(studio.whatsappNumber),
                 }}
               />
             </CardBody>

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { accentVars } from "@/lib/color";
 import { dateKeyInZone, formatTime } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
-import { isOnlinePaymentEnabled } from "@/lib/payments";
+import { depositMethods } from "@/lib/appointments/methods";
 import { findByManageToken } from "@/lib/appointments/book";
 import { whenText, waLink } from "@/lib/appointments/whatsapp-text";
 import { Badge } from "@/components/ui/badge";
@@ -141,7 +141,7 @@ export default async function ManagePage({
                 <PayForm
                   token={token}
                   hasEmail={Boolean(appt.client.user.email)}
-                  methods={{ mp: isOnlinePaymentEnabled(), transfer: Boolean(studio.whatsappNumber) }}
+                  methods={depositMethods(studio)}
                 />
               </div>
             )}
