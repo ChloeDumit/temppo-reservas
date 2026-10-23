@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { db } from "@/lib/db";
 import { accentVars } from "@/lib/color";
 import { dateKeyInZone } from "@/lib/dates";
-import { isOnlinePaymentEnabled } from "@/lib/payments";
+import { depositMethods } from "@/lib/appointments/methods";
 import { waLink } from "@/lib/appointments/whatsapp-text";
 import { BrandFooter } from "@/components/brand-footer";
 import { BookingFlow, type FlowService } from "./booking-flow";
@@ -57,8 +57,7 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
       .map((a) => ({ id: a.id, name: a.name, durationMin: a.durationMin, priceCents: a.priceCents })),
   }));
 
-  const canMp = isOnlinePaymentEnabled();
-  const canTransfer = Boolean(studio.whatsappNumber);
+  const { mp: canMp, transfer: canTransfer } = depositMethods(studio);
   const contact = waLink(studio.whatsappNumber, t("hello", { studio: studio.name }));
 
   return (

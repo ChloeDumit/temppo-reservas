@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { notifyOwners } from "@/lib/notifications";
-import { isOnlinePaymentEnabled } from "@/lib/payments";
+import { depositMethods } from "@/lib/appointments/methods";
 import { appUrlFor } from "@/lib/brand/url";
 import { cancelAppointment, findByManageToken, rescheduleAppointment } from "@/lib/appointments/book";
 import { startDepositCheckout, submitDepositTransfer } from "@/lib/appointments/payments";
@@ -96,14 +96,15 @@ export async function payDepositAction(_prev: ManageState, formData: FormData): 
   const appt = await findByManageToken(token);
   if (!appt || appt.status !== "PENDING_PAYMENT") return { error: "notFound" };
 
-  if (method === "transfer" && appt.studio.whatsappNumber) {
+  const methods = depositMethods(appt.studio);
+  if (method === "transfer" && methods.transfer) {
     await submitDepositTransfer(appt.id);
     await notifyTransferAnnounced(appt.id);
     revalidatePath(PAGE, "page");
     return { ok: true };
   }
 
-  if (method === "mp" && isOnlinePaymentEnabled()) {
+  if (method === "mp" && methods.mp) {
     const email = String(formData.get("email") ?? "").trim().toLowerCase() || appt.client.user.email;
     if (!email || !z.string().email().safeParse(email).success) return { error: "emailForMp" };
     if (!appt.client.user.email) {

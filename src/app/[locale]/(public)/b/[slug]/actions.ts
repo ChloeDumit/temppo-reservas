@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
-import { isOnlinePaymentEnabled } from "@/lib/payments";
+import { depositMethods } from "@/lib/appointments/methods";
 import { appUrlFor } from "@/lib/brand/url";
 import { localePath } from "@/i18n/routing";
 import { availabilityQuery } from "@/lib/appointments/availability";
@@ -89,8 +89,7 @@ export async function bookPublicAction(_prev: BookState, formData: FormData): Pr
   if (!studio) return { error: "generic" };
 
   // Which ways to pay exist decides whether a deposit can be asked for at all.
-  const canMp = isOnlinePaymentEnabled();
-  const canTransfer = Boolean(studio.whatsappNumber);
+  const { mp: canMp, transfer: canTransfer } = depositMethods(studio);
   const pay = v.pay === "mp" && canMp ? "mp" : v.pay === "transfer" && canTransfer ? "transfer" : null;
   if (pay === "mp" && !v.email) return { error: "emailForMp" };
 

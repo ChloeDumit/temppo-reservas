@@ -5,12 +5,12 @@ import { BeautyWordmark } from "@/components/brand";
 import { buttonClass } from "@/components/ui/button";
 import { whatsappLink } from "@/lib/payment-code";
 import type { Brand } from "@/lib/brand/registry";
-import { BEAUTY_PLANS } from "@/lib/brand/pricing";
+import { BEAUTY_PLANS, LAUNCH_LOCK_MONTHS, LAUNCH_SPOTS, WA_AUTO_LIVE, WA_PACK } from "@/lib/brand/pricing";
 
 /**
  * The beauty brand's front page. Same bones as TEMPPO's — recognition of her
  * week first, then what changes, then plain answers — but about a chair and a
- * client rather than a class and a seat. No prices until there are prices.
+ * client rather than a class and a seat.
  */
 export async function BeautyLanding({ brand }: { brand: Brand }) {
   const t = await getTranslations("marketingBeauty");
@@ -72,7 +72,7 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
               </a>
             )}
           </div>
-          <p className="mt-4 text-sm text-muted">{t("trialNote")}</p>
+          <p className="mt-4 text-sm text-muted">{t(WA_AUTO_LIVE ? "trialNote" : "trialNoteSoon")}</p>
         </section>
 
         <section className="border-y border-line bg-sunken">
@@ -128,9 +128,12 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
         <section id="precios" className="mx-auto max-w-5xl scroll-mt-6 px-5 py-16 sm:py-24">
           <h2 className="max-w-2xl text-balance text-2xl sm:text-3xl">{t("pricesTitle")}</h2>
           <p className="mt-3 max-w-xl text-ink-soft">{t("pricesSubtitle")}</p>
+          <p className="mt-5 inline-block rounded-full bg-accent-soft px-4 py-1.5 text-sm font-medium text-accent">
+            {t("launchBadge", { spots: LAUNCH_SPOTS, months: LAUNCH_LOCK_MONTHS })}
+          </p>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {BEAUTY_PLANS.map((plan) => {
-              const featured = plan.key === "solo";
+              const featured = plan.key === "team";
               return (
                 <article
                   key={plan.key}
@@ -144,9 +147,12 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
                     {t(`plan_${plan.key}_tag`)}
                   </p>
                   <h3 className="mt-2 font-display text-2xl">{t(`plan_${plan.key}_name`)}</h3>
-                  <p className="mt-4 flex items-baseline gap-1.5">
+                  <p className="mt-4 text-sm text-muted line-through tabular-nums">
+                    ${plan.priceUyu.toLocaleString("es-UY")}
+                  </p>
+                  <p className="flex items-baseline gap-1.5">
                     <span className="font-display text-5xl font-semibold tabular-nums text-ink">
-                      ${plan.priceUyu.toLocaleString("es-UY")}
+                      ${plan.launchPriceUyu.toLocaleString("es-UY")}
                     </span>
                     <span className="text-sm text-muted">{t("perMonth")}</span>
                   </p>
@@ -163,7 +169,14 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
                     </li>
                     <li className="flex gap-2">
                       <Icon name="check" className="mt-1 size-4 shrink-0 text-accent" />
-                      {t("allIncluded")}
+                      <span>
+                        {plan.waQuota > 0 ? t("waAuto", { count: plan.waQuota }) : t("waManual")}
+                        {plan.waQuota > 0 && !WA_AUTO_LIVE && (
+                          <span className="ml-2 whitespace-nowrap rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+                            {t("soon")}
+                          </span>
+                        )}
+                      </span>
                     </li>
                   </ul>
                   <Link
@@ -186,7 +199,9 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-sm text-muted">{t("pricesNote")}</p>
+            <p className="mt-4 text-sm text-muted">
+              {t(WA_AUTO_LIVE ? "pricesNote" : "pricesNoteSoon", { packMessages: WA_PACK.messages, packPrice: WA_PACK.priceUyu })}
+            </p>
           </div>
         </section>
 

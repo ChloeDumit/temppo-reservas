@@ -13,6 +13,9 @@ export type Rules = {
   cancellationCutoffHours: number;
   holdMinutes: number;
   depositRefundable: boolean;
+  acceptMercadoPago: boolean;
+  acceptTransfer: boolean;
+  hasWhatsapp: boolean;
 };
 
 export function RulesForm({ rules }: { rules: Rules }) {
@@ -52,6 +55,24 @@ export function RulesForm({ rules }: { rules: Rules }) {
           <Input name="holdMinutes" type="number" min={5} max={1440} defaultValue={rules.holdMinutes} />
         </Field>
       </div>
+      <fieldset className="space-y-2.5 rounded-[var(--radius-md)] bg-sunken p-3">
+        <legend className="mb-1 text-sm font-medium text-ink-soft">{t("payMethods")}</legend>
+        <label className="flex items-start gap-2.5 text-sm text-ink">
+          <input type="checkbox" name="acceptMercadoPago" defaultChecked={rules.acceptMercadoPago} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
+          <span>
+            {t("acceptMp")}
+            <span className="block text-xs text-muted">{t("acceptMpHint")}</span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2.5 text-sm text-ink">
+          <input type="checkbox" name="acceptTransfer" defaultChecked={rules.acceptTransfer} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
+          <span>
+            {t("acceptTransfer")}
+            <span className="block text-xs text-muted">{rules.hasWhatsapp ? t("acceptTransferHint") : t("acceptTransferNeedsWhatsapp")}</span>
+          </span>
+        </label>
+        <p className="text-xs text-muted">{t("noMethodsHint")}</p>
+      </fieldset>
       <label className="flex items-start gap-2.5 text-sm text-ink">
         <input
           type="checkbox"

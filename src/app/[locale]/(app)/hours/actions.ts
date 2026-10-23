@@ -138,7 +138,12 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
 
   await db.studio.update({
     where: { id: user.studioId },
-    data: { ...parsed.data, depositRefundable: formData.get("depositRefundable") === "on" },
+    data: {
+      ...parsed.data,
+      depositRefundable: formData.get("depositRefundable") === "on",
+      acceptMercadoPago: formData.get("acceptMercadoPago") === "on",
+      acceptTransfer: formData.get("acceptTransfer") === "on",
+    },
   });
 
   await recordAudit({
