@@ -21,10 +21,12 @@ export type BeautyPlan = {
   locations: number | null;
   /** Automatic WhatsApp messages a month. 0 = only the manual wa.me button. */
   waQuota: number;
+  /** Automatic WhatsApp bought on top, for a plan that does not include it. */
+  waAddOn?: { messages: number; priceUyu: number };
 };
 
 export const BEAUTY_PLANS: BeautyPlan[] = [
-  { key: "solo", priceUyu: 790, launchPriceUyu: 490, professionals: 1, locations: 1, waQuota: 0 },
+  { key: "solo", priceUyu: 790, launchPriceUyu: 490, professionals: 1, locations: 1, waQuota: 0, waAddOn: { messages: 150, priceUyu: 190 } },
   { key: "team", priceUyu: 1390, launchPriceUyu: 890, professionals: 4, locations: 1, waQuota: 300 },
   { key: "salon", priceUyu: 2490, launchPriceUyu: 1590, professionals: null, locations: null, waQuota: 800 },
 ];

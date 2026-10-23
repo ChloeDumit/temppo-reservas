@@ -171,13 +171,18 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
                       <Icon name="check" className="mt-1 size-4 shrink-0 text-accent" />
                       <span>
                         {plan.waQuota > 0 ? t("waAuto", { count: plan.waQuota }) : t("waManual")}
-                        {plan.waQuota > 0 && !WA_AUTO_LIVE && (
-                          <span className="ml-2 whitespace-nowrap rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
-                            {t("soon")}
-                          </span>
-                        )}
+                        {plan.waQuota > 0 && !WA_AUTO_LIVE && <Soon label={t("soon")} />}
                       </span>
                     </li>
+                    {plan.waAddOn && (
+                      <li className="flex gap-2">
+                        <Icon name="plus" className="mt-1 size-4 shrink-0 text-accent" />
+                        <span>
+                          {t("waAddOn", { count: plan.waAddOn.messages, price: plan.waAddOn.priceUyu })}
+                          {!WA_AUTO_LIVE && <Soon label={t("soon")} />}
+                        </span>
+                      </li>
+                    )}
                   </ul>
                   <Link
                     href="/register"
@@ -232,5 +237,13 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
         </div>
       </footer>
     </div>
+  );
+}
+
+function Soon({ label }: { label: string }) {
+  return (
+    <span className="ml-2 whitespace-nowrap rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+      {label}
+    </span>
   );
 }

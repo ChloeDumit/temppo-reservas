@@ -1164,6 +1164,7 @@
     "manyLocations": "Varias sucursales",
     "waAuto": "WhatsApp automático: {count} mensajes al mes",
     "waManual": "Recordatorios por WhatsApp con un toque",
+    "waAddOn": "WhatsApp automático opcional: +${price} / mes, {count} mensajes",
     "soon": "Próximamente",
     "everyPlan": "Todos los planes incluyen",
     "inc1": "Página de reservas para tu bio",

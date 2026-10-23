@@ -1164,6 +1164,7 @@
     "manyLocations": "Several locations",
     "waAuto": "Automatic WhatsApp: {count} messages a month",
     "waManual": "One-tap WhatsApp reminders",
+    "waAddOn": "Optional automatic WhatsApp: +${price} / month, {count} messages",
     "soon": "Coming soon",
     "everyPlan": "Every plan includes",
     "inc1": "A booking page for your bio",
