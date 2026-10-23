@@ -91,10 +91,13 @@ export default async function ClientPage({ params }: { params: Promise<{ locale:
         </div>
       )}
 
-      <div className="mb-5 grid grid-cols-3 gap-3">
+      {/* Money gets its own row on a phone: three columns cut "2.400 UYU" short. */}
+      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label={t("visits")} value={String(done.length)} />
-        <Stat label={t("spent")} value={money(spent)} />
         <Stat label={t("noShows")} value={String(client.noShowCount)} tone={client.noShowCount ? "critical" : undefined} />
+        <div className="col-span-2 sm:order-first sm:col-span-1">
+          <Stat label={t("spent")} value={money(spent)} />
+        </div>
       </div>
 
       <Card className="mb-5">
