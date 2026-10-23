@@ -666,10 +666,22 @@ model NotificationLog {
   relatedType String?
   relatedId   String?
 
+  /// The provider's own id for the message (WhatsApp's wamid), so its later
+  /// delivery and failure callbacks find the row they belong to.
+  providerMessageId String? @unique
+
   sentAt    DateTime?
   createdAt DateTime  @default(now())
 
   @@index([studioId, createdAt])
+}
+
+/// A phone that replied BAJA to our WhatsApp number. Platform-wide: every
+/// studio sends from the same number, so to her it is one sender to stop.
+model WhatsAppOptOut {
+  /// Digits only, with country code: 59899123456.
+  phone     String   @id
+  createdAt DateTime @default(now())
 }
 
 model AuditLog {

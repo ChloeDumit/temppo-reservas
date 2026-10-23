@@ -1,5 +1,6 @@
 import { formatTime } from "@/lib/dates";
 import { whatsappLink } from "@/lib/payment-code";
+import { toWhatsAppNumber } from "@/lib/phone";
 
 /**
  * The words that go out about an appointment, shared by email, push and the
@@ -47,9 +48,7 @@ export function rebookText(serviceName: string, studio: Studio, clientName: stri
 
 /** Opens the professional's own WhatsApp with the message ready to send. */
 export function waLink(phone: string | null | undefined, text: string) {
-  if (!phone) return null;
-  const digits = phone.replace(/\D/g, "");
-  // A local Uruguayan mobile (09x…) needs the country code for wa.me.
-  const international = digits.startsWith("0") && digits.length === 9 ? `598${digits.slice(1)}` : digits;
+  const international = toWhatsAppNumber(phone);
+  if (!international) return null;
   return whatsappLink(international, text);
 }
