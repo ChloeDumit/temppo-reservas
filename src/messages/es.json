@@ -388,6 +388,7 @@
     "mpTitle": "Mercado Pago",
     "mpPitch": "Conectá tu cuenta y las señas que paguen tus clientas con Mercado Pago te llegan directo, al momento.",
     "mpConnect": "Conectar Mercado Pago",
+    "mpSupportConnect": "Conectar Mercado Pago lo hace el negocio desde su propia cuenta, entrando con su usuario de Mercado Pago.",
     "mpFallback": "Mientras no la conectes, las señas online las cobramos nosotros y te las transferimos.",
     "mpConnected": "Conectada",
     "mpConnectedHint": "Las señas online entran directo a esta cuenta. Las devoluciones las hacés desde tu Mercado Pago.",

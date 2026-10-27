@@ -388,6 +388,7 @@
     "mpTitle": "Mercado Pago",
     "mpPitch": "Connect your account and the deposits clients pay through Mercado Pago reach you directly, right away.",
     "mpConnect": "Connect Mercado Pago",
+    "mpSupportConnect": "The business connects Mercado Pago from its own account, signed in with its own Mercado Pago login.",
     "mpFallback": "Until you connect it, we collect online deposits and transfer them to you.",
     "mpConnected": "Connected",
     "mpConnectedHint": "Online deposits go straight into this account. Refunds are made from your Mercado Pago.",
