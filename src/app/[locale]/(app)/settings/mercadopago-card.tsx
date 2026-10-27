@@ -9,7 +9,16 @@ import { disconnectMercadoPagoAction } from "./actions";
  * Where an appointment studio links its own Mercado Pago, so online deposits
  * reach it directly. `outcome` is what the OAuth callback reported back.
  */
-export async function MercadoPagoCard({ studioId, outcome }: { studioId: string; outcome?: string }) {
+export async function MercadoPagoCard({
+  studioId,
+  outcome,
+  support = false,
+}: {
+  studioId: string;
+  outcome?: string;
+  /** A support visit: the status shows, but connecting is left to the owner. */
+  support?: boolean;
+}) {
   const t = await getTranslations("settings");
   const account = await db.mercadoPagoAccount.findUnique({
     where: { studioId },
@@ -38,9 +47,13 @@ export async function MercadoPagoCard({ studioId, outcome }: { studioId: string;
         ) : (
           <>
             <p className="text-sm text-ink-soft">{t("mpPitch")}</p>
-            <a href="/api/mercadopago/connect" className={buttonClass("primary", "md")}>
-              {t("mpConnect")}
-            </a>
+            {support ? (
+              <p className="rounded-[var(--radius-md)] bg-sunken px-3 py-2 text-sm text-ink-soft">{t("mpSupportConnect")}</p>
+            ) : (
+              <a href="/api/mercadopago/connect" className={buttonClass("primary", "md")}>
+                {t("mpConnect")}
+              </a>
+            )}
             <p className="text-xs text-muted">{t("mpFallback")}</p>
           </>
         )}

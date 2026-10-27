@@ -61,9 +61,8 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        {/* Connecting is the owner's to do, signed in to her own Mercado Pago. */}
-        {studio.vertical === "APPOINTMENTS" && isMercadoPagoOAuthConfigured() && !(await inSupportVisit()) && (
-          <MercadoPagoCard studioId={studio.id} outcome={mpOutcome} />
+        {studio.vertical === "APPOINTMENTS" && isMercadoPagoOAuthConfigured() && (
+          <MercadoPagoCard studioId={studio.id} outcome={mpOutcome} support={await inSupportVisit()} />
         )}
 
         <Card>
