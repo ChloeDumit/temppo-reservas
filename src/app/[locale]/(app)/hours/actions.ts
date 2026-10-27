@@ -143,6 +143,7 @@ const rulesSchema = z.object({
   cancellationCutoffHours: z.coerce.number().int().min(0).max(14 * 24),
   holdMinutes: z.coerce.number().int().min(5).max(24 * 60),
   reminderHoursBefore: z.coerce.number().int().min(1).max(168),
+  noShowLimit: z.coerce.number().int().min(0).max(50),
 });
 
 export async function saveBookingRulesAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

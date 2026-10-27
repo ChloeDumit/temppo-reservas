@@ -32,6 +32,9 @@ export type PushMessage = {
   url?: string;
   /** Same tag replaces an earlier notification instead of stacking. */
   tag?: string;
+  /** The brand's icon and badge, so each product's pushes look like it. */
+  icon?: string;
+  badge?: string;
 };
 
 /**

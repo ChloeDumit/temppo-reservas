@@ -390,7 +390,11 @@
     "mpError": "No pudimos conectar tu cuenta. Probá de nuevo en un rato.",
     "mpDisconnect": "Desconectar",
     "roleProfessional": "Profesional",
-    "invitePasswordHintBeauty": "Pasásela a la profesional para que entre ahora. Se la va a cambiar la primera vez. También le llega un enlace por email."
+    "invitePasswordHintBeauty": "Pasásela a la profesional para que entre ahora. Se la va a cambiar la primera vez. También le llega un enlace por email.",
+    "studioBeauty": "Tu negocio",
+    "studioNameBeauty": "Nombre del negocio",
+    "whatsappNumberBeauty": "WhatsApp del negocio",
+    "whatsappHintBeauty": "Donde tus clientas te mandan el comprobante de la seña y te escriben desde tu página. Formato internacional."
   },
   "booking": {
     "title": "Reservar clase",
@@ -662,7 +666,8 @@
     "enabledHint": "En este dispositivo.",
     "blocked": "Bloqueaste las notificaciones en este navegador. Habilitalas desde los ajustes del sitio.",
     "unsupported": "Este navegador no admite notificaciones. En iPhone, agregá la app a la pantalla de inicio primero.",
-    "hint": "Te avisamos de tus clases y cuando se libera un lugar."
+    "hint": "Te avisamos de tus clases y cuando se libera un lugar.",
+    "hintBeauty": "Te avisamos cuando reservan, cancelan o pagan una seña."
   },
   "transfer": {
     "codeTitle": "Tu código de pago",
@@ -986,7 +991,9 @@
     "blockError": "No se pudo bloquear. Revisá los datos y probá de nuevo.",
     "transferInstructions": "Datos para transferir",
     "transferInstructionsHint": "Se los mostramos a la clienta junto a su código de pago.",
-    "transferInstructionsPlaceholder": "BROU caja de ahorro 001234567-00001, a nombre de Lucía Pérez"
+    "transferInstructionsPlaceholder": "BROU caja de ahorro 001234567-00001, a nombre de Lucía Pérez",
+    "noShowLimit": "Faltas sin avisar",
+    "noShowLimitHint": "Después de tantas, ya no puede reservar online hasta que la desbloquees desde su ficha. 0 = nunca se bloquea."
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",
@@ -1180,7 +1187,8 @@
     "whoCancels": "¿Quién cancela?",
     "cancelByClient": "La clienta (me avisó)",
     "cancelByStudio": "Nosotros",
-    "cancelClientDeposit": "Si avisó con menos anticipación que la acordada, la seña queda para el negocio. Si no, se le devuelve o queda como crédito, según tus reglas."
+    "cancelClientDeposit": "Si avisó con menos anticipación que la acordada, la seña queda para el negocio. Si no, se le devuelve o queda como crédito, según tus reglas.",
+    "setHours": "Cargar horarios"
   },
   "clients": {
     "title": "Clientas",

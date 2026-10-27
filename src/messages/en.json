@@ -390,7 +390,11 @@
     "mpError": "We couldn't connect your account. Try again in a while.",
     "mpDisconnect": "Disconnect",
     "roleProfessional": "Professional",
-    "invitePasswordHintBeauty": "Give it to the professional so she can sign in now. She'll change it the first time. She also gets a link by email."
+    "invitePasswordHintBeauty": "Give it to the professional so she can sign in now. She'll change it the first time. She also gets a link by email.",
+    "studioBeauty": "Your business",
+    "studioNameBeauty": "Business name",
+    "whatsappNumberBeauty": "Business WhatsApp",
+    "whatsappHintBeauty": "Where clients send their deposit receipt and message you from your page. International format."
   },
   "booking": {
     "title": "Book a class",
@@ -662,7 +666,8 @@
     "enabledHint": "On this device.",
     "blocked": "You blocked notifications in this browser. Re-enable them in site settings.",
     "unsupported": "This browser does not support notifications. On iPhone, add the app to your home screen first.",
-    "hint": "We will remind you about classes and when a spot opens up."
+    "hint": "We will remind you about classes and when a spot opens up.",
+    "hintBeauty": "We let you know when clients book, cancel or pay a deposit."
   },
   "transfer": {
     "codeTitle": "Your payment code",
@@ -986,7 +991,9 @@
     "blockError": "Couldn't block it. Check the details and try again.",
     "transferInstructions": "Transfer details",
     "transferInstructionsHint": "Shown to the client next to her payment code.",
-    "transferInstructionsPlaceholder": "Bank, account number, account holder"
+    "transferInstructionsPlaceholder": "Bank, account number, account holder",
+    "noShowLimit": "No-shows allowed",
+    "noShowLimitHint": "After this many, she can't book online until you unblock her from her file. 0 = never blocked."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
@@ -1180,7 +1187,8 @@
     "whoCancels": "Who is cancelling?",
     "cancelByClient": "The client (she told me)",
     "cancelByStudio": "We are",
-    "cancelClientDeposit": "If she gave less notice than agreed, the business keeps the deposit. Otherwise it's refunded or kept as credit, per your rules."
+    "cancelClientDeposit": "If she gave less notice than agreed, the business keeps the deposit. Otherwise it's refunded or kept as credit, per your rules.",
+    "setHours": "Set working hours"
   },
   "clients": {
     "title": "Clients",

@@ -156,7 +156,10 @@ function stepsFor(role: Role, beauty: boolean, mercadoPago: boolean): Step[] {
       const setup = BEAUTY_SETUP_STEPS.filter((s) => mercadoPago || s.key !== "beautyMercadoPago");
       return [...setup, ...BEAUTY_DAILY_STEPS];
     }
-    return [{ key: "beautyWelcomeStaff", phase: "daily" }, ...BEAUTY_DAILY_STEPS];
+    // A client's app is one screen: nothing to tour.
+    if (role === "STUDENT") return [];
+    // A professional cannot open Pagos; pointing her there is a locked door.
+    return [{ key: "beautyWelcomeStaff", phase: "daily" }, ...BEAUTY_DAILY_STEPS.filter((s) => s.key !== "beautyPayments")];
   }
   if (role === "STUDENT") return STUDENT_STEPS;
   if (role === "OWNER" || role === "ADMIN") return [...SETUP_STEPS, ...DAILY_STEPS];
@@ -204,6 +207,7 @@ export function GuidedTour({
 
   const steps = stepsFor(role, beauty, mercadoPago);
   const step = steps[index];
+  const hasTour = steps.length > 0;
 
   const loadProgress = useCallback(() => {
     void tourProgressAction()
@@ -214,7 +218,7 @@ export function GuidedTour({
 
   // Resume where we left off, or open for the first time.
   useEffect(() => {
-    const place = readPlace();
+    const place = hasTour ? readPlace() : null;
     if (place) {
       setIndex(Math.min(place.index, steps.length - 1));
       if (place.open) setRunning(true);
@@ -223,7 +227,7 @@ export function GuidedTour({
       return;
     }
 
-    if (alreadySeen || readSeen()) return;
+    if (!hasTour || alreadySeen || readSeen()) return;
 
     // Let the tab bar paint before measuring it.
     const timer = setTimeout(() => {

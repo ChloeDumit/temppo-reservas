@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { SheetForm } from "@/components/app/sheet-form";
 import { CopyButton } from "@/components/app/copy-button";
+import { ButtonLink } from "@/components/ui/button";
 import { AppointmentSheet, STATUS_TONE } from "./appointment-sheet";
 import { NewAppointmentForm } from "./new-appointment-form";
 
@@ -141,6 +142,13 @@ export default async function AgendaPage({
     allStaffOptions.push({ id: user.id, name: user.name });
   }
   const visible = appointments.filter((a) => !HIDDEN.includes(a.status));
+  const staffName = (id: string) => working.find((w) => w.id === id)?.name ?? "";
+  // Blocks touching a day, for the views that list days rather than draw them.
+  const blocksOn = (key: string) => {
+    const start = wallTimeToUtc(key, "00:00", tz);
+    const end = addDays(start, 1);
+    return blocks.filter((b) => b.startsAt < end && b.endsAt > start && (b.staffId === null || staffIds.includes(b.staffId)));
+  };
   const showStaffColour = visibleStaff.length > 1;
 
   // Navigation keeps the view and the staff filter.
@@ -409,11 +417,13 @@ export default async function AgendaPage({
               const items = visible.filter(
                 (a) => dateKeyInZone(a.startsAt, tz) === col.date && (!col.staffId || a.staffId === col.staffId),
               );
+              // A professional's own block shows in her column, or — in a week
+              // shared by several — in the day's column with her name on it.
               const colBlocks = blocks.filter(
                 (b) =>
                   b.startsAt < dayEnd &&
                   b.endsAt > dayStart &&
-                  (b.staffId === null || (col.staffId ? b.staffId === col.staffId : staffIds.length === 1 && b.staffId === staffIds[0])),
+                  (b.staffId === null || (col.staffId ? b.staffId === col.staffId : staffIds.includes(b.staffId))),
               );
 
               // Side by side only where appointments actually overlap.
@@ -446,6 +456,7 @@ export default async function AgendaPage({
                           className="absolute inset-x-1 overflow-hidden rounded-md bg-[repeating-linear-gradient(135deg,var(--color-line)_0_6px,transparent_6px_12px)] px-2 py-1 text-[11px] text-muted"
                           style={{ top: pos(from), height: Math.max(pos(to) - pos(from), 16) }}
                         >
+                          {!col.staffId && b.staffId && staffIds.length > 1 && `${staffName(b.staffId)} · `}
                           {b.reason ?? t("blocked")}
                         </div>
                       );
@@ -519,6 +530,7 @@ export default async function AgendaPage({
         <div className="space-y-4 md:hidden">
           {days.map((key) => {
             const items = visible.filter((a) => dateKeyInZone(a.startsAt, tz) === key);
+            const dayBlocks = blocksOn(key);
             return (
               <section key={key}>
                 <Link
@@ -527,8 +539,18 @@ export default async function AgendaPage({
                 >
                   {upperFirst(fmt({ weekday: "long", day: "numeric", month: "short" }).format(noon(key)))}
                 </Link>
+                {dayBlocks.map((b) => (
+                  <p
+                    key={b.id}
+                    className="mb-1.5 rounded-[var(--radius-md)] bg-[repeating-linear-gradient(135deg,var(--color-line)_0_6px,transparent_6px_12px)] px-3 py-1.5 text-xs text-ink-soft"
+                  >
+                    {t("blocked")}
+                    {b.staffId && staffIds.length > 1 ? ` · ${staffName(b.staffId)}` : ""}
+                    {b.reason ? ` · ${b.reason}` : ""}
+                  </p>
+                ))}
                 {items.length === 0 ? (
-                  <p className="px-1 text-sm text-muted">{t("nothing")}</p>
+                  dayBlocks.length === 0 && <p className="px-1 text-sm text-muted">{t("nothing")}</p>
                 ) : (
                   <Card>
                     <ul className="divide-y divide-line">
@@ -572,6 +594,11 @@ export default async function AgendaPage({
       {visibleStaff.length === 0 ? (
         <Card>
           <EmptyState message={t("noStaff")} />
+          <div className="flex justify-center pb-5">
+            <ButtonLink href="/hours" size="sm" variant="secondary">
+              {t("setHours")}
+            </ButtonLink>
+          </div>
         </Card>
       ) : (
         timeGrid(

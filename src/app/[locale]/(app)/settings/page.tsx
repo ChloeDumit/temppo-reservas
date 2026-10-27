@@ -44,9 +44,10 @@ export default async function SettingsPage({
 
       <div className="space-y-4">
         <Card id="studio">
-          <CardHeader title={t("studio")} />
+          <CardHeader title={t(beauty ? "studioBeauty" : "studio")} />
           <CardBody>
             <StudioForm
+              beauty={beauty}
               values={{
                 name: studio.name,
                 timezone: studio.timezone,
@@ -67,7 +68,7 @@ export default async function SettingsPage({
         <Card>
           <CardHeader title={tpush("title")} />
           <CardBody className="space-y-2">
-            <p className="text-xs text-muted">{tpush("hint")}</p>
+            <p className="text-xs text-muted">{tpush(beauty ? "hintBeauty" : "hint")}</p>
             <PushToggle publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
           </CardBody>
         </Card>

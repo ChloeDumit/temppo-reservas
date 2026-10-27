@@ -16,14 +16,15 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: "TEMPPO Reservas", body: event.data.text() };
+    payload = { title: "", body: event.data.text() };
   }
 
-  const title = payload.title || "TEMPPO Reservas";
+  // Each brand sends its own title and icon; no fallback names one of them.
+  const title = payload.title || "";
   const options = {
     body: payload.body || "",
     icon: payload.icon || "/icon-192.png",
-    badge: "/icon-192.png",
+    badge: payload.badge || payload.icon || "/icon-192.png",
     // Collapses repeats of the same subject instead of stacking them.
     tag: payload.tag || undefined,
     renotify: Boolean(payload.tag),

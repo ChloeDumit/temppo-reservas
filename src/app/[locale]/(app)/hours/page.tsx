@@ -139,6 +139,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                   cancellationCutoffHours: studio.cancellationCutoffHours,
                   holdMinutes: studio.holdMinutes,
                   reminderHoursBefore: studio.reminderHoursBefore,
+                  noShowLimit: studio.noShowLimit,
                   depositRefundable: studio.depositRefundable,
                   acceptMercadoPago: studio.acceptMercadoPago,
                   acceptTransfer: studio.acceptTransfer,

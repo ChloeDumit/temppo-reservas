@@ -77,8 +77,12 @@ export async function notifyPreferred(
     const studio = await db.studio
       .findUnique({ where: { id: payload.studioId }, select: { brand: true } })
       .catch(() => null);
+    const brand = brandByKey(studio?.brand);
     await pushToUser(payload.userId, {
-      title: payload.subject ?? brandByKey(studio?.brand).name,
+      // The brand's own icon: a Temppo Beauty push must not show TEMPPO's mascot.
+      icon: `${brand.iconBase}/icon-192.png`,
+      badge: `${brand.iconBase}/icon-192.png`,
+      title: payload.subject ?? brand.name,
       body: payload.body,
       url: payload.url,
       tag: payload.template,
