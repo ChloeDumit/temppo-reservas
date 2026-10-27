@@ -18,7 +18,7 @@ export default async function AdminPayoutsPage({ params }: { params: Promise<{ l
   const [owed, payouts] = await Promise.all([
     db.payment.groupBy({
       by: ["studioId", "currency"],
-      where: { appointmentId: { not: null }, method: "MERCADO_PAGO", status: "APPROVED", payoutId: null },
+      where: { appointmentId: { not: null }, method: "MERCADO_PAGO", status: "APPROVED", payoutId: null, collectedByStudio: false },
       _sum: { amountCents: true },
       _count: true,
       _min: { approvedAt: true },

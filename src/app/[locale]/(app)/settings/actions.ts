@@ -12,6 +12,7 @@ import { generateToken, hashToken } from "@/lib/auth/tokens";
 import { hashPassword } from "@/lib/auth/password";
 import { generateTempPassword } from "@/lib/auth/temp-password";
 import { notify } from "@/lib/notifications";
+import { disconnectMercadoPago } from "@/lib/payments/mercadopago-oauth";
 
 export type ActionState = {
   error?: string;
@@ -239,4 +240,19 @@ export async function inviteMemberAction(
   revalidateSettings();
   // The plaintext exists only in this response — not in the database, not in a log.
   return { ok: true, tempPassword };
+}
+
+/** Unlinks the studio's Mercado Pago: online deposits go back to the platform's account. */
+export async function disconnectMercadoPagoAction() {
+  const user = await assertAdmin();
+  await disconnectMercadoPago(user.studioId);
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "studio.mercadopago_disconnected",
+    entityType: "Studio",
+    entityId: user.studioId,
+  });
+  revalidatePath("/[locale]/(app)/settings", "page");
 }

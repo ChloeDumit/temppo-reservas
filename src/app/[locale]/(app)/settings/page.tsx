@@ -7,13 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
 import { PushToggle } from "@/components/app/push-toggle";
+import { MercadoPagoCard } from "./mercadopago-card";
+import { isMercadoPagoOAuthConfigured } from "@/lib/payments/mercadopago-oauth";
 
 export default async function SettingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ mp?: string }>;
 }) {
   const { locale } = await params;
+  const { mp: mpOutcome } = await searchParams;
   setRequestLocale(locale);
 
   const user = await requireAdmin();
@@ -52,6 +57,10 @@ export default async function SettingsPage({
             />
           </CardBody>
         </Card>
+
+        {studio.vertical === "APPOINTMENTS" && isMercadoPagoOAuthConfigured() && (
+          <MercadoPagoCard studioId={studio.id} outcome={mpOutcome} />
+        )}
 
         <Card>
           <CardHeader title={tpush("title")} />

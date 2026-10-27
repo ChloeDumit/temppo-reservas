@@ -97,6 +97,11 @@ model Studio {
   waSentThisPeriod Int       @default(0)
   waPeriodStart    DateTime?
 
+  /// Set while the studio has its own Mercado Pago connected: online deposits
+  /// then go straight to its account rather than the platform's. The tokens
+  /// live in MercadoPagoAccount, away from a row that is read everywhere.
+  mpConnectedAt DateTime?
+
   onboardingCompletedAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -109,6 +114,7 @@ model Studio {
   appointments      Appointment[]
   payouts           StudioPayout[]
   inboxItems        InboxItem[]
+  mercadoPago       MercadoPagoAccount?
 
   locations         Location[]
   users             User[]
@@ -577,6 +583,8 @@ model Payment {
   /// straight to the studio and never appear in a payout.
   payoutId String?
   payout   StudioPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+  /// Paid into the studio's own Mercado Pago account: nothing is owed to it.
+  collectedByStudio Boolean @default(false)
 
   amountCents Int
   currency    String        @default("UYU")
@@ -1171,4 +1179,24 @@ model InboxItem {
 
   @@index([userId, createdAt])
   @@index([userId, readAt])
+}
+
+/// A studio's own Mercado Pago account, connected through OAuth. Tokens are
+/// encrypted at rest (see lib/crypto/secret-box) and renewed before they
+/// lapse — Mercado Pago issues them for 180 days.
+model MercadoPagoAccount {
+  studioId String @id
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  mpUserId        String
+  /// What the owner sees in settings, so she knows which account is linked.
+  nickname        String?
+  email           String?
+  accessTokenEnc  String
+  refreshTokenEnc String
+  expiresAt       DateTime
+  liveMode        Boolean  @default(true)
+
+  connectedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

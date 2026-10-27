@@ -156,7 +156,7 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
                     </span>
                     <span className="text-sm text-muted">{t("perMonth")}</span>
                   </p>
-                  <ul className="mt-5 space-y-2 text-[15px] text-ink-soft">
+                  <ul className="mt-5 flex-1 space-y-2 text-[15px] text-ink-soft">
                     <li className="flex gap-2">
                       <Icon name="check" className="mt-1 size-4 shrink-0 text-accent" />
                       {plan.professionals === null

@@ -75,7 +75,7 @@ export const mercadoPago: PaymentProvider = {
   },
 
   async createCheckout(request: CheckoutRequest): Promise<CheckoutSession> {
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const token = request.accessToken ?? process.env.MERCADOPAGO_ACCESS_TOKEN;
     if (!token) throw new Error("MERCADOPAGO_ACCESS_TOKEN is not set");
 
     const res = await fetch(`${API}/checkout/preferences`, {
@@ -103,6 +103,7 @@ export const mercadoPago: PaymentProvider = {
         },
         auto_return: "approved",
         notification_url: request.notificationUrl,
+        ...(request.marketplaceFeeCents ? { marketplace_fee: request.marketplaceFeeCents / 100 } : {}),
       }),
     });
 
@@ -130,8 +131,8 @@ export const mercadoPago: PaymentProvider = {
    * Webhooks only carry an id, never an amount or status we can trust, so the
    * payment is always re-fetched from the API before we act on it.
    */
-  async resolveWebhook(payload: unknown): Promise<ProviderPayment | null> {
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  async resolveWebhook(payload: unknown, accessToken?: string): Promise<ProviderPayment | null> {
+    const token = accessToken ?? process.env.MERCADOPAGO_ACCESS_TOKEN;
     if (!token) return null;
 
     const body = payload as {

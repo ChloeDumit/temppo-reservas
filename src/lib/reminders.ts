@@ -5,6 +5,7 @@ import { notifyPreferred, notifyOwners } from "@/lib/notifications";
 import { sweepExpiredOffers } from "@/lib/waitlist";
 import { expireHolds, sendAppointmentReminders, sendRebookNudges } from "@/lib/appointments/cron";
 import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
+import { renewExpiringMercadoPagoTokens } from "@/lib/payments/mercadopago-oauth";
 
 /**
  * Sends the pre-class reminder for every studio whose window has arrived.
@@ -103,7 +104,13 @@ export async function sendDueReminders(now = new Date()) {
     }
   }
 
-  return { studios: studios.length, classes, sent, birthdays, appointments };
+  // Studios' own Mercado Pago connections, renewed well before they lapse.
+  const mpRenewed = await renewExpiringMercadoPagoTokens(now).catch((error) => {
+    console.error("[reminders] Mercado Pago renewal failed", error);
+    return 0;
+  });
+
+  return { studios: studios.length, classes, sent, birthdays, appointments, mpRenewed };
 }
 
 type BirthdayStudio = { id: string; name: string; timezone: string; locale: string };

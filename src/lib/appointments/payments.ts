@@ -2,18 +2,29 @@ import "server-only";
 import { db } from "@/lib/db";
 import { paymentProvider } from "@/lib/payments";
 import { paymentRef } from "@/lib/payments/reference";
+import { studioAccessToken } from "@/lib/payments/mercadopago-oauth";
 import type { ProviderPaymentStatus } from "@/lib/payments/types";
 import { generatePaymentCode } from "@/lib/payment-code";
 import { isOverlapError } from "./book";
 
 /**
- * Deposits (señas). The platform collects them online on the studio's
- * behalf — every approved online deposit is owed to the studio until a payout
+ * Deposits (señas). A studio that connected its own Mercado Pago is paid
+ * there directly. Otherwise the platform collects them online on its behalf,
+ * and every approved online deposit is owed to the studio until a payout
  * settles it. Transfers and cash go straight to the studio and are only
  * recorded here.
  */
 
-/** Opens a Mercado Pago checkout for an appointment's deposit. */
+/** The platform's cut of a deposit paid into a studio's own account. 0 unless set. */
+function marketplaceFeeCents(amountCents: number) {
+  const percent = Number(process.env.MERCADOPAGO_MARKETPLACE_FEE_PERCENT || 0);
+  return percent > 0 ? Math.round((amountCents * percent) / 100) : 0;
+}
+
+/**
+ * Opens a Mercado Pago checkout for an appointment's deposit, in the
+ * studio's own account when it has one connected.
+ */
 export async function startDepositCheckout(opts: {
   appointmentId: string;
   payerEmail: string;
@@ -28,7 +39,8 @@ export async function startDepositCheckout(opts: {
   if (!appt || appt.status !== "PENDING_PAYMENT" || appt.depositCents <= 0) return null;
 
   const provider = paymentProvider();
-  if (!provider.isConfigured()) return null;
+  const studioToken = await studioAccessToken(appt.studioId);
+  if (!studioToken && !provider.isConfigured()) return null;
 
   const payment = await db.payment.create({
     data: {
@@ -40,8 +52,13 @@ export async function startDepositCheckout(opts: {
       method: "MERCADO_PAGO",
       status: "PENDING",
       provider: provider.name,
+      collectedByStudio: Boolean(studioToken),
     },
   });
+
+  // The webhook needs to know whose account to read the payment from.
+  const notificationUrl = new URL(opts.notificationUrl);
+  if (studioToken) notificationUrl.searchParams.set("studio", appt.studioId);
 
   const session = await provider.createCheckout({
     studioId: appt.studioId,
@@ -52,7 +69,10 @@ export async function startDepositCheckout(opts: {
     payerEmail: opts.payerEmail,
     successUrl: opts.successUrl,
     failureUrl: opts.failureUrl,
-    notificationUrl: opts.notificationUrl,
+    notificationUrl: notificationUrl.toString(),
+    ...(studioToken
+      ? { accessToken: studioToken, marketplaceFeeCents: marketplaceFeeCents(appt.depositCents) }
+      : {}),
   });
 
   await db.payment.update({ where: { id: payment.id }, data: { providerPaymentId: session.providerReference } });
@@ -281,8 +301,9 @@ export async function markDepositReceived(opts: {
 }
 
 /**
- * What the platform holds for a studio: online deposits approved and not yet
- * handed over. Transfers and cash never pass through the platform.
+ * What the platform holds for a studio: online deposits approved into the
+ * platform's account and not yet handed over. Transfers, cash and deposits
+ * paid into the studio's own Mercado Pago never pass through the platform.
  */
 export async function owedToStudio(studioId: string) {
   const result = await db.payment.aggregate({
@@ -292,6 +313,7 @@ export async function owedToStudio(studioId: string) {
       method: "MERCADO_PAGO",
       status: "APPROVED",
       payoutId: null,
+      collectedByStudio: false,
     },
     _sum: { amountCents: true },
     _count: true,
@@ -320,6 +342,7 @@ export async function createPayout(opts: {
         method: "MERCADO_PAGO",
         status: "APPROVED",
         payoutId: null,
+        collectedByStudio: false,
         approvedAt: { lte: upTo },
       },
       select: { id: true, amountCents: true, currency: true },
