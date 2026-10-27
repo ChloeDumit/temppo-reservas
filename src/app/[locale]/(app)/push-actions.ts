@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { assertUser } from "@/lib/auth/guards";
+import { assertUser, inSupportVisit } from "@/lib/auth/guards";
 
 /** Stores one device's push subscription against the signed-in user. */
 export async function savePushSubscriptionAction(input: {
@@ -12,6 +12,8 @@ export async function savePushSubscriptionAction(input: {
 }) {
   const user = await assertUser();
   if (!input.endpoint || !input.p256dh || !input.auth) return;
+  // Support's own browser must not start receiving the owner's notifications.
+  if (await inSupportVisit()) return;
 
   // The same endpoint can move between accounts on a shared device.
   await db.pushSubscription.upsert({

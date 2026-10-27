@@ -888,6 +888,7 @@
     "hint": "At least 8 characters.",
     "save": "Save and continue",
     "passwordShort": "Use at least 8 characters.",
+    "support": "A support visit can't change the account's password.",
     "passwordMismatch": "The passwords do not match.",
     "tooShort": "It needs at least 8 characters.",
     "ready": "Both match. You're good to go.",
@@ -1381,5 +1382,10 @@
     "pushHint": "To get them on your phone or tablet even with the panel closed:",
     "open": "Open",
     "dismiss": "Dismiss"
+  },
+  "support": {
+    "banner": "Support mode: you're in {studio} as {name}. Everything you change is logged under your name.",
+    "until": "Until {time}",
+    "exit": "Exit"
   }
 }

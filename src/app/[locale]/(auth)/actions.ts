@@ -6,7 +6,8 @@ import { getLocale } from "next-intl/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { createSession, destroySession } from "@/lib/auth/session";
+import { createSession, destroySession, getSupportSession } from "@/lib/auth/session";
+import { exitSupportAction } from "../(app)/support-actions";
 import { generateToken, hashToken } from "@/lib/auth/tokens";
 import {
   createStudioChoice,
@@ -306,6 +307,8 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
 
 export async function logoutAction() {
   const locale = await getLocale();
+  // Logging out of a support visit ends the visit, not the account's sessions.
+  if (await getSupportSession()) return exitSupportAction();
   await destroySession();
   redirect(localePath(locale, "/login"));
 }

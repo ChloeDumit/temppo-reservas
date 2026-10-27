@@ -888,6 +888,7 @@
     "hint": "Mínimo 8 caracteres.",
     "save": "Guardar y entrar",
     "passwordShort": "Usá al menos 8 caracteres.",
+    "support": "En modo soporte no se cambia la contraseña de la cuenta.",
     "passwordMismatch": "Las contraseñas no coinciden.",
     "tooShort": "Tiene que tener al menos 8 caracteres.",
     "ready": "Las dos coinciden. Ya podés entrar.",
@@ -1381,5 +1382,10 @@
     "pushHint": "Para que te lleguen al celular o la tablet aunque no tengas el panel abierto:",
     "open": "Ver",
     "dismiss": "Cerrar"
+  },
+  "support": {
+    "banner": "Modo soporte: estás en {studio} como {name}. Todo lo que cambies queda registrado a tu nombre.",
+    "until": "Hasta las {time}",
+    "exit": "Salir"
   }
 }

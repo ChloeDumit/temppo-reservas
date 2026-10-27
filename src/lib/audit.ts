@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
+import { getSupportSession } from "@/lib/auth/session";
 
 type AuditInput = {
   studioId: string;
@@ -26,15 +27,34 @@ export async function recordAudit(input: AuditInput) {
       // Outside a request scope (scripts, jobs) — fine.
     }
 
+    /*
+      On a support visit every action runs as the studio's owner, so the code
+      that calls this names her. The trail should name who really did it: the
+      platform admin, with the owner kept alongside.
+    */
+    let actorId = input.actorId ?? null;
+    let actorLabel = input.actorLabel ?? null;
+    let metadata = input.metadata;
+    try {
+      const support = await getSupportSession();
+      if (support && actorId === support.userId) {
+        actorId = support.supportById;
+        actorLabel = `${support.supportBy.name} (soporte)`;
+        metadata = { ...metadata, onBehalfOf: support.user.name };
+      }
+    } catch {
+      // Outside a request scope — no visit to attribute.
+    }
+
     await db.auditLog.create({
       data: {
         studioId: input.studioId,
-        actorId: input.actorId ?? null,
-        actorLabel: input.actorLabel ?? null,
+        actorId,
+        actorLabel,
         action: input.action,
         entityType: input.entityType,
         entityId: input.entityId ?? null,
-        metadata: (input.metadata ?? undefined) as never,
+        metadata: (metadata ?? undefined) as never,
         ipAddress,
       },
     });

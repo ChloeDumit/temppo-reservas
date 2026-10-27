@@ -212,7 +212,8 @@ model User {
 
   studentProfile     StudentProfile?
   instructorProfile  InstructorProfile?
-  sessions           Session[]
+  sessions           Session[]           @relation("UserSessions")
+  supportSessions    Session[]           @relation("SupportSessions")
   verificationTokens VerificationToken[]
   auditLogs          AuditLog[]          @relation("AuditActor")
   approvedPayments   Payment[]           @relation("PaymentApprover")
@@ -775,7 +776,11 @@ model PushSubscription {
 model Session {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  /// Set on a support visit: the platform admin acting as this user. Such a
+  /// session lives in its own cookie and expires within the hour.
+  supportById String?
+  supportBy   User?   @relation("SupportSessions", fields: [supportById], references: [id], onDelete: Cascade)
   tokenHash String   @unique // the raw token lives only in the cookie
   expiresAt DateTime
   userAgent String?
@@ -790,6 +795,8 @@ enum VerificationPurpose {
   PASSWORD_RESET
   EMAIL_VERIFY
   STUDIO_CHOICE
+  /// Hands a platform admin's support visit to the studio's own host.
+  SUPPORT_ENTRY
 }
 
 model VerificationToken {

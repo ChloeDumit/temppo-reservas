@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { assertUser } from "@/lib/auth/guards";
+import { assertUser, inSupportVisit } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { cancelAutoDebit, isPaidPlan, startAutoDebit, type PaidPlan } from "@/lib/billing";
 import { localePath } from "@/i18n/routing";
@@ -17,6 +17,8 @@ const planSchema = z.object({ plan: z.enum(["ESSENTIAL", "STUDIO", "NETWORK"]) }
 /** Only the owner signs the studio up for a bill. */
 async function assertOwner() {
   const user = await assertUser();
+  // What the studio pays TEMPPO is the owner's own call, never support's.
+  if (await inSupportVisit()) return null;
   return user.role === "OWNER" ? user : null;
 }
 

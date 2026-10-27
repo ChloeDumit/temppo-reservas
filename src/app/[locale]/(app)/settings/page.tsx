@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { requireAdmin } from "@/lib/auth/guards";
+import { inSupportVisit, requireAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -61,7 +61,8 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        {studio.vertical === "APPOINTMENTS" && isMercadoPagoOAuthConfigured() && (
+        {/* Connecting is the owner's to do, signed in to her own Mercado Pago. */}
+        {studio.vertical === "APPOINTMENTS" && isMercadoPagoOAuthConfigured() && !(await inSupportVisit()) && (
           <MercadoPagoCard studioId={studio.id} outcome={mpOutcome} />
         )}
 
