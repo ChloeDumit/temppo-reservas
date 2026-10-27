@@ -15,6 +15,7 @@ import { notify } from "@/lib/notifications";
 import { disconnectMercadoPago } from "@/lib/payments/mercadopago-oauth";
 import { brandByKey } from "@/lib/brand/registry";
 import { appUrlFor } from "@/lib/brand/url";
+import { deleteLogo, readLogo, storeLogo } from "@/lib/logo/store";
 
 export type ActionState = {
   error?: string;
@@ -40,31 +41,6 @@ const studioSchema = z.object({
   whatsappNumber: z.string().trim().max(25).optional(),
 });
 
-const LOGO_MAX_BYTES = 1024 * 1024;
-
-/** PNG, JPEG and WebP only, told apart by their first bytes rather than trusting the browser. */
-function sniffImage(data: Uint8Array) {
-  const starts = (...bytes: number[]) => bytes.every((b, i) => data[i] === b);
-  if (starts(0x89, 0x50, 0x4e, 0x47)) return "image/png";
-  if (starts(0xff, 0xd8, 0xff)) return "image/jpeg";
-  if (starts(0x52, 0x49, 0x46, 0x46) && String.fromCharCode(...data.slice(8, 12)) === "WEBP") return "image/webp";
-  return null;
-}
-
-/**
- * The logo file, if one was picked. The browser already shrinks it to a PNG;
- * SVG is refused here because it would be served from our own origin, where a
- * script inside it could run.
- */
-async function readLogo(value: FormDataEntryValue | null) {
-  if (!(value instanceof File) || value.size === 0) return null;
-  if (value.size > LOGO_MAX_BYTES) return "tooBig" as const;
-  const data = new Uint8Array(await value.arrayBuffer());
-  const mimeType = sniffImage(data);
-  if (!mimeType) return "invalid" as const;
-  return { data, mimeType };
-}
-
 export async function updateStudioAction(
   _prev: ActionState,
   formData: FormData,
@@ -78,16 +54,8 @@ export async function updateStudioAction(
   if (logo === "tooBig") return { error: "logoTooBig" };
   const removeLogo = !logo && formData.get("logoRemove") === "1";
 
-  if (logo) {
-    const data = { data: logo.data, mimeType: logo.mimeType };
-    await db.studioLogo.upsert({
-      where: { studioId: user.studioId },
-      create: { studioId: user.studioId, ...data },
-      update: data,
-    });
-  } else if (removeLogo) {
-    await db.studioLogo.deleteMany({ where: { studioId: user.studioId } });
-  }
+  const logoUrl = logo ? await storeLogo(user.studioId, logo) : undefined;
+  if (removeLogo) await deleteLogo(user.studioId);
 
   await db.studio.update({
     where: { id: user.studioId },
@@ -97,8 +65,7 @@ export async function updateStudioAction(
       currency: parsed.data.currency.toUpperCase(),
       locale: parsed.data.locale,
       accentColor: normalizeHex(parsed.data.accentColor),
-      // A new address per upload, so caches never hold on to the old one.
-      ...(logo && { logoUrl: `/api/logo/${user.studioId}?v=${Date.now().toString(36)}` }),
+      ...(logoUrl && { logoUrl }),
       ...(removeLogo && { logoUrl: null }),
       // Stored as typed; wa.me links strip everything but digits.
       whatsappNumber: parsed.data.whatsappNumber?.trim() || null,

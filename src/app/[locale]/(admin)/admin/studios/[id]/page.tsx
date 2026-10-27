@@ -20,6 +20,7 @@ import {
   updateStudioConfigAction,
 } from "../../actions";
 import { beautyPlanFor, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
+import { StudioLogoForm } from "./logo-form";
 
 const TIMEZONES = [
   "America/Montevideo",
@@ -350,6 +351,16 @@ export default async function AdminStudioPage({
             {studio.suspendedAt ? "Reactivar estudio" : "Suspender estudio"}
           </button>
         </form>
+      </section>
+
+      {/* ── Logo ───────────────────────────────────────────── */}
+      <section className="mt-4 rounded-[var(--radius-lg)] border border-white/10 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50">Logo</h2>
+        <p className="mt-2 text-sm text-white/50">
+          Se ve en su app, en su página de reservas y en los correos. PNG, JPG o SVG; se ajusta
+          solo.
+        </p>
+        <StudioLogoForm studioId={studio.id} logoUrl={studio.logoUrl} />
       </section>
 
       {/* ── Configuration ──────────────────────────────────── */}
