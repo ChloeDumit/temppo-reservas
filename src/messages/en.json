@@ -284,7 +284,9 @@
     "depositsHeld": "Deposits collected online, owed to you",
     "depositsHeldHint": "{count, plural, =0 {Nothing pending.} one {# deposit collected through Mercado Pago not yet transferred to you.} other {# deposits collected through Mercado Pago not yet transferred to you.}}",
     "lastPayout": "Last transfer: {amount} on {date}.",
-    "client": "Client"
+    "client": "Client",
+    "addIncome": "Record income",
+    "incomePlaceholder": "Product sale"
   },
   "billing": {
     "title": "Subscription",
@@ -386,7 +388,13 @@
     "mpConnectedHint": "Online deposits go straight into this account. Refunds are made from your Mercado Pago.",
     "mpConnectedNow": "Done! Your Mercado Pago is connected.",
     "mpError": "We couldn't connect your account. Try again in a while.",
-    "mpDisconnect": "Disconnect"
+    "mpDisconnect": "Disconnect",
+    "roleProfessional": "Professional",
+    "invitePasswordHintBeauty": "Give it to the professional so she can sign in now. She'll change it the first time. She also gets a link by email.",
+    "studioBeauty": "Your business",
+    "studioNameBeauty": "Business name",
+    "whatsappNumberBeauty": "Business WhatsApp",
+    "whatsappHintBeauty": "Where clients send their deposit receipt and message you from your page. International format."
   },
   "booking": {
     "title": "Book a class",
@@ -608,7 +616,13 @@
     "auditWhen": "When",
     "weekly": "Income by week",
     "noChartData": "No data in this period.",
-    "exportsHint": "CSV downloads, including the activity log."
+    "exportsHint": "CSV downloads, including the activity log.",
+    "subtitleBeauty": "What came in, the work you did and your exports.",
+    "billed": "Billed",
+    "completedAppointments": "Appointments done",
+    "noShowAppointments": "No-shows",
+    "exportAppointments": "Appointments",
+    "exportClients": "Clients"
   },
   "availability": {
     "title": "Standing spots",
@@ -652,7 +666,8 @@
     "enabledHint": "On this device.",
     "blocked": "You blocked notifications in this browser. Re-enable them in site settings.",
     "unsupported": "This browser does not support notifications. On iPhone, add the app to your home screen first.",
-    "hint": "We will remind you about classes and when a spot opens up."
+    "hint": "We will remind you about classes and when a spot opens up.",
+    "hintBeauty": "We let you know when clients book, cancel or pay a deposit."
   },
   "transfer": {
     "codeTitle": "Your payment code",
@@ -968,7 +983,17 @@
     "acceptTransfer": "Bank transfer",
     "acceptTransferHint": "The client sends you the receipt on WhatsApp and you confirm it.",
     "acceptTransferNeedsWhatsapp": "Add your WhatsApp in Settings to use it.",
-    "noMethodsHint": "With both off, bookings come in confirmed with no deposit."
+    "noMethodsHint": "With both off, bookings come in confirmed with no deposit.",
+    "reminder": "Reminder",
+    "reminderHint": "How many hours before the appointment we remind the client.",
+    "blockClashes": "{count, plural, one {Blocked. Note: # appointment is still inside that time. Move it or tell the client.} other {Blocked. Note: # appointments are still inside that time. Move them or tell the clients.}}",
+    "seeAgenda": "See it in the agenda",
+    "blockError": "Couldn't block it. Check the details and try again.",
+    "transferInstructions": "Transfer details",
+    "transferInstructionsHint": "Shown to the client next to her payment code.",
+    "transferInstructionsPlaceholder": "Bank, account number, account holder",
+    "noShowLimit": "No-shows allowed",
+    "noShowLimitHint": "After this many, she can't book online until you unblock her from her file. 0 = never blocked."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
@@ -1013,7 +1038,8 @@
     "errName": "Enter your name.",
     "errEmailForMp": "We need your email to pay with Mercado Pago.",
     "errTooManyHolds": "You already have bookings waiting for a deposit. Pay those first or message us.",
-    "errGeneric": "We couldn't book that. Try again."
+    "errGeneric": "We couldn't book that. Try again.",
+    "depositExplainCredit": "To confirm, you pay a {amount} deposit, taken off the total. Cancel more than {hours} hours ahead and it stays as credit for your next appointment."
   },
   "manage": {
     "title": "Your appointment",
@@ -1061,7 +1087,13 @@
     "pastCutoff": "The free change window has passed.",
     "bookAgain": "Book another appointment",
     "writeToStudio": "Message the studio",
-    "errGeneric": "Something went wrong. Try again."
+    "errGeneric": "Something went wrong. Try again.",
+    "saveLink": "Save this link: it's how you get back to your booking to pay, change or cancel it.",
+    "copyLink": "Copy link",
+    "copied": "Copied!",
+    "sendToMyWhatsapp": "Send it to my WhatsApp",
+    "selfMessage": "My {service} appointment: {url}",
+    "confirmMove": "Move to {time}"
   },
   "agenda": {
     "title": "Agenda",
@@ -1111,7 +1143,7 @@
     "back": "Back",
     "cancelReason": "Reason (optional)",
     "cancelReasonPlaceholder": "Illness, asked to change…",
-    "cancelKeepsDeposit": "The studio is cancelling: the client keeps her deposit.",
+    "cancelKeepsDeposit": "We're cancelling: the client doesn't lose her deposit. We email her if we have her address.",
     "cancelConfirm": "Cancel appointment",
     "errOverlap": "It overlaps another appointment for that professional.",
     "errClient": "Pick a client or enter a name and mobile.",
@@ -1134,13 +1166,35 @@
     "depositMissing": "The {amount} deposit is due. She hasn't chosen how to pay yet.",
     "markPaid": "Received it?",
     "paidTransfer": "Paid by transfer",
-    "paidCash": "Paid in cash"
+    "paidCash": "Paid in cash",
+    "paidSoFar": "Paid",
+    "toCharge": "Left to charge",
+    "fullyPaid": "Fully paid",
+    "charge": "Charge",
+    "chargeAmount": "Amount",
+    "chargeMethod": "Paid by",
+    "methodCASH": "Cash",
+    "methodBANK_TRANSFER": "Transfer",
+    "methodMERCADO_PAGO": "Mercado Pago / card",
+    "methodOTHER": "Other",
+    "noteSaved": "Note saved.",
+    "errBlockedTime": "That time is blocked (time off, holiday or a block).",
+    "errUnavailable": "That professional doesn't do this service.",
+    "errAlreadyCancelled": "That appointment was already cancelled.",
+    "errAmount": "Check the amount.",
+    "moveAnyway": "Move anyway",
+    "bookAnyway": "Book anyway",
+    "whoCancels": "Who is cancelling?",
+    "cancelByClient": "The client (she told me)",
+    "cancelByStudio": "We are",
+    "cancelClientDeposit": "If she gave less notice than agreed, the business keeps the deposit. Otherwise it's refunded or kept as credit, per your rules.",
+    "setHours": "Set working hours"
   },
   "clients": {
     "title": "Clients",
     "subtitle": "Everyone who has ever booked, with their file.",
     "search": "Search by name, mobile or email",
-    "empty": "No clients yet. They appear on their own when they book.",
+    "empty": "No clients yet. They appear when they book, or add them with “New client”.",
     "noMatches": "Nobody matches that search.",
     "allergyBadge": "Allergies",
     "blocked": "Blocked",
@@ -1166,7 +1220,15 @@
     "noShows": "No-shows",
     "file": "File",
     "history": "History",
-    "noHistory": "No appointments yet."
+    "noHistory": "No appointments yet.",
+    "new": "New client",
+    "add": "Add client",
+    "adding": "Adding…",
+    "optional": "optional",
+    "errPhone": "Check the phone number.",
+    "errGeneric": "Couldn't save. Try again.",
+    "exists": "You already have a client with that phone or email.",
+    "openFile": "Open her file"
   },
   "myAppointments": {
     "title": "My appointments",

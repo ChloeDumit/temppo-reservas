@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { startOfMonthInZone } from "@/lib/dates";
-import { attendanceSummary, financialSummary, instructorPayroll } from "@/lib/reports";
+import { appointmentSummary, attendanceSummary, financialSummary, instructorPayroll } from "@/lib/reports";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { BarChart } from "@/components/ui/bar-chart";
@@ -20,6 +20,15 @@ const EXPORTS = [
   ["audit", "exportAudit"],
 ] as const;
 
+/** An appointment business exports its appointments and clients instead of class rows. */
+const BEAUTY_EXPORTS = [
+  ["payments", "exportPayments"],
+  ["transactions", "exportTransactions"],
+  ["appointments", "exportAppointments"],
+  ["clients", "exportClients"],
+  ["audit", "exportAudit"],
+] as const;
+
 export default async function ReportsPage({
   params,
   searchParams,
@@ -33,6 +42,8 @@ export default async function ReportsPage({
 
   const user = await requireAdmin();
   const studio = user.studio;
+  // Teacher payroll is paid per class taught; an appointment business has none.
+  const beauty = studio.vertical === "APPOINTMENTS";
   const t = await getTranslations("reports");
   const tp = await getTranslations("payments");
 
@@ -54,10 +65,11 @@ export default async function ReportsPage({
     student, and it buried the exports under a wall of noise. It is still
     downloadable below, which is where an audit trail is actually useful.
   */
-  const [finance, attendance, payroll, incomeRows] = await Promise.all([
+  const [finance, attendance, payroll, visits, incomeRows] = await Promise.all([
     financialSummary(studio.id, range),
-    attendanceSummary(studio.id, range),
-    instructorPayroll(studio.id, range),
+    beauty ? Promise.resolve({ booked: 0, attended: 0, noShow: 0, cancelled: 0 }) : attendanceSummary(studio.id, range),
+    beauty ? Promise.resolve([]) : instructorPayroll(studio.id, range),
+    beauty ? appointmentSummary(studio.id, range) : Promise.resolve(null),
     db.transaction.findMany({
       where: { studioId: studio.id, type: "INCOME", occurredAt: { gte: from, lt: to } },
       select: { amountCents: true, occurredAt: true },
@@ -91,7 +103,7 @@ export default async function ReportsPage({
 
   return (
     <>
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t(beauty ? "subtitleBeauty" : "subtitle")} />
 
       <Card className="mb-5">
         <CardBody>
@@ -117,9 +129,19 @@ export default async function ReportsPage({
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label={tp("balance")} value={money(finance.net)} tone={finance.net >= 0 ? "positive" : "critical"} />
-        <Stat label={t("attended")} value={attendance.attended} />
-        <Stat label={t("noShow")} value={attendance.noShow} tone={attendance.noShow > 0 ? "accent" : undefined} />
-        <Stat label={t("payrollTotal")} value={money(payrollTotal)} />
+        {visits ? (
+          <>
+            <Stat label={t("billed")} value={money(visits.billedCents)} />
+            <Stat label={t("completedAppointments")} value={visits.completed} />
+            <Stat label={t("noShowAppointments")} value={visits.noShow} tone={visits.noShow > 0 ? "accent" : undefined} />
+          </>
+        ) : (
+          <>
+            <Stat label={t("attended")} value={attendance.attended} />
+            <Stat label={t("noShow")} value={attendance.noShow} tone={attendance.noShow > 0 ? "accent" : undefined} />
+            <Stat label={t("payrollTotal")} value={money(payrollTotal)} />
+          </>
+        )}
       </div>
 
       <Card className="mb-5">
@@ -133,79 +155,81 @@ export default async function ReportsPage({
         </CardBody>
       </Card>
 
-      <Card className="mb-5">
-        <CardHeader title={t("payroll")} />
-        {payroll.length === 0 ? (
-          <EmptyState message={t("payrollEmpty")} />
-        ) : (
-          <>
-            <ul className="divide-y divide-line lg:hidden">
-              {payroll.map((row) => (
-                <li key={row.instructorId} className="flex items-center gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-medium text-ink">{row.name}</p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {row.classes} {t("classes").toLowerCase()} · {(row.minutes / 60).toFixed(1)}h
-                      · {t(`basis${row.basis}`)}
+      {!beauty && (
+        <Card className="mb-5">
+          <CardHeader title={t("payroll")} />
+          {payroll.length === 0 ? (
+            <EmptyState message={t("payrollEmpty")} />
+          ) : (
+            <>
+              <ul className="divide-y divide-line lg:hidden">
+                {payroll.map((row) => (
+                  <li key={row.instructorId} className="flex items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-medium text-ink">{row.name}</p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {row.classes} {t("classes").toLowerCase()} · {(row.minutes / 60).toFixed(1)}h
+                        · {t(`basis${row.basis}`)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-[15px] font-semibold tabular-nums text-ink">
+                      {money(row.payCents)}
                     </p>
-                  </div>
-                  <p className="shrink-0 text-[15px] font-semibold tabular-nums text-ink">
-                    {money(row.payCents)}
-                  </p>
+                  </li>
+                ))}
+                <li className="flex items-center justify-between px-4 py-3">
+                  <span className="text-sm font-medium">{t("payrollTotal")}</span>
+                  <span className="font-display text-lg font-semibold tabular-nums">
+                    {money(payrollTotal)}
+                  </span>
                 </li>
-              ))}
-              <li className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm font-medium">{t("payrollTotal")}</span>
-                <span className="font-display text-lg font-semibold tabular-nums">
-                  {money(payrollTotal)}
-                </span>
-              </li>
-            </ul>
+              </ul>
 
-            <div className="hidden lg:block">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                    <th className="px-5 py-2 font-medium">{t("instructor")}</th>
-                    <th className="px-4 py-2 font-medium">{t("classes")}</th>
-                    <th className="px-4 py-2 font-medium">{t("hours")}</th>
-                    <th className="px-4 py-2 font-medium">{t("attendees")}</th>
-                    <th className="px-4 py-2 font-medium">{t("basis")}</th>
-                    <th className="px-4 py-2 text-right font-medium">{t("pay")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {payroll.map((row) => (
-                    <tr key={row.instructorId}>
-                      <td className="px-5 py-2.5 font-medium">{row.name}</td>
-                      <td className="px-4 py-2.5 tabular-nums">{row.classes}</td>
-                      <td className="px-4 py-2.5 tabular-nums">{(row.minutes / 60).toFixed(1)}</td>
-                      <td className="px-4 py-2.5 tabular-nums">{row.attendees}</td>
-                      <td className="px-4 py-2.5 text-muted">{t(`basis${row.basis}`)}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums">{money(row.payCents)}</td>
+              <div className="hidden lg:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
+                      <th className="px-5 py-2 font-medium">{t("instructor")}</th>
+                      <th className="px-4 py-2 font-medium">{t("classes")}</th>
+                      <th className="px-4 py-2 font-medium">{t("hours")}</th>
+                      <th className="px-4 py-2 font-medium">{t("attendees")}</th>
+                      <th className="px-4 py-2 font-medium">{t("basis")}</th>
+                      <th className="px-4 py-2 text-right font-medium">{t("pay")}</th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-line-strong">
-                    <td className="px-5 py-2.5 font-medium" colSpan={5}>
-                      {t("payrollTotal")}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-display text-base font-semibold tabular-nums">
-                      {money(payrollTotal)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </>
-        )}
-      </Card>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {payroll.map((row) => (
+                      <tr key={row.instructorId}>
+                        <td className="px-5 py-2.5 font-medium">{row.name}</td>
+                        <td className="px-4 py-2.5 tabular-nums">{row.classes}</td>
+                        <td className="px-4 py-2.5 tabular-nums">{(row.minutes / 60).toFixed(1)}</td>
+                        <td className="px-4 py-2.5 tabular-nums">{row.attendees}</td>
+                        <td className="px-4 py-2.5 text-muted">{t(`basis${row.basis}`)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums">{money(row.payCents)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-line-strong">
+                      <td className="px-5 py-2.5 font-medium" colSpan={5}>
+                        {t("payrollTotal")}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-display text-base font-semibold tabular-nums">
+                        {money(payrollTotal)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          )}
+        </Card>
+      )}
 
       <Card>
         <CardHeader title={t("exports")} description={t("exportsHint")} />
         <CardBody className="flex flex-wrap gap-2">
-          {EXPORTS.map(([kind, label]) => (
+          {(beauty ? BEAUTY_EXPORTS : EXPORTS).map(([kind, label]) => (
             <a
               key={kind}
               href={`/api/export/${kind}${exportQuery}`}

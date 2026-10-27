@@ -4,7 +4,9 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { instructorPayroll, toCsv } from "@/lib/reports";
 import { recordAudit } from "@/lib/audit";
 
-const KINDS = ["payments", "transactions", "bookings", "payroll", "students", "audit"] as const;
+const KINDS = ["payments", "transactions", "bookings", "payroll", "students", "appointments", "clients", "audit"] as const;
+/** What an appointment business can export; class exports would be empty for it. */
+const APPOINTMENT_KINDS: string[] = ["payments", "transactions", "appointments", "clients", "audit"];
 type Kind = (typeof KINDS)[number];
 
 function parseRange(request: NextRequest) {
@@ -34,6 +36,10 @@ export async function GET(
     return NextResponse.json({ error: "unknown export" }, { status: 404 });
   }
 
+  if (user.studio.vertical === "APPOINTMENTS" && !APPOINTMENT_KINDS.includes(kind)) {
+    return NextResponse.json({ error: "unknown export" }, { status: 404 });
+  }
+
   const range = parseRange(request);
   const studioId = user.studioId;
   const iso = (date: Date) => date.toISOString();
@@ -43,16 +49,21 @@ export async function GET(
   if (kind === "payments") {
     const rows = await db.payment.findMany({
       where: { studioId, createdAt: { gte: range.from, lt: range.to } },
-      include: { student: { include: { user: true } }, studentPack: { include: { pack: true } } },
+      include: {
+        student: { include: { user: true } },
+        studentPack: { include: { pack: true } },
+        appointment: { select: { serviceName: true, startsAt: true } },
+      },
       orderBy: { createdAt: "asc" },
     });
     csv = toCsv(
-      ["date", "student", "email", "pack", "amount", "currency", "method", "status", "reference"],
+      ["date", "client", "email", "for", "appointment_date", "amount", "currency", "method", "status", "reference"],
       rows.map((row) => [
         iso(row.createdAt),
         row.student.user.name,
         row.student.user.email,
-        row.studentPack?.pack.name ?? "",
+        row.appointment?.serviceName ?? row.studentPack?.pack.name ?? "",
+        row.appointment ? iso(row.appointment.startsAt) : "",
         (row.amountCents / 100).toFixed(2),
         row.currency,
         row.method,
@@ -127,6 +138,54 @@ export async function GET(
         row.noShowCount,
         row.bookingBlocked ? "yes" : "no",
         row.emergencyContact ?? "",
+      ]),
+    );
+  } else if (kind === "appointments") {
+    const rows = await db.appointment.findMany({
+      where: { studioId, startsAt: { gte: range.from, lt: range.to } },
+      include: {
+        client: { include: { user: true } },
+        staff: { select: { name: true } },
+        addOns: { select: { name: true } },
+        payments: { where: { status: "APPROVED" }, select: { amountCents: true } },
+      },
+      orderBy: { startsAt: "asc" },
+    });
+    csv = toCsv(
+      ["date", "service", "extras", "professional", "client", "phone", "status", "source", "price", "deposit", "deposit_status", "paid"],
+      rows.map((row) => [
+        iso(row.startsAt),
+        row.serviceName,
+        row.addOns.map((a) => a.name).join(" + "),
+        row.staff.name,
+        row.client.user.name,
+        row.client.user.phone ?? "",
+        row.status,
+        row.source,
+        (row.priceCents / 100).toFixed(2),
+        (row.depositCents / 100).toFixed(2),
+        row.depositStatus,
+        (row.payments.reduce((sum, p) => sum + p.amountCents, 0) / 100).toFixed(2),
+      ]),
+    );
+  } else if (kind === "clients") {
+    const rows = await db.studentProfile.findMany({
+      where: { user: { studioId, role: "STUDENT" } },
+      include: { user: true, _count: { select: { appointments: { where: { status: "COMPLETED" } } } } },
+      orderBy: { user: { name: "asc" } },
+    });
+    csv = toCsv(
+      ["name", "phone", "email", "visits", "last_visit", "no_shows", "blocked", "allergies", "notes"],
+      rows.map((row) => [
+        row.user.name,
+        row.user.phone ?? "",
+        row.user.email ?? "",
+        row._count.appointments,
+        row.lastVisitAt ? row.lastVisitAt.toISOString().slice(0, 10) : "",
+        row.noShowCount,
+        row.bookingBlocked ? "yes" : "no",
+        row.allergies ?? "",
+        row.notes ?? "",
       ]),
     );
   } else {

@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
-import { Mascot } from "@/components/brand";
+import { BeautyMascot, Mascot } from "@/components/brand";
+import { getAdminProduct } from "@/lib/admin/product";
+import { ProductSwitch } from "./product-switch";
 
 /**
  * Platform console shell.
@@ -22,11 +24,14 @@ export default async function AdminLayout({
   setRequestLocale(locale);
 
   const user = await requirePlatformAdmin();
+  const product = await getAdminProduct();
+  const beauty = product === "beauty";
 
+  // Deposits held for businesses only exist on the appointments product.
   const tabs = [
-    { href: "/admin", label: "Estudios" },
+    { href: "/admin", label: beauty ? "Negocios" : "Estudios" },
     { href: "/admin/payments", label: "Cobros" },
-    { href: "/admin/payouts", label: "Señas" },
+    ...(beauty ? [{ href: "/admin/payouts", label: "Señas" }] : []),
     { href: "/admin/users", label: "Usuarios" },
   ];
 
@@ -35,14 +40,17 @@ export default async function AdminLayout({
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4">
           <Link href="/admin" className="flex items-center gap-2.5">
-            <Mascot size={28} />
-            <span className="font-brand text-lg text-[#E07A5F]">temppo</span>
+            {beauty ? <BeautyMascot size={28} /> : <Mascot size={28} />}
+            <span className={`font-brand text-lg ${beauty ? "text-[#DE8BA3]" : "text-[#E07A5F]"}`}>
+              temppo{beauty && <span className="ml-1 font-sans text-sm font-medium">Beauty</span>}
+            </span>
             <span className="rounded-[var(--radius-pill)] bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider">
               Consola
             </span>
           </Link>
 
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <ProductSwitch current={product} />
             <nav className="flex gap-1">
               {tabs.map((tab) => (
                 <Link

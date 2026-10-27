@@ -82,7 +82,8 @@ export function RecordPaymentForm({
   );
 }
 
-export function ExpenseForm({ currency }: { currency: string }) {
+/** Money out — or, with `income`, money in that is not an appointment (a product, a gift card). */
+export function ExpenseForm({ currency, income = false }: { currency: string; income?: boolean }) {
   const t = useTranslations("payments");
   const tc = useTranslations("common");
   const te = useTranslations("errors");
@@ -101,9 +102,10 @@ export function ExpenseForm({ currency }: { currency: string }) {
 
   return (
     <form action={submit} className="space-y-4">
+      {income && <input type="hidden" name="type" value="INCOME" />}
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={t("category")}>
-          <Input name="category" required maxLength={60} placeholder="Alquiler" />
+          <Input name="category" required maxLength={60} placeholder={income ? t("incomePlaceholder") : "Alquiler"} />
         </Field>
         <Field label={`${t("amount")} (${currency})`} error={message}>
           <Input name="amount" required inputMode="decimal" placeholder="25000" />
@@ -120,7 +122,7 @@ export function ExpenseForm({ currency }: { currency: string }) {
       <Field label={tc("description")}>
         <Input name="description" maxLength={200} />
       </Field>
-      <SubmitButton pendingLabel={tc("saving")}>{t("addExpense")}</SubmitButton>
+      <SubmitButton pendingLabel={tc("saving")}>{t(income ? "addIncome" : "addExpense")}</SubmitButton>
     </form>
   );
 }

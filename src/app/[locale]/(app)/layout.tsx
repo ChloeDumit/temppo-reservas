@@ -152,7 +152,7 @@ export default async function AppLayout({
         user={{
           name: user.name,
           email: user.email,
-          roleLabel: ts(`role${user.role}`),
+          roleLabel: beauty && user.role === "INSTRUCTOR" ? ts("roleProfessional") : ts(`role${user.role}`),
         }}
       />
     </div>

@@ -103,6 +103,26 @@ export async function attendanceSummary(studioId: string, range: Range) {
   };
 }
 
+/**
+ * An appointment business's month: what was done, who did not come, what
+ * was called off, and what the work done was worth at its price.
+ */
+export async function appointmentSummary(studioId: string, range: Range) {
+  const grouped = await db.appointment.groupBy({
+    by: ["status"],
+    where: { studioId, startsAt: { gte: range.from, lt: range.to } },
+    _count: { _all: true },
+    _sum: { priceCents: true },
+  });
+  const row = (status: string) => grouped.find((r) => r.status === status);
+  return {
+    completed: row("COMPLETED")?._count._all ?? 0,
+    noShow: row("NO_SHOW")?._count._all ?? 0,
+    cancelled: (row("CANCELLED")?._count._all ?? 0) + (row("LATE_CANCELLED")?._count._all ?? 0),
+    billedCents: row("COMPLETED")?._sum.priceCents ?? 0,
+  };
+}
+
 /** Escapes a value for CSV, guarding against spreadsheet formula injection. */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return "";

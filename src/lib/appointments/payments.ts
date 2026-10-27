@@ -70,6 +70,8 @@ export async function startDepositCheckout(opts: {
     successUrl: opts.successUrl,
     failureUrl: opts.failureUrl,
     notificationUrl: notificationUrl.toString(),
+    // A little past the hold, so a card mid-payment as it ends still goes through.
+    ...(appt.holdExpiresAt ? { expiresAt: new Date(appt.holdExpiresAt.getTime() + 5 * 60_000) } : {}),
     ...(studioToken
       ? { accessToken: studioToken, marketplaceFeeCents: marketplaceFeeCents(appt.depositCents) }
       : {}),
@@ -366,5 +368,66 @@ export async function createPayout(opts: {
       data: { payoutId: payout.id },
     });
     return payout;
+  });
+}
+
+/** What has come in for an appointment so far: its deposit and anything after. */
+export async function collectedFor(appointmentId: string) {
+  const sum = await db.payment.aggregate({
+    where: { appointmentId, status: "APPROVED" },
+    _sum: { amountCents: true },
+  });
+  return sum._sum.amountCents ?? 0;
+}
+
+/**
+ * Staff took the rest of the price at the chair — cash, transfer, card.
+ * Recorded as income for the service so the month's numbers are what was
+ * actually charged, not only deposits.
+ */
+export async function recordAppointmentPayment(opts: {
+  studioId: string;
+  appointmentId: string;
+  amountCents: number;
+  method: "CASH" | "BANK_TRANSFER" | "MERCADO_PAGO" | "OTHER";
+  approvedById: string;
+  now?: Date;
+}) {
+  const now = opts.now ?? new Date();
+  const appt = await db.appointment.findFirst({
+    where: { id: opts.appointmentId, studioId: opts.studioId },
+    include: { studio: { select: { currency: true } } },
+  });
+  if (!appt || opts.amountCents <= 0) return null;
+  if (!["CONFIRMED", "COMPLETED", "PENDING_PAYMENT"].includes(appt.status)) return null;
+
+  return db.$transaction(async (tx) => {
+    const payment = await tx.payment.create({
+      data: {
+        studioId: appt.studioId,
+        studentId: appt.clientId,
+        appointmentId: appt.id,
+        amountCents: opts.amountCents,
+        currency: appt.studio.currency,
+        method: opts.method,
+        status: "APPROVED",
+        approvedById: opts.approvedById,
+        approvedAt: now,
+        // Charged at the chair: it never passes through the platform.
+        collectedByStudio: true,
+      },
+    });
+    await tx.transaction.create({
+      data: {
+        studioId: appt.studioId,
+        type: "INCOME",
+        category: "Servicios",
+        description: appt.serviceName,
+        amountCents: opts.amountCents,
+        occurredAt: now,
+        paymentId: payment.id,
+      },
+    });
+    return payment;
   });
 }

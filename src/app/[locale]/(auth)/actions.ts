@@ -21,6 +21,7 @@ import { recordAudit } from "@/lib/audit";
 import { localePath } from "@/i18n/routing";
 import { getBrand } from "@/lib/brand/server";
 import { appUrlFor } from "@/lib/brand/url";
+import { brandByKey } from "@/lib/brand/registry";
 import { seedAppointmentStudio } from "@/lib/appointments/seed";
 import { BEAUTY_TRIAL_WA_QUOTA, WA_AUTO_LIVE } from "@/lib/brand/pricing";
 
@@ -128,8 +129,14 @@ export async function magicLinkAction(_prev: AuthState, formData: FormData): Pro
   const parsed = emailSchema.safeParse(formData.get("email"));
   if (!parsed.success) return { error: "invalidEmail" };
 
-  const accounts = await db.user.findMany({ where: { email: parsed.data, isActive: true } });
-  const user = accounts[0];
+  const accounts = await db.user.findMany({
+    where: { email: parsed.data, isActive: true },
+    include: { studio: { select: { brand: true } } },
+  });
+  // The link opens on the brand it was asked from: sessions are per domain,
+  // so a Temppo Beauty owner sent to TEMPPO's domain would land signed out.
+  const brand = await getBrand();
+  const user = accounts.find((a) => a.studio.brand === brand.key) ?? accounts[0];
 
   // Always report success — otherwise this endpoint tells the world who has an account.
   if (user) {
@@ -145,16 +152,20 @@ export async function magicLinkAction(_prev: AuthState, formData: FormData): Pro
       },
     });
 
-    const base = process.env.APP_URL || "http://localhost:3000";
+    const base = appUrlFor(user.studio);
     // API routes are not locale-prefixed; the locale rides along as a param.
     const link = `${base}/api/auth/magic?token=${token}&locale=${locale}`;
+    const product = brandByKey(user.studio.brand).name;
 
     await notify({
       studioId: user.studioId,
       to: user.email,
       template: "magic_link",
-      subject: "TEMPPO Reservas — acceso / login",
-      body: `Hola ${user.name},\n\nEntrá con este enlace (vence en ${MAGIC_LINK_TTL_MINUTES} minutos):\n${link}\n\nSi no lo pediste, ignorá este mensaje.`,
+      subject: locale === "en" ? `${product} — sign in` : `${product} — acceso`,
+      body:
+        locale === "en"
+          ? `Hi ${user.name},\n\nSign in with this link (it expires in ${MAGIC_LINK_TTL_MINUTES} minutes):\n${link}\n\nIf you didn't ask for it, ignore this message.`
+          : `Hola ${user.name},\n\nEntrá con este enlace (vence en ${MAGIC_LINK_TTL_MINUTES} minutos):\n${link}\n\nSi no lo pediste, ignorá este mensaje.`,
       relatedType: "User",
       relatedId: user.id,
     });

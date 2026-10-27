@@ -58,12 +58,16 @@ async function load(appointmentId: string) {
  * A new booking: the client gets her link to change or cancel (the only time
  * the raw token exists), the studio hears about it, and so does the
  * professional if she is not the one running the place.
+ *
+ * `contactEmail`: the address typed on this booking, which may not be the
+ * one on her file — a public booking never writes it there (see
+ * findOrCreateClient), but its confirmation still goes to whoever made it.
  */
-export async function notifyBooked(appointmentId: string, manageToken: string) {
+export async function notifyBooked(appointmentId: string, manageToken: string, contactEmail?: string | null) {
   const appt = await load(appointmentId);
   if (!appt) return;
   const { studio } = appt;
-  const client = appt.client.user;
+  const client = { ...appt.client.user, email: contactEmail || appt.client.user.email };
   const manageUrl = manageUrlFor(studio, manageToken);
   const when = whenText(appt.startsAt, studio);
   const en = studio.locale === "en";
@@ -171,6 +175,20 @@ export async function afterDepositSettled(appointmentId: string, outcome: Settle
   }
 
   if (outcome === "paid_too_late") {
+    // She paid and the time is gone: tell her before she turns up.
+    if (client.email) {
+      await notify({
+        studioId: studio.id,
+        to: client.email,
+        template: "appointment_deposit_late_client",
+        subject: en ? `${studio.name} — about your deposit` : `${studio.name} — sobre tu seña`,
+        body: en
+          ? `Hi ${client.name}, your deposit of ${amount} for ${appt.serviceName} (${when}) arrived after the time had been released, and someone else booked it. ${studio.name} will get in touch to give you another time or return your money.`
+          : `Hola ${client.name}, tu seña de ${amount} para ${appt.serviceName} (${when}) llegó después de que se liberó el horario, y lo reservó otra persona. ${studio.name} se va a comunicar con vos para darte otro horario o devolverte la plata.`,
+        relatedType: "Appointment",
+        relatedId: appt.id,
+      });
+    }
     await notifyOwners(studio.id, {
       url: "/agenda",
       template: "appointment_deposit_late",
@@ -204,6 +222,68 @@ export async function notifyStaffBookedForYou(appointmentId: string, byUserId: s
     body: en
       ? `${appt.serviceName}, ${whenText(appt.startsAt, studio)}.`
       : `${appt.serviceName}, ${whenText(appt.startsAt, studio)}.`,
+    relatedType: "Appointment",
+    relatedId: appt.id,
+  });
+}
+
+/**
+ * The business moved or called off her appointment: she hears it from us,
+ * not by turning up. Email when we have one; staff also get a WhatsApp
+ * button in the agenda for everyone else.
+ */
+export async function notifyClientChanged(appointmentId: string, kind: "moved" | "cancelled") {
+  const appt = await load(appointmentId);
+  if (!appt?.client.user.email) return;
+  const { studio } = appt;
+  const client = appt.client.user;
+  const when = whenText(appt.startsAt, studio);
+  const en = studio.locale === "en";
+  const first = client.name.split(" ")[0];
+  const body =
+    kind === "moved"
+      ? en
+        ? `Hi ${first}, your ${appt.serviceName} at ${studio.name} was moved to ${when}, with ${appt.staff.name}. If that doesn't suit you, just reply or message us.`
+        : `Hola ${first}, tu turno de ${appt.serviceName} en ${studio.name} pasó al ${when}, con ${appt.staff.name}. Si no te queda bien, respondé este mail o escribinos.`
+      : en
+        ? `Hi ${first}, your ${appt.serviceName} at ${studio.name} on ${when} was cancelled. Message us and we'll find you another time.`
+        : `Hola ${first}, se canceló tu turno de ${appt.serviceName} en ${studio.name} del ${when}. Escribinos y te buscamos otro horario.`;
+  await notify({
+    studioId: studio.id,
+    to: client.email,
+    template: kind === "moved" ? "appointment_moved" : "appointment_cancelled_by_studio",
+    subject: `${studio.name} — ${appt.serviceName}`,
+    body,
+    relatedType: "Appointment",
+    relatedId: appt.id,
+  });
+}
+
+/** She cancelled — from her link or her account. The owners hear what it means for the deposit. */
+export async function notifyClientCancelled(appointmentId: string, depositStatus: string) {
+  const appt = await load(appointmentId);
+  if (!appt) return;
+  const { studio } = appt;
+  const name = appt.client.user.name;
+  const en = studio.locale === "en";
+  const when = whenText(appt.startsAt, studio);
+  const amount = formatMoney(appt.depositCents, studio.currency, studio.locale);
+  // Only a deposit actually paid is kept, returned or carried over.
+  const depositLine =
+    depositStatus === "FORFEITED"
+      ? en ? ` Late: the ${amount} deposit is kept.` : ` Fuera de término: la seña de ${amount} queda.`
+      : depositStatus === "REFUNDED"
+        ? en ? ` Return her ${amount} deposit.` : ` Hay que devolverle la seña de ${amount}.`
+        : depositStatus === "CREDIT"
+          ? en ? ` Her ${amount} deposit stays as credit for her next visit.` : ` La seña de ${amount} le queda como crédito para la próxima.`
+          : "";
+  await notifyOwners(studio.id, {
+    url: "/agenda",
+    template: "appointment_cancelled",
+    subject: en ? `Cancelled — ${name}` : `Canceló — ${name}`,
+    body: en
+      ? `${name} cancelled ${appt.serviceName} on ${when}.${depositLine}`
+      : `${name} canceló ${appt.serviceName} del ${when}.${depositLine}`,
     relatedType: "Appointment",
     relatedId: appt.id,
   });

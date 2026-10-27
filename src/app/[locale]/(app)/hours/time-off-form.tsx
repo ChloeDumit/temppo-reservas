@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Field, Input, Select } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useSheetClose } from "@/components/app/sheet-form";
+import { Link } from "@/i18n/navigation";
+import { buttonClass } from "@/components/ui/button";
 import { createTimeOffAction, type ActionState } from "./actions";
 
 export function TimeOffForm({
@@ -23,9 +25,28 @@ export function TimeOffForm({
   const closeSheet = useSheetClose();
   const [state, submit] = useActionState<ActionState, FormData>(async (prev, formData) => {
     const result = await createTimeOffAction(prev, formData);
-    if (result?.ok) closeSheet();
+    // With appointments caught inside, stay open to say so.
+    if (result?.ok && !result.clashes) closeSheet();
     return result;
   }, null);
+
+  if (state?.ok && state.clashes) {
+    return (
+      <div className="space-y-4">
+        <p className="rounded-[var(--radius-md)] bg-caution-soft px-3 py-2.5 text-sm text-caution">
+          {t("blockClashes", { count: state.clashes })}
+        </p>
+        <div className="flex gap-2">
+          <Link href="/agenda" className={buttonClass("primary", "md")} onClick={closeSheet}>
+            {t("seeAgenda")}
+          </Link>
+          <button type="button" className={buttonClass("ghost", "md")} onClick={closeSheet}>
+            {tc("done")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form action={submit} className="space-y-4">
@@ -56,7 +77,7 @@ export function TimeOffForm({
       <Field label={t("reason")}>
         <Input name="reason" maxLength={120} placeholder={t("reasonPlaceholder")} />
       </Field>
-      {state?.error && <p className="text-sm text-critical">{t("badRange")}</p>}
+      {state?.error && <p className="text-sm text-critical">{state.error === "badRange" ? t("badRange") : t("blockError")}</p>}
       <SubmitButton pendingLabel={tc("saving")}>{t("block")}</SubmitButton>
     </form>
   );

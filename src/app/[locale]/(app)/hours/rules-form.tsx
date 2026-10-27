@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { saveBookingRulesAction, type ActionState } from "./actions";
 
@@ -12,9 +12,12 @@ export type Rules = {
   slotStepMinutes: number;
   cancellationCutoffHours: number;
   holdMinutes: number;
+  reminderHoursBefore: number;
+  noShowLimit: number;
   depositRefundable: boolean;
   acceptMercadoPago: boolean;
   acceptTransfer: boolean;
+  transferInstructions: string;
   hasWhatsapp: boolean;
 };
 
@@ -54,6 +57,12 @@ export function RulesForm({ rules }: { rules: Rules }) {
         <Field label={t("hold")} hint={t("holdHint")}>
           <Input name="holdMinutes" type="number" min={5} max={1440} defaultValue={rules.holdMinutes} />
         </Field>
+        <Field label={t("reminder")} hint={t("reminderHint")}>
+          <Input name="reminderHoursBefore" type="number" min={1} max={168} defaultValue={rules.reminderHoursBefore} />
+        </Field>
+        <Field label={t("noShowLimit")} hint={t("noShowLimitHint")}>
+          <Input name="noShowLimit" type="number" min={0} max={50} defaultValue={rules.noShowLimit} />
+        </Field>
       </div>
       <fieldset className="space-y-2.5 rounded-[var(--radius-md)] bg-sunken p-3">
         <legend className="mb-1 text-sm font-medium text-ink-soft">{t("payMethods")}</legend>
@@ -71,6 +80,15 @@ export function RulesForm({ rules }: { rules: Rules }) {
             <span className="block text-xs text-muted">{rules.hasWhatsapp ? t("acceptTransferHint") : t("acceptTransferNeedsWhatsapp")}</span>
           </span>
         </label>
+        <Field label={t("transferInstructions")} hint={t("transferInstructionsHint")}>
+          <Textarea
+            name="transferInstructions"
+            maxLength={500}
+            rows={3}
+            defaultValue={rules.transferInstructions}
+            placeholder={t("transferInstructionsPlaceholder")}
+          />
+        </Field>
         <p className="text-xs text-muted">{t("noMethodsHint")}</p>
       </fieldset>
       <label className="flex items-start gap-2.5 text-sm text-ink">

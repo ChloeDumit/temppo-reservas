@@ -11,6 +11,8 @@ import {
   subscriptionsNeedingAttention,
 } from "@/lib/billing";
 import { formatMoney } from "@/lib/money";
+import { beautyPlanFor, getAdminProduct, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
+import { BEAUTY_TRIAL_DAYS, LAUNCH_LOCK_MONTHS, LAUNCH_SPOTS } from "@/lib/brand/pricing";
 import { setPlanPricesAction, voidChargeAction } from "../actions";
 
 /**
@@ -33,37 +35,57 @@ export default async function AdminPaymentsPage({
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
-  const [charges, active, attention, prices, monthTotal] = await Promise.all([
-    allCharges(60),
-    activeSubscriptions(),
-    subscriptionsNeedingAttention(),
-    planPrices(),
-    db.subscriptionCharge.aggregate({
-      where: { status: "APPROVED", paidAt: { gte: monthStart } },
-      _sum: { amountCents: true },
-    }),
-  ]);
+  const product = await getAdminProduct();
+  const beauty = product === "beauty";
+
+  // Fetched across both products, then narrowed to the one on screen.
+  const [allRecent, allActive, allAttention, prices, monthTotal, productStudios] =
+    await Promise.all([
+      allCharges(300),
+      activeSubscriptions(),
+      subscriptionsNeedingAttention(),
+      planPrices(),
+      db.subscriptionCharge.aggregate({
+        where: {
+          status: "APPROVED",
+          paidAt: { gte: monthStart },
+          subscription: { studio: { brand: product } },
+        },
+        _sum: { amountCents: true },
+      }),
+      db.studio.findMany({ where: { brand: product }, select: { id: true } }),
+    ]);
+  const ours = new Set(productStudios.map((s) => s.id));
+  const charges = allRecent.filter((c) => ours.has(c.subscription.studio.id)).slice(0, 60);
+  const active = allActive.filter((s) => ours.has(s.studio.id));
+  const attention = allAttention.filter((s) => ours.has(s.studio.id));
 
   const money = (cents: number) => formatMoney(cents, PLATFORM_CURRENCY, locale);
-  const date = (d: Date) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
+  const date = (d: Date) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
 
   // Recurring revenue: what the live subscriptions bill in a month.
   const mrr = active.reduce((sum, s) => sum + s.amountCents, 0);
 
   const facts = [
     { label: "Ingreso recurrente", value: money(mrr) },
-    { label: "Cobrado este mes", value: money(monthTotal._sum.amountCents ?? 0) },
+    {
+      label: "Cobrado este mes",
+      value: money(monthTotal._sum.amountCents ?? 0),
+    },
     { label: "Suscripciones activas", value: String(active.length) },
     { label: "Requieren atención", value: String(attention.length) },
   ];
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Cobros</h1>
+      <h1 className="text-2xl font-semibold">
+        Cobros{" "}
+        <span className="text-base font-normal text-white/40">· {PRODUCT_LABEL[product]}</span>
+      </h1>
       <p className="mt-1 text-sm text-white/40">
-        Lo que los estudios nos pagan a nosotros. No incluye lo que los alumnos pagan a cada
-        estudio.
+        {beauty
+          ? "Lo que los negocios nos pagan a nosotros. Las señas de sus clientas van aparte, en Señas."
+          : "Lo que los estudios nos pagan a nosotros. No incluye lo que los alumnos pagan a cada estudio."}
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -82,7 +104,7 @@ export default async function AdminPaymentsPage({
         </h2>
         {attention.length === 0 ? (
           <p className="px-4 py-6 text-center text-sm text-white/40">
-            Nadie atrasado. Todos los estudios están al día.
+            Nadie atrasado. Todos los {beauty ? "negocios" : "estudios"} están al día.
           </p>
         ) : (
           <ul className="divide-y divide-white/10">
@@ -96,7 +118,8 @@ export default async function AdminPaymentsPage({
                     {sub.studio.name}
                   </Link>
                   <p className="text-xs text-white/40">
-                    {sub.plan} · {money(sub.amountCents)}/mes
+                    {planLabel(product, sub.plan)} · {money(sub.amountCents)}
+                    /mes
                     {sub.currentPeriodEnd && ` · pagó hasta ${date(sub.currentPeriodEnd)}`}
                     {sub.studio.suspendedAt && " · estudio suspendido"}
                   </p>
@@ -116,36 +139,106 @@ export default async function AdminPaymentsPage({
         )}
       </section>
 
-      {/* ── Prices ─────────────────────────────────────────── */}
-      <section className="mt-4 rounded-[var(--radius-lg)] border border-white/10 p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50">Precios</h2>
-        <p className="mt-2 text-sm text-white/50">
-          Se aplican a las suscripciones nuevas y a los cobros manuales. Un estudio que ya autorizó
-          el débito sigue pagando el monto que autorizó: cambiarlo requiere que vuelva a autorizar.
-        </p>
+      {beauty ? (
+        <>
+          {/* ── Prices ─────────────────────────────────────────── */}
+          <section className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-white/10">
+            <h2 className="border-b border-white/10 bg-white/5 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+              Planes de Temppo Beauty
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-left text-[11px] uppercase tracking-wider text-white/40">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Plan</th>
+                    <th className="px-3 py-2 font-medium">Precio / mes</th>
+                    <th className="px-3 py-2 font-medium">Profesionales</th>
+                    <th className="px-3 py-2 font-medium">Sucursales</th>
+                    <th className="px-3 py-2 font-medium">WhatsApp auto</th>
+                    <th className="px-3 py-2 font-medium">Activas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {PAID_PLANS.map((plan) => {
+                    const p = beautyPlanFor(plan);
+                    return (
+                      <tr key={plan}>
+                        <td className="px-4 py-2.5 font-medium">
+                          {p.name} <span className="text-xs text-white/30">{plan}</span>
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums">
+                          <span className="font-semibold">{money(p.launchPriceUyu * 100)}</span>
+                          <span className="ml-2 text-xs text-white/30 line-through">
+                            {money(p.priceUyu * 100)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums text-white/60">
+                          {p.professionals ?? "Sin límite"}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums text-white/60">
+                          {p.locations === null ? "Varias" : p.locations}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums text-white/60">
+                          {p.waQuota
+                            ? `${p.waQuota}/mes`
+                            : p.waAddOn
+                              ? `add-on ${money(p.waAddOn.priceUyu * 100)}`
+                              : "—"}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums">
+                          {active.filter((s) => s.plan === plan).length}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="border-t border-white/10 px-4 py-3 text-xs text-white/40">
+              Los mismos planes y precios que muestra la landing de Beauty. El precio de lanzamiento lo
+              mantienen los primeros {LAUNCH_SPOTS} negocios durante {LAUNCH_LOCK_MONTHS} meses; el
+              tachado es el precio regular. El primer mes ({BEAUTY_TRIAL_DAYS} días) es gratis y sin
+              tarjeta. Al cobrar a mano, cargá el precio de lanzamiento.
+            </p>
+          </section>
+        </>
+      ) : (
+        <>
+          {/* ── Prices ─────────────────────────────────────────── */}
+          <section className="mt-4 rounded-[var(--radius-lg)] border border-white/10 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50">
+              Precios
+            </h2>
+            <p className="mt-2 text-sm text-white/50">
+              Se aplican a las suscripciones nuevas y a los cobros manuales. Un estudio que ya
+              autorizó el débito sigue pagando el monto que autorizó: cambiarlo requiere que vuelva
+              a autorizar.
+            </p>
 
-        <form action={setPlanPricesAction} className="mt-4 flex flex-wrap items-end gap-3">
-          <input type="hidden" name="returnTo" value="/admin/payments" />
-          {PAID_PLANS.map((plan) => (
-            <label key={plan} className="text-xs text-white/40">
-              {plan} ({PLATFORM_CURRENCY})
-              <input
-                name={plan}
-                required
-                inputMode="numeric"
-                defaultValue={String(Math.round(prices[plan] / 100))}
-                className="mt-1 block w-28 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          ))}
-          <button
-            type="submit"
-            className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
-          >
-            Guardar precios
-          </button>
-        </form>
-      </section>
+            <form action={setPlanPricesAction} className="mt-4 flex flex-wrap items-end gap-3">
+              <input type="hidden" name="returnTo" value="/admin/payments" />
+              {PAID_PLANS.map((plan) => (
+                <label key={plan} className="text-xs text-white/40">
+                  {plan} ({PLATFORM_CURRENCY})
+                  <input
+                    name={plan}
+                    required
+                    inputMode="numeric"
+                    defaultValue={String(Math.round(prices[plan] / 100))}
+                    className="mt-1 block w-28 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+              ))}
+              <button
+                type="submit"
+                className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
+              >
+                Guardar precios
+              </button>
+            </form>
+          </section>
+        </>
+      )}
 
       {/* ── Ledger ─────────────────────────────────────────── */}
       <section className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-white/10">
@@ -171,8 +264,7 @@ export default async function AdminPaymentsPage({
                   <p className="text-xs text-white/40">
                     {charge.method === "BANK_TRANSFER" ? "transferencia" : "Mercado Pago"}
                     {charge.months > 1 && ` · ${charge.months} meses`}
-                    {charge.note && ` · ${charge.note}`} ·{" "}
-                    {date(charge.paidAt ?? charge.createdAt)}
+                    {charge.note && ` · ${charge.note}`} · {date(charge.paidAt ?? charge.createdAt)}
                   </p>
                 </div>
 

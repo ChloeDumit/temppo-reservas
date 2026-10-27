@@ -71,3 +71,4 @@ next-env.d.ts
 android/app/keystore.properties
 *.keystore
 *.jks
+e2e-shots/

@@ -89,6 +89,9 @@ model Studio {
   /// straight away and no deposit is asked.
   acceptMercadoPago Boolean @default(true)
   acceptTransfer    Boolean @default(true)
+  /// Where a deposit by transfer goes — bank, account, holder, alias — shown
+  /// to the client next to her payment code.
+  transferInstructions String?
 
   /// LINK: staff send reminders from their own WhatsApp (wa.me). CLOUD: the
   /// platform sends them automatically, within a monthly quota.

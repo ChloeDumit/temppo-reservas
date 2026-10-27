@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import Link from "next/link";
+// The locale-aware Link: "/b/slug" keeps /en for an English studio. External
+// hrefs (wa.me, tel:) pass through untouched.
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";

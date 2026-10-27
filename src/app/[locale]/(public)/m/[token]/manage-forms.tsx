@@ -108,6 +108,8 @@ export function RescheduleForm({
   const [days, setDays] = useState<DayOption[] | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A time is picked first and confirmed second: one stray tap must not move her booking.
+  const [picked, setPicked] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const timeFmt = useMemo(
@@ -175,25 +177,45 @@ export function RescheduleForm({
                 key={s.start}
                 type="button"
                 disabled={pending}
-                onClick={() =>
-                  start(async () => {
-                    const result = await rescheduleByTokenAction({ token, startsAt: s.start });
-                    if (result?.ok) {
-                      setOpen(false);
-                      router.refresh();
-                    } else {
-                      setError(result?.error === "TOO_LATE" ? t("tooLateToMove") : t("errSlotTaken"));
-                      setDays(null);
-                    }
-                  })
-                }
-                className="rounded-[var(--radius-md)] border border-line bg-surface py-2 text-sm font-medium tabular-nums text-ink hover:border-accent"
+                onClick={() => {
+                  setPicked(s.start);
+                  setError(null);
+                }}
+                className={cn(
+                  "rounded-[var(--radius-md)] border py-2 text-sm font-medium tabular-nums",
+                  picked === s.start ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-accent",
+                )}
               >
                 {timeFmt.format(new Date(s.start))}
               </button>
             ))}
           </div>
         </>
+      )}
+      {picked && (
+        <Button
+          type="button"
+          className="w-full"
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              const result = await rescheduleByTokenAction({ token, startsAt: picked });
+              if (result?.ok) {
+                setOpen(false);
+                setPicked(null);
+                router.refresh();
+              } else {
+                setError(result?.error === "TOO_LATE" ? t("tooLateToMove") : t("errSlotTaken"));
+                setPicked(null);
+                setDays(null);
+              }
+            })
+          }
+        >
+          {t("confirmMove", {
+            time: new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone }).format(new Date(picked)),
+          })}
+        </Button>
       )}
       {error && <p className="text-sm text-critical">{error}</p>}
       <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>

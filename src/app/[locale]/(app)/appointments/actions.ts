@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { assertUser } from "@/lib/auth/guards";
 import { cancelAppointment } from "@/lib/appointments/book";
+import { notifyClientCancelled } from "@/lib/appointments/notify";
 
 /** A signed-in client cancelling her own appointment, under the same rules as the link. */
 export async function cancelMyAppointmentAction(formData: FormData) {
@@ -13,6 +14,7 @@ export async function cancelMyAppointmentAction(formData: FormData) {
     where: { id: String(formData.get("id") ?? ""), clientId: user.studentProfile.id },
   });
   if (!appt) return;
-  await cancelAppointment({ studio: user.studio, appointmentId: appt.id, by: "client" });
+  const result = await cancelAppointment({ studio: user.studio, appointmentId: appt.id, by: "client" });
+  if (result.ok) await notifyClientCancelled(appt.id, result.depositStatus);
   revalidatePath("/[locale]/(app)/appointments", "page");
 }

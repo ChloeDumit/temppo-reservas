@@ -284,7 +284,9 @@
     "depositsHeld": "Señas cobradas online, a transferirte",
     "depositsHeldHint": "{count, plural, =0 {Nada pendiente.} one {# seña cobrada por Mercado Pago que todavía no te transferimos.} other {# señas cobradas por Mercado Pago que todavía no te transferimos.}}",
     "lastPayout": "Última transferencia: {amount} el {date}.",
-    "client": "Clienta"
+    "client": "Clienta",
+    "addIncome": "Registrar ingreso",
+    "incomePlaceholder": "Venta de productos"
   },
   "billing": {
     "title": "Suscripción",
@@ -386,7 +388,13 @@
     "mpConnectedHint": "Las señas online entran directo a esta cuenta. Las devoluciones las hacés desde tu Mercado Pago.",
     "mpConnectedNow": "¡Listo! Tu Mercado Pago quedó conectado.",
     "mpError": "No pudimos conectar tu cuenta. Probá de nuevo en un rato.",
-    "mpDisconnect": "Desconectar"
+    "mpDisconnect": "Desconectar",
+    "roleProfessional": "Profesional",
+    "invitePasswordHintBeauty": "Pasásela a la profesional para que entre ahora. Se la va a cambiar la primera vez. También le llega un enlace por email.",
+    "studioBeauty": "Tu negocio",
+    "studioNameBeauty": "Nombre del negocio",
+    "whatsappNumberBeauty": "WhatsApp del negocio",
+    "whatsappHintBeauty": "Donde tus clientas te mandan el comprobante de la seña y te escriben desde tu página. Formato internacional."
   },
   "booking": {
     "title": "Reservar clase",
@@ -608,7 +616,13 @@
     "auditWhen": "Cuándo",
     "weekly": "Ingresos por semana",
     "noChartData": "Sin datos en el período.",
-    "exportsHint": "Descargas en CSV, incluido el registro de actividad."
+    "exportsHint": "Descargas en CSV, incluido el registro de actividad.",
+    "subtitleBeauty": "Cuánto entró, cuánto trabajaste y tus exportaciones.",
+    "billed": "Facturado",
+    "completedAppointments": "Turnos realizados",
+    "noShowAppointments": "No vinieron",
+    "exportAppointments": "Turnos",
+    "exportClients": "Clientas"
   },
   "availability": {
     "title": "Cupos fijos",
@@ -652,7 +666,8 @@
     "enabledHint": "En este dispositivo.",
     "blocked": "Bloqueaste las notificaciones en este navegador. Habilitalas desde los ajustes del sitio.",
     "unsupported": "Este navegador no admite notificaciones. En iPhone, agregá la app a la pantalla de inicio primero.",
-    "hint": "Te avisamos de tus clases y cuando se libera un lugar."
+    "hint": "Te avisamos de tus clases y cuando se libera un lugar.",
+    "hintBeauty": "Te avisamos cuando reservan, cancelan o pagan una seña."
   },
   "transfer": {
     "codeTitle": "Tu código de pago",
@@ -968,7 +983,17 @@
     "acceptTransfer": "Transferencia",
     "acceptTransferHint": "La clienta te manda el comprobante por WhatsApp y vos la confirmás.",
     "acceptTransferNeedsWhatsapp": "Cargá tu WhatsApp en Ajustes para poder usarla.",
-    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña."
+    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña.",
+    "reminder": "Recordatorio",
+    "reminderHint": "Cuántas horas antes del turno le recordamos a la clienta.",
+    "blockClashes": "{count, plural, one {Bloqueado. Ojo: queda # turno dentro de ese horario. Movelo o avisale a la clienta.} other {Bloqueado. Ojo: quedan # turnos dentro de ese horario. Movelos o avisales a las clientas.}}",
+    "seeAgenda": "Ver en la agenda",
+    "blockError": "No se pudo bloquear. Revisá los datos y probá de nuevo.",
+    "transferInstructions": "Datos para transferir",
+    "transferInstructionsHint": "Se los mostramos a la clienta junto a su código de pago.",
+    "transferInstructionsPlaceholder": "BROU caja de ahorro 001234567-00001, a nombre de Lucía Pérez",
+    "noShowLimit": "Faltas sin avisar",
+    "noShowLimitHint": "Después de tantas, ya no puede reservar online hasta que la desbloquees desde su ficha. 0 = nunca se bloquea."
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",
@@ -1013,7 +1038,8 @@
     "errName": "Escribí tu nombre.",
     "errEmailForMp": "Para pagar con Mercado Pago necesitamos tu email.",
     "errTooManyHolds": "Ya tenés reservas esperando la seña. Pagá esas primero o escribinos.",
-    "errGeneric": "No pudimos reservar. Probá de nuevo."
+    "errGeneric": "No pudimos reservar. Probá de nuevo.",
+    "depositExplainCredit": "Para confirmar el turno se paga una seña de {amount}, que se descuenta del total. Si cancelás con más de {hours} horas de anticipación, te queda como crédito para tu próximo turno."
   },
   "manage": {
     "title": "Tu turno",
@@ -1061,7 +1087,13 @@
     "pastCutoff": "Ya pasó el plazo para cambiar sin costo.",
     "bookAgain": "Reservar otro turno",
     "writeToStudio": "Escribirle al estudio",
-    "errGeneric": "Algo salió mal. Probá de nuevo."
+    "errGeneric": "Algo salió mal. Probá de nuevo.",
+    "saveLink": "Guardá este link: es tu forma de volver a tu turno para pagar, cambiarlo o cancelarlo.",
+    "copyLink": "Copiar link",
+    "copied": "¡Copiado!",
+    "sendToMyWhatsapp": "Mandármelo por WhatsApp",
+    "selfMessage": "Mi turno de {service}: {url}",
+    "confirmMove": "Pasar a {time}"
   },
   "agenda": {
     "title": "Agenda",
@@ -1111,7 +1143,7 @@
     "back": "Volver",
     "cancelReason": "Motivo (opcional)",
     "cancelReasonPlaceholder": "Enfermedad, pidió cambiar…",
-    "cancelKeepsDeposit": "Cancela el estudio: la clienta no pierde la seña.",
+    "cancelKeepsDeposit": "Cancelamos nosotros: la clienta no pierde la seña. Le avisamos por mail si tiene.",
     "cancelConfirm": "Cancelar turno",
     "errOverlap": "Se pisa con otro turno de esa profesional.",
     "errClient": "Elegí una clienta o escribí nombre y celular.",
@@ -1134,13 +1166,35 @@
     "depositMissing": "Falta la seña de {amount}. Todavía no eligió cómo pagar.",
     "markPaid": "¿Ya la cobraste?",
     "paidTransfer": "Pagada por transferencia",
-    "paidCash": "Pagada en efectivo"
+    "paidCash": "Pagada en efectivo",
+    "paidSoFar": "Pagado",
+    "toCharge": "Falta cobrar",
+    "fullyPaid": "Pagado completo",
+    "charge": "Cobrar",
+    "chargeAmount": "Monto",
+    "chargeMethod": "Cómo pagó",
+    "methodCASH": "Efectivo",
+    "methodBANK_TRANSFER": "Transferencia",
+    "methodMERCADO_PAGO": "Mercado Pago / tarjeta",
+    "methodOTHER": "Otro",
+    "noteSaved": "Nota guardada.",
+    "errBlockedTime": "Ese horario está bloqueado (vacaciones, feriado o bloqueo).",
+    "errUnavailable": "Esa profesional no hace este servicio.",
+    "errAlreadyCancelled": "Ese turno ya estaba cancelado.",
+    "errAmount": "Revisá el monto.",
+    "moveAnyway": "Mover igual",
+    "bookAnyway": "Agendar igual",
+    "whoCancels": "¿Quién cancela?",
+    "cancelByClient": "La clienta (me avisó)",
+    "cancelByStudio": "Nosotros",
+    "cancelClientDeposit": "Si avisó con menos anticipación que la acordada, la seña queda para el negocio. Si no, se le devuelve o queda como crédito, según tus reglas.",
+    "setHours": "Cargar horarios"
   },
   "clients": {
     "title": "Clientas",
     "subtitle": "Todas las que reservaron alguna vez, con su ficha.",
     "search": "Buscar por nombre, celular o email",
-    "empty": "Todavía no hay clientas. Aparecen solas cuando reservan.",
+    "empty": "Todavía no hay clientas. Aparecen solas cuando reservan, o sumalas con «Nueva clienta».",
     "noMatches": "Nadie coincide con esa búsqueda.",
     "allergyBadge": "Alergias",
     "blocked": "Bloqueada",
@@ -1166,7 +1220,15 @@
     "noShows": "Faltas",
     "file": "Ficha",
     "history": "Historial",
-    "noHistory": "Sin turnos todavía."
+    "noHistory": "Sin turnos todavía.",
+    "new": "Nueva clienta",
+    "add": "Agregar clienta",
+    "adding": "Agregando…",
+    "optional": "opcional",
+    "errPhone": "Revisá el celular.",
+    "errGeneric": "No se pudo guardar. Probá de nuevo.",
+    "exists": "Ya tenés una clienta con ese celular o email.",
+    "openFile": "Ver su ficha"
   },
   "myAppointments": {
     "title": "Mis turnos",
@@ -1291,7 +1353,7 @@
     "comeBackEmpty": "Nadie para invitar por ahora. Aparecen cuando les toca volver según cada servicio.",
     "lastService": "{service} hace {days} días",
     "thisMonthTitle": "Este mes",
-    "done": "Listo",
+    "done": "Realizados",
     "newClients": "Clientas nuevas",
     "avgTicket": "Ticket promedio",
     "depositsTitle": "{count, plural, one {Seña pendiente} other {Señas pendientes}} ({count})",

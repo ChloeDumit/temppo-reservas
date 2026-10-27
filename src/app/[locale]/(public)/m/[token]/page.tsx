@@ -11,6 +11,8 @@ import { whenText, waLink } from "@/lib/appointments/whatsapp-text";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { BrandFooter } from "@/components/brand-footer";
+import { CopyButton } from "@/components/app/copy-button";
+import { manageUrlFor } from "@/lib/appointments/notify";
 import { CancelForm, PayForm, RescheduleForm } from "./manage-forms";
 
 // The token is a secret; keep it out of search engines and referrers.
@@ -37,7 +39,10 @@ export default async function ManagePage({
     where: { appointmentId: appt.id, method: "BANK_TRANSFER", status: "PENDING" },
   });
 
-  const live = appt.status === "CONFIRMED" || appt.status === "PENDING_PAYMENT";
+  // A hold that ran out is over, even before the sweep marks it so.
+  const holdOver = appt.status === "PENDING_PAYMENT" && appt.holdExpiresAt !== null && appt.holdExpiresAt <= now;
+  const status = holdOver ? "EXPIRED" : appt.status;
+  const live = status === "CONFIRMED" || status === "PENDING_PAYMENT";
   const upcoming = live && appt.startsAt > now;
   const cutoff = new Date(appt.startsAt.getTime() - studio.cancellationCutoffHours * 3_600_000);
   const late = now > cutoff;
@@ -52,7 +57,7 @@ export default async function ManagePage({
     COMPLETED: <Badge>{t("statusDone")}</Badge>,
     NO_SHOW: <Badge>{t("statusNoShow")}</Badge>,
     EXPIRED: <Badge tone="critical">{t("statusExpired")}</Badge>,
-  }[appt.status];
+  }[status];
 
   const receiptLink =
     transfer &&
@@ -67,6 +72,8 @@ export default async function ManagePage({
       }),
     );
   const contact = waLink(studio.whatsappNumber, t("hello", { studio: studio.name }));
+  const manageUrl = manageUrlFor(studio, token);
+  const selfLink = waLink(appt.client.user.phone, t("selfMessage", { service: appt.serviceName, url: manageUrl }));
   const card = "rounded-[var(--radius-lg)] border border-line bg-surface p-5 shadow-[var(--shadow-soft)]";
 
   return (
@@ -75,14 +82,14 @@ export default async function ManagePage({
         <header className="text-center">
           <p className="text-sm font-medium uppercase tracking-widest text-accent">{studio.name}</p>
           <h1 className="mt-1 text-[26px] leading-tight">
-            {query.new && appt.status === "CONFIRMED" ? t("bookedTitle") : t("title")}
+            {(query.new || query.paid === "1") && status === "CONFIRMED" ? t("bookedTitle") : t("title")}
           </h1>
         </header>
 
-        {query.paid === "1" && appt.status === "PENDING_PAYMENT" && (
+        {query.paid === "1" && status === "PENDING_PAYMENT" && (
           <p className="rounded-[var(--radius-md)] bg-positive-soft px-4 py-3 text-sm text-positive">{t("paymentProcessing")}</p>
         )}
-        {query.paid === "0" && appt.status === "PENDING_PAYMENT" && (
+        {query.paid === "0" && status === "PENDING_PAYMENT" && (
           <p className="rounded-[var(--radius-md)] bg-critical-soft px-4 py-3 text-sm text-critical">{t("paymentFailed")}</p>
         )}
 
@@ -121,11 +128,31 @@ export default async function ManagePage({
           </dl>
         </section>
 
-        {appt.status === "PENDING_PAYMENT" && (
+        {query.new && !appt.client.user.email && live && (
+          // Without an email this page is her only way back to the booking.
+          <section className={`${card} space-y-3`}>
+            <p className="text-sm text-ink">{t("saveLink")}</p>
+            <div className="flex flex-wrap gap-2">
+              <CopyButton value={manageUrl} label={t("copyLink")} copiedLabel={t("copied")} />
+              {selfLink && (
+                <ButtonLink href={selfLink} size="sm" variant="secondary">
+                  {t("sendToMyWhatsapp")}
+                </ButtonLink>
+              )}
+            </div>
+          </section>
+        )}
+
+        {status === "PENDING_PAYMENT" && (
           <section className={card}>
             {transfer ? (
               <div className="space-y-3">
                 <p className="text-sm text-ink">{t("transferSteps", { amount: money(transfer.amountCents) })}</p>
+                {studio.transferInstructions && (
+                  <p className="whitespace-pre-line rounded-[var(--radius-md)] border border-line px-3 py-2.5 text-sm text-ink">
+                    {studio.transferInstructions}
+                  </p>
+                )}
                 <p className="rounded-[var(--radius-md)] bg-sunken py-3 text-center font-mono text-xl tracking-widest text-ink">
                   {transfer.shortCode}
                 </p>
@@ -147,7 +174,12 @@ export default async function ManagePage({
             )}
             {appt.holdExpiresAt && (
               <p className="mt-3 text-xs text-muted">
-                {t("holdUntil", { time: formatTime(appt.holdExpiresAt, studio.timezone, locale) })}
+                {t("holdUntil", {
+                  time:
+                    dateKeyInZone(appt.holdExpiresAt, studio.timezone) === dateKeyInZone(now, studio.timezone)
+                      ? formatTime(appt.holdExpiresAt, studio.timezone, locale)
+                      : whenText(appt.holdExpiresAt, studio),
+                })}
               </p>
             )}
           </section>
@@ -175,7 +207,7 @@ export default async function ManagePage({
           </section>
         )}
 
-        {!live && (
+        {!upcoming && (
           <ButtonLink href={`/b/${studio.slug}`} variant="secondary" className="w-full">
             {t("bookAgain")}
           </ButtonLink>
