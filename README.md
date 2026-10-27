@@ -234,8 +234,6 @@ real device with no build step.
 
 ## What is not built yet
 
-- Binary logo upload. Branding takes a logo **URL** today; file upload needs a
-  storage bucket (Supabase Storage or S3) wired into Settings.
 - Subscriptions (recurring billing). Packs are one-off purchases; the payment
   interface has room for it but Mercado Pago Preapproval is not implemented.
 - Light/dark theming — the interface is committed to a single light palette.
