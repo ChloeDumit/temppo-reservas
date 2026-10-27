@@ -14,6 +14,7 @@ import { BEAUTY_PLANS, LAUNCH_LOCK_MONTHS, LAUNCH_SPOTS, WA_AUTO_LIVE, WA_PACK }
  */
 export async function BeautyLanding({ brand }: { brand: Brand }) {
   const t = await getTranslations("marketingBeauty");
+  const tc = await getTranslations("common");
 
   const pain = [t("pain1"), t("pain2"), t("pain3"), t("pain4")];
   const steps = [
@@ -233,7 +234,12 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-muted">
           <BeautyWordmark name={brand.name} subdued />
-          <span>© {new Date().getFullYear()} TEMPPO SAS</span>
+          <span className="flex items-center gap-4">
+            <Link href="/privacy" className="underline-offset-4 hover:underline">
+              {tc("privacy")}
+            </Link>
+            © {new Date().getFullYear()} TEMPPO SAS
+          </span>
         </div>
       </footer>
     </div>

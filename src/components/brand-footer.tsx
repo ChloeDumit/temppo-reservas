@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { getBrand } from "@/lib/brand/server";
 import { BeautyWordmark, Brand } from "@/components/brand";
 
@@ -6,10 +7,15 @@ import { BeautyWordmark, Brand } from "@/components/brand";
 export async function BrandFooter() {
   const brand = await getBrand();
   const t = await getTranslations("trial");
+  const tc = await getTranslations("common");
   return (
-    <footer className="flex items-center justify-center gap-2 pb-8 text-xs text-muted">
+    <footer className="flex flex-wrap items-center justify-center gap-2 pb-8 text-xs text-muted">
       {t("poweredBy")}{" "}
       {brand.key === "temppo" ? <Brand subdued className="text-xs" /> : <BeautyWordmark name={brand.name} subdued className="text-sm" />}
+      <span aria-hidden>·</span>
+      <Link href="/privacy" className="underline-offset-4 hover:underline">
+        {tc("privacy")}
+      </Link>
     </footer>
   );
 }

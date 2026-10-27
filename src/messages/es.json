@@ -29,7 +29,8 @@
     "done": "Listo",
     "allLocations": "Todas las sucursales",
     "location": "Sucursal",
-    "locationsLabel": "Sucursales"
+    "locationsLabel": "Sucursales",
+    "privacy": "Privacidad"
   },
   "nav": {
     "dashboard": "Panel",

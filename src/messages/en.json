@@ -29,7 +29,8 @@
     "done": "Done",
     "allLocations": "All locations",
     "location": "Location",
-    "locationsLabel": "Locations"
+    "locationsLabel": "Locations",
+    "privacy": "Privacy"
   },
   "nav": {
     "dashboard": "Dashboard",
