@@ -4,6 +4,9 @@
  *   npm run wa:templates              prints each one, to paste by hand
  *   npm run wa:templates -- --create  submits the missing ones to Meta
  *   npm run wa:templates -- --status  shows what Meta approved or rejected
+ *   npm run wa:templates -- --sync    rewrites approved or rejected ones in
+ *                                     Meta to match the wording here (Meta
+ *                                     allows one edit a day per template)
  *
  * --create and --status need WHATSAPP_TOKEN and WHATSAPP_WABA_ID (the
  * WhatsApp Business Account ID, in WhatsApp Manager next to the account
@@ -11,9 +14,9 @@
  */
 import "dotenv/config";
 import {
-  WHATSAPP_FOOTER,
   WHATSAPP_TEMPLATE_KEYS,
   WHATSAPP_TEMPLATES,
+  type WhatsAppTemplateKey,
 } from "../src/lib/notifications/whatsapp-templates";
 
 const API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
@@ -45,10 +48,23 @@ function graph(path: string, init?: RequestInit) {
   }).then(async (res) => ({ ok: res.ok, body: (await res.json().catch(() => ({}))) as Record<string, unknown> }));
 }
 
-type Existing = { name: string; language: string; status: string; rejected_reason?: string };
+type Existing = {
+  id: string;
+  name: string;
+  language: string;
+  status: string;
+  rejected_reason?: string;
+  components?: { type: string; text?: string }[];
+};
+
+/** What Meta stores for a template: the body and its sample values, nothing else. */
+function components(key: WhatsAppTemplateKey, lang: "es" | "en") {
+  const tpl = WHATSAPP_TEMPLATES[key];
+  return [{ type: "BODY", text: tpl.body[lang], example: { body_text: [tpl.params.map((p) => EXAMPLES[p])] } }];
+}
 
 async function existing(): Promise<Existing[]> {
-  const res = await graph("/message_templates?fields=name,language,status,rejected_reason&limit=200");
+  const res = await graph("/message_templates?fields=id,name,language,status,rejected_reason,components&limit=200");
   if (!res.ok) {
     console.error("Meta respondió:", JSON.stringify(res.body));
     process.exit(1);
@@ -62,7 +78,6 @@ function print() {
     for (const lang of languages) {
       console.log(`\n── ${key} [${lang}] · Utility ──`);
       console.log(tpl.body[lang]);
-      console.log(`Pie: ${WHATSAPP_FOOTER[lang]}`);
       console.log(`Ejemplos: ${tpl.params.map((p, i) => `{{${i + 1}}} ${EXAMPLES[p]}`).join(" · ")}`);
     }
   }
@@ -83,13 +98,45 @@ async function create() {
           name: key,
           language: lang,
           category: "UTILITY",
-          components: [
-            { type: "BODY", text: tpl.body[lang], example: { body_text: [tpl.params.map((p) => EXAMPLES[p])] } },
-            { type: "FOOTER", text: WHATSAPP_FOOTER[lang] },
-          ],
+          components: components(key, lang),
         }),
       });
       console.log(res.ok ? `+ ${key} [${lang}] enviada (${res.body.status})` : `✗ ${key} [${lang}]: ${JSON.stringify(res.body)}`);
+    }
+  }
+}
+
+/**
+ * Brings templates already in Meta in line with the code. Only approved or
+ * rejected ones can be edited; one still in review is left for a later run.
+ * Each edit goes back to Meta's review: check it with --status.
+ */
+async function sync() {
+  const token = process.env.WHATSAPP_TOKEN;
+  const have = await existing();
+  for (const key of WHATSAPP_TEMPLATE_KEYS) {
+    for (const lang of languages) {
+      const t = have.find((x) => x.name === key && x.language === lang);
+      if (!t) {
+        console.log(`· ${key} [${lang}] no existe: usá --create`);
+        continue;
+      }
+      const body = t.components?.find((c) => c.type === "BODY")?.text;
+      const extra = t.components?.some((c) => c.type !== "BODY");
+      if (body === WHATSAPP_TEMPLATES[key].body[lang] && !extra) {
+        console.log(`= ${key} [${lang}] ya está al día`);
+        continue;
+      }
+      if (!["APPROVED", "REJECTED", "PAUSED"].includes(t.status)) {
+        console.log(`… ${key} [${lang}] está ${t.status}: se puede editar cuando Meta termine de revisarla`);
+        continue;
+      }
+      const res = await fetch(`https://graph.facebook.com/${API_VERSION}/${t.id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ components: components(key, lang) }),
+      }).then(async (r) => ({ ok: r.ok, body: await r.json().catch(() => ({})) }));
+      console.log(res.ok ? `~ ${key} [${lang}] editada` : `✗ ${key} [${lang}]: ${JSON.stringify(res.body)}`);
     }
   }
 }
@@ -105,7 +152,14 @@ async function status() {
   }
 }
 
-(args.has("--create") ? create() : args.has("--status") ? status() : Promise.resolve(print())).catch((error) => {
+(args.has("--create")
+  ? create()
+  : args.has("--sync")
+    ? sync()
+    : args.has("--status")
+      ? status()
+      : Promise.resolve(print())
+).catch((error) => {
   console.error(error);
   process.exit(1);
 });

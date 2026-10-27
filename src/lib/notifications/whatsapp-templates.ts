@@ -8,7 +8,8 @@
 
   All are Utility: they are about an appointment she booked. Meta rejects a
   body that starts or ends with a variable, so each one ends on fixed words.
-  The footer tells her how to stop them; the webhook handles the reply.
+  No footer asking her to reply BAJA: Meta does not require one on Utility
+  templates. The webhook still honours BAJA / ALTA whenever she sends it.
 */
 
 export type WhatsAppTemplateKey =
@@ -27,11 +28,6 @@ export type WhatsAppTemplate = {
   /** Shown to the studio in Ajustes: when it goes out. */
   label: { es: string; en: string };
   body: { es: string; en: string };
-};
-
-export const WHATSAPP_FOOTER = {
-  es: "Respondé BAJA para no recibir más mensajes.",
-  en: "Reply STOP to stop these messages.",
 };
 
 export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> = {
