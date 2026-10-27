@@ -21,6 +21,7 @@
     "demo:video": "node scripts/demo-video.mjs",
     "demo:encode": "node scripts/demo-encode.mjs",
     "seed:soco": "tsx prisma/seed-soco.ts",
+    "seed:beauty": "tsx prisma/seed-beauty.ts",
     "grant:admin": "tsx scripts/grant-admin.ts",
     "emails:preview": "tsx scripts/preview-emails.ts"
   },
