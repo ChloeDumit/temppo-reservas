@@ -789,6 +789,75 @@
     "doneStudent": {
       "title": "Off you go!",
       "body": "That is it. Book your first class whenever you like."
+    },
+    "beautyWelcome": {
+      "title": "Welcome!",
+      "body": "Let's get your agenda ready to take bookings. First we set it up step by step, then I'll show you the day to day. You can leave whenever you like and pick up where you left off."
+    },
+    "beautyStudio": {
+      "title": "Your business",
+      "body": "Your name, logo and colour, and your WhatsApp: that's where clients send the receipt when they pay a deposit by transfer. It's what clients see on your booking page.",
+      "action": "Go to Settings"
+    },
+    "beautyServices": {
+      "title": "Your services",
+      "body": "What you offer, with its length, price and deposit. You can add extras (like nail art or a removal) and choose who does each service. Without services, your page has nothing to book.",
+      "action": "Add services"
+    },
+    "beautyHours": {
+      "title": "Your hours",
+      "body": "The days and hours you work, with a lunch break if you take one. Your page only offers times inside these hours. Holidays and time off are blocked from the same place.",
+      "action": "See hours"
+    },
+    "beautyDeposits": {
+      "title": "Deposits and rules",
+      "body": "How far ahead clients can book, how late they can cancel without losing the deposit, and whether the deposit is paid through Mercado Pago, by transfer or both.",
+      "action": "Set up rules"
+    },
+    "beautyMercadoPago": {
+      "title": "Your Mercado Pago",
+      "body": "Connect your account and deposits paid through Mercado Pago reach you directly, right away. It takes a minute: sign in to Mercado Pago and tap Allow.",
+      "action": "Connect Mercado Pago"
+    },
+    "beautyTeam": {
+      "title": "Your team",
+      "body": "If you work with other professionals, add them: each has her own hours and agenda, and clients choose who they book with. If you work alone, move on.",
+      "action": "Add a professional"
+    },
+    "beautyClients": {
+      "title": "Your clients",
+      "body": "You don't need to add them: they're created when they book. If you like, add your regulars now with their phone, to keep their file and message them on WhatsApp.",
+      "action": "See clients"
+    },
+    "beautyShare": {
+      "title": "Your booking link",
+      "body": "Copy your link from Home and put it in your Instagram bio and on WhatsApp. Clients book from there on their own, day or night.",
+      "action": "Copy my link"
+    },
+    "beautyHome": {
+      "title": "Home",
+      "body": "Your day at a glance: who's coming, deposits to confirm and clients who are due to come back."
+    },
+    "beautyAgenda": {
+      "title": "Agenda",
+      "body": "Every appointment by day and by professional. Tap one to move it, mark the deposit as paid, send a WhatsApp reminder or note a no-show."
+    },
+    "beautyClientsDaily": {
+      "title": "Clients",
+      "body": "Each client's file: her appointments, what she's spent, allergies and formulas. Invite her back from there with one tap."
+    },
+    "beautyPayments": {
+      "title": "Payments",
+      "body": "Deposits that came in and transfers to confirm: once you see the receipt, confirm it and the appointment is set.",
+      "action": "See payments"
+    },
+    "beautyDone": {
+      "title": "Ready to take bookings!",
+      "body": "You're all set. You can see this guide again any time from the More menu."
+    },
+    "beautyWelcomeStaff": {
+      "title": "Welcome!",
+      "body": "Here's what you'll use every day: your agenda and your clients' files. It only takes a few seconds."
     }
   },
   "password": {

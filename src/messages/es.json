@@ -789,6 +789,75 @@
     "doneStudent": {
       "title": "¡A moverse!",
       "body": "Ya está. Reservá tu primera clase cuando quieras."
+    },
+    "beautyWelcome": {
+      "title": "¡Bienvenida!",
+      "body": "Vamos a dejar tu agenda lista para recibir reservas. Primero la configuramos paso a paso, después te muestro el día a día. Podés salir cuando quieras y seguir donde lo dejaste."
+    },
+    "beautyStudio": {
+      "title": "Tu negocio",
+      "body": "Nombre, logo y color de tu marca, y tu WhatsApp: ahí te mandan el comprobante cuando pagan la seña por transferencia. Es lo que ven tus clientas en tu página de reservas.",
+      "action": "Ir a Ajustes"
+    },
+    "beautyServices": {
+      "title": "Tus servicios",
+      "body": "Lo que ofrecés, con su duración, precio y seña. Podés sumar extras (como un diseño o un retiro) y elegir quién hace cada servicio. Sin servicios, tu página no tiene nada para reservar.",
+      "action": "Cargar servicios"
+    },
+    "beautyHours": {
+      "title": "Tus horarios",
+      "body": "Los días y horas en que atendés, con un corte al mediodía si lo hacés. Tu página solo ofrece turnos dentro de estos horarios. Los feriados y las vacaciones se bloquean desde ahí mismo.",
+      "action": "Ver horarios"
+    },
+    "beautyDeposits": {
+      "title": "Seña y reglas",
+      "body": "Con cuánta anticipación te pueden reservar, hasta cuándo pueden cancelar sin perder la seña, y si la seña se paga con Mercado Pago, por transferencia o las dos.",
+      "action": "Configurar reglas"
+    },
+    "beautyMercadoPago": {
+      "title": "Tu Mercado Pago",
+      "body": "Conectá tu cuenta y las señas que paguen con Mercado Pago te llegan directo, al momento. Es un minuto: iniciás sesión en Mercado Pago y tocás Permitir.",
+      "action": "Conectar Mercado Pago"
+    },
+    "beautyTeam": {
+      "title": "Tu equipo",
+      "body": "Si trabajás con otras profesionales, sumalas: cada una tiene sus horarios y su agenda, y tus clientas eligen con quién. Si trabajás sola, seguí de largo.",
+      "action": "Agregar profesional"
+    },
+    "beautyClients": {
+      "title": "Tus clientas",
+      "body": "No hace falta cargarlas: se crean solas cuando reservan. Si querés, sumá las de siempre ahora, con su teléfono, para tener su ficha y avisarles por WhatsApp.",
+      "action": "Ver clientas"
+    },
+    "beautyShare": {
+      "title": "Tu link de reservas",
+      "body": "Copiá tu link desde el inicio y ponelo en la bio de Instagram y en tu WhatsApp. Desde ahí tus clientas reservan solas, de día o de noche.",
+      "action": "Copiar mi link"
+    },
+    "beautyHome": {
+      "title": "Inicio",
+      "body": "Tu día de un vistazo: quién viene, las señas por confirmar y las clientas a las que ya les toca volver."
+    },
+    "beautyAgenda": {
+      "title": "Agenda",
+      "body": "Todos los turnos por día y por profesional. Tocá uno para moverlo, marcar la seña como pagada, mandarle el recordatorio por WhatsApp o anotar que no vino."
+    },
+    "beautyClientsDaily": {
+      "title": "Clientas",
+      "body": "La ficha de cada una: sus turnos, lo que gastó, alergias y fórmulas. Desde ahí la invitás a volver con un toque."
+    },
+    "beautyPayments": {
+      "title": "Pagos",
+      "body": "Las señas que entraron y las transferencias para confirmar: cuando ves el comprobante, la confirmás y el turno queda firme.",
+      "action": "Ver pagos"
+    },
+    "beautyDone": {
+      "title": "¡Lista para recibir reservas!",
+      "body": "Ya está todo. Podés volver a ver esta guía cuando quieras desde el menú Más."
+    },
+    "beautyWelcomeStaff": {
+      "title": "¡Bienvenida!",
+      "body": "Te muestro lo que vas a usar todos los días: tu agenda y la ficha de tus clientas. Son unos segundos."
     }
   },
   "password": {

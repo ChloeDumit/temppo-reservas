@@ -24,18 +24,33 @@ export async function markTourSeenAction() {
  * How far the studio has actually got with its setup.
  *
  * Fetched when the tour opens rather than passed down from the layout: this is
- * six counts, and a walkthrough that runs once must not put them on the path of
+ * a handful of counts, and a walkthrough that runs once must not put them on the path of
  * every page view. Re-read each time the tour resumes, so a step the owner has
  * just completed is ticked off by the time they come back to it.
  */
-export async function tourProgressAction() {
+export async function tourProgressAction(): Promise<Record<string, number>> {
   const user = await assertUser();
 
   // Only the roles that can run setup see the counts behind it.
-  const empty = { locations: 0, teachers: 0, packs: 0, classes: 0, students: 0, spots: 0 };
-  if (!ADMIN_ROLES.includes(user.role)) return empty;
+  if (!ADMIN_ROLES.includes(user.role)) return {};
 
   const studioId = user.studioId;
+
+  if (user.studio.vertical === "APPOINTMENTS") {
+    const [services, hours, clients] = await Promise.all([
+      db.service.count({ where: { studioId, isActive: true } }),
+      db.workingHours.count({ where: { studioId } }),
+      db.user.count({ where: { studioId, role: "STUDENT", isActive: true } }),
+    ]);
+    return {
+      services,
+      hours,
+      clients,
+      whatsapp: user.studio.whatsappNumber ? 1 : 0,
+      mercadoPago: user.studio.mpConnectedAt ? 1 : 0,
+    };
+  }
+
   const [locations, teachers, packs, classes, students, spots] = await Promise.all([
     db.location.count({ where: { studioId, isActive: true } }),
     db.instructorProfile.count({ where: { user: { studioId, isActive: true } } }),

@@ -143,12 +143,16 @@ console.log("\nSetup covers what a studio has to build");
   itself, so renaming one there and not here fails loudly instead of leaving a
   step permanently stuck on "pending".
 */
-const returnStart = actions.indexOf("return {");
-const progressKeys = actions
-  .slice(returnStart + "return {".length, actions.indexOf("}", returnStart))
-  .split(",")
-  .map((part) => part.trim())
-  .filter(Boolean);
+function returnedKeys(from: number) {
+  const start = actions.indexOf("return {", from);
+  return actions
+    .slice(start + "return {".length, actions.indexOf("}", start))
+    .split(",")
+    .map((part) => part.split(":")[0].trim())
+    .filter(Boolean);
+}
+// The class studio's counts come last; an appointment business returns its own first.
+const progressKeys = returnedKeys(actions.indexOf("const [locations"));
 
 const needed = setupSteps.map((s) => s.needs).filter(Boolean);
 check(
@@ -215,6 +219,75 @@ check(
   namedInMore.filter((word) => !moreBody.includes(word)),
   [],
 );
+
+console.log("\nAppointment businesses get their own setup");
+
+const beautySetup = steps("BEAUTY_SETUP_STEPS");
+const beautyDaily = steps("BEAUTY_DAILY_STEPS");
+const beautySteps = [...beautySetup, ...beautyDaily];
+const beautyNav = navHrefs("BEAUTY_STAFF_NAV");
+
+check(
+  "beauty: every target is a real tab",
+  beautySteps.filter((s) => s.target && !tabTargets(beautyNav).includes(s.target)).map((s) => s.target),
+  [],
+);
+check(
+  "beauty: every 'take me there' goes somewhere real",
+  beautySteps.filter((s) => s.href && !routes.includes(s.href.split("#")[0])).map((s) => s.href),
+  [],
+);
+const hoursSource = readFileSync("src/app/[locale]/(app)/hours/page.tsx", "utf8");
+const cardSource = readFileSync("src/app/[locale]/(app)/settings/mercadopago-card.tsx", "utf8");
+check(
+  "beauty: every anchored step has a section to scroll to",
+  beautySteps
+    .filter((s) => s.href?.includes("#"))
+    .filter((s) => {
+      const [path, anchor] = s.href!.split("#");
+      const source = path === "/hours" ? hoursSource : settingsSource + cardSource;
+      return !source.includes(`id="${anchor}"`);
+    })
+    .map((s) => s.href),
+  [],
+);
+for (const [lang, messages] of [
+  ["Spanish", es],
+  ["English", en],
+] as const) {
+  check(
+    `beauty: ${lang} copy complete`,
+    [...beautySteps, { key: "beautyWelcomeStaff" }]
+      .filter((s) => !messages.tour[s.key!]?.title || !messages.tour[s.key!]?.body)
+      .map((s) => s.key),
+    [],
+  );
+  check(
+    `beauty: ${lang} action labels complete`,
+    beautySteps.filter((s) => s.href && !messages.tour[s.key!]?.action).map((s) => s.key),
+    [],
+  );
+}
+
+const beautyKeys = returnedKeys(actions.indexOf('vertical === "APPOINTMENTS"'));
+const beautyNeeded = beautySetup.map((s) => s.needs).filter(Boolean);
+check("beauty: every step that checks itself checks a real count", beautyNeeded.filter((n) => !beautyKeys.includes(n!)), []);
+check("beauty: every count is used by a step", beautyKeys.filter((k) => !beautyNeeded.includes(k)), []);
+
+const bAt = (key: string) => beautySetup.findIndex((s) => s.key === key);
+check("beauty: the business itself comes first", bAt("beautyStudio"), 1);
+check("beauty: services before the hours they fill", bAt("beautyServices") < bAt("beautyHours"), true);
+check("beauty: the link is shared only once there is something to book", bAt("beautyShare"), beautySetup.length - 1);
+check(
+  "beauty: every primary tab is introduced",
+  beautyNav
+    .slice(0, TAB_SLOTS)
+    .map((h) => `tab:${h}`)
+    .filter((t) => !beautySteps.some((s) => s.target === t) && t !== "tab:/services"),
+  [],
+);
+check("beauty: opens and closes with a centred card", [beautySteps[0].target, beautySteps.at(-1)!.target], [null, null]);
+check("beauty: the last step says how to replay", /Más/.test(es.tour.beautyDone?.body ?? ""), true);
 
 console.log("\nShape");
 
