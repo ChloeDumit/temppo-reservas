@@ -269,10 +269,14 @@ export async function addExpenseAction(
   const amountCents = parseMoneyToCents(parsed.data.amount);
   if (amountCents === null) return { error: "priceInvalid" };
 
+  // The same form records money in that is not tied to an appointment — a
+  // product sold, a gift card — when it says so.
+  const type = formData.get("type") === "INCOME" ? "INCOME" : "EXPENSE";
+
   const created = await db.transaction.create({
     data: {
       studioId: user.studioId,
-      type: "EXPENSE",
+      type,
       category: parsed.data.category,
       description: parsed.data.description || null,
       amountCents,
@@ -284,7 +288,7 @@ export async function addExpenseAction(
     studioId: user.studioId,
     actorId: user.id,
     actorLabel: user.name,
-    action: "transaction.expense",
+    action: type === "INCOME" ? "transaction.income" : "transaction.expense",
     entityType: "Transaction",
     entityId: created.id,
     metadata: { amountCents, category: parsed.data.category },

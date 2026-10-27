@@ -284,7 +284,9 @@
     "depositsHeld": "Deposits collected online, owed to you",
     "depositsHeldHint": "{count, plural, =0 {Nothing pending.} one {# deposit collected through Mercado Pago not yet transferred to you.} other {# deposits collected through Mercado Pago not yet transferred to you.}}",
     "lastPayout": "Last transfer: {amount} on {date}.",
-    "client": "Client"
+    "client": "Client",
+    "addIncome": "Record income",
+    "incomePlaceholder": "Product sale"
   },
   "billing": {
     "title": "Subscription",
@@ -610,7 +612,13 @@
     "auditWhen": "When",
     "weekly": "Income by week",
     "noChartData": "No data in this period.",
-    "exportsHint": "CSV downloads, including the activity log."
+    "exportsHint": "CSV downloads, including the activity log.",
+    "subtitleBeauty": "What came in, the work you did and your exports.",
+    "billed": "Billed",
+    "completedAppointments": "Appointments done",
+    "noShowAppointments": "No-shows",
+    "exportAppointments": "Appointments",
+    "exportClients": "Clients"
   },
   "availability": {
     "title": "Standing spots",

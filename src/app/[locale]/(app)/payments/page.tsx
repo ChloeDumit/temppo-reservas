@@ -58,7 +58,11 @@ export default async function PaymentsPage({
         status: { not: "PENDING" },
         ...(locationId ? { student: atLocation } : {}),
       },
-      include: { student: { include: { user: true } } },
+      include: {
+        student: { include: { user: true } },
+        studentPack: { include: { pack: { select: { name: true } } } },
+        appointment: { select: { serviceName: true } },
+      },
       orderBy: { createdAt: "desc" },
       take: 40,
     }),
@@ -83,6 +87,9 @@ export default async function PaymentsPage({
   const money = (cents: number) => formatMoney(cents, studio.currency, locale);
   const beauty = studio.vertical === "APPOINTMENTS";
   const peopleBase = beauty ? "/clients" : "/students";
+  // What a payment was for: the service of its appointment, or the pack.
+  const forWhat = (p: (typeof history)[number]) =>
+    p.appointment ? p.appointment.serviceName : (p.studentPack?.pack.name ?? null);
 
   // Online deposits are collected by the platform and handed over in payouts.
   const [owed, lastPayout] = beauty
@@ -121,13 +128,21 @@ export default async function PaymentsPage({
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
-        <SheetForm label={t("registerPayment")} title={t("registerPayment")}>
-          <RecordPaymentForm
-            currency={studio.currency}
-            students={students.map((s) => ({ id: s.id, name: s.user.name }))}
-            packs={packs.map((p) => ({ id: p.id, name: p.name, priceCents: p.priceCents }))}
-          />
-        </SheetForm>
+        {beauty ? (
+          // A service is charged from its appointment in the agenda; this is
+          // for money in that is not an appointment.
+          <SheetForm label={t("addIncome")} title={t("addIncome")}>
+            <ExpenseForm currency={studio.currency} income />
+          </SheetForm>
+        ) : (
+          <SheetForm label={t("registerPayment")} title={t("registerPayment")}>
+            <RecordPaymentForm
+              currency={studio.currency}
+              students={students.map((s) => ({ id: s.id, name: s.user.name }))}
+              packs={packs.map((p) => ({ id: p.id, name: p.name, priceCents: p.priceCents }))}
+            />
+          </SheetForm>
+        )}
         <SheetForm
           label={t("addExpense")}
           title={t("addExpense")}
@@ -245,6 +260,7 @@ export default async function PaymentsPage({
                       {payment.student.user.name}
                     </Link>
                     <p className="mt-0.5 truncate text-xs text-muted">
+                      {forWhat(payment) && `${forWhat(payment)} · `}
                       {t(`method${payment.method}`)} ·{" "}
                       {formatDate(payment.createdAt, studio.timezone, locale)}
                     </p>
@@ -287,6 +303,7 @@ export default async function PaymentsPage({
                         <Link href={`${peopleBase}/${payment.studentId}`} className="hover:text-accent">
                           {payment.student.user.name}
                         </Link>
+                        {forWhat(payment) && <span className="block text-xs text-muted">{forWhat(payment)}</span>}
                       </td>
                       <td className="px-4 py-2.5 tabular-nums">{money(payment.amountCents)}</td>
                       <td className="px-4 py-2.5 text-muted">{t(`method${payment.method}`)}</td>

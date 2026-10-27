@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { startOfMonthInZone } from "@/lib/dates";
-import { attendanceSummary, financialSummary, instructorPayroll } from "@/lib/reports";
+import { appointmentSummary, attendanceSummary, financialSummary, instructorPayroll } from "@/lib/reports";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { BarChart } from "@/components/ui/bar-chart";
@@ -17,6 +17,15 @@ const EXPORTS = [
   ["bookings", "exportBookings"],
   ["payroll", "exportPayroll"],
   ["students", "exportStudents"],
+  ["audit", "exportAudit"],
+] as const;
+
+/** An appointment business exports its appointments and clients instead of class rows. */
+const BEAUTY_EXPORTS = [
+  ["payments", "exportPayments"],
+  ["transactions", "exportTransactions"],
+  ["appointments", "exportAppointments"],
+  ["clients", "exportClients"],
   ["audit", "exportAudit"],
 ] as const;
 
@@ -56,10 +65,11 @@ export default async function ReportsPage({
     student, and it buried the exports under a wall of noise. It is still
     downloadable below, which is where an audit trail is actually useful.
   */
-  const [finance, attendance, payroll, incomeRows] = await Promise.all([
+  const [finance, attendance, payroll, visits, incomeRows] = await Promise.all([
     financialSummary(studio.id, range),
-    attendanceSummary(studio.id, range),
+    beauty ? Promise.resolve({ booked: 0, attended: 0, noShow: 0, cancelled: 0 }) : attendanceSummary(studio.id, range),
     beauty ? Promise.resolve([]) : instructorPayroll(studio.id, range),
+    beauty ? appointmentSummary(studio.id, range) : Promise.resolve(null),
     db.transaction.findMany({
       where: { studioId: studio.id, type: "INCOME", occurredAt: { gte: from, lt: to } },
       select: { amountCents: true, occurredAt: true },
@@ -93,7 +103,7 @@ export default async function ReportsPage({
 
   return (
     <>
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t(beauty ? "subtitleBeauty" : "subtitle")} />
 
       <Card className="mb-5">
         <CardBody>
@@ -119,9 +129,19 @@ export default async function ReportsPage({
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label={tp("balance")} value={money(finance.net)} tone={finance.net >= 0 ? "positive" : "critical"} />
-        <Stat label={t("attended")} value={attendance.attended} />
-        <Stat label={t("noShow")} value={attendance.noShow} tone={attendance.noShow > 0 ? "accent" : undefined} />
-        {!beauty && <Stat label={t("payrollTotal")} value={money(payrollTotal)} />}
+        {visits ? (
+          <>
+            <Stat label={t("billed")} value={money(visits.billedCents)} />
+            <Stat label={t("completedAppointments")} value={visits.completed} />
+            <Stat label={t("noShowAppointments")} value={visits.noShow} tone={visits.noShow > 0 ? "accent" : undefined} />
+          </>
+        ) : (
+          <>
+            <Stat label={t("attended")} value={attendance.attended} />
+            <Stat label={t("noShow")} value={attendance.noShow} tone={attendance.noShow > 0 ? "accent" : undefined} />
+            <Stat label={t("payrollTotal")} value={money(payrollTotal)} />
+          </>
+        )}
       </div>
 
       <Card className="mb-5">
@@ -209,7 +229,7 @@ export default async function ReportsPage({
       <Card>
         <CardHeader title={t("exports")} description={t("exportsHint")} />
         <CardBody className="flex flex-wrap gap-2">
-          {EXPORTS.filter(([kind]) => !beauty || kind !== "payroll").map(([kind, label]) => (
+          {(beauty ? BEAUTY_EXPORTS : EXPORTS).map(([kind, label]) => (
             <a
               key={kind}
               href={`/api/export/${kind}${exportQuery}`}
