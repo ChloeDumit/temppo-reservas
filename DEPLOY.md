@@ -105,17 +105,21 @@ other — intended, since an account belongs to one studio and one brand.
   3. A System User with the `whatsapp_business_messaging` permission; its
      permanent token goes in `WHATSAPP_TOKEN`. The app secret goes in
      `WHATSAPP_APP_SECRET`. Add a payment method in WhatsApp Manager.
-  4. A *Utility* template named `appointment_reminder`, in Spanish (`es`), and
-     in English (`en`) if any studio uses it. Four variables, in this order:
-
-     > Hola {{1}}, te recordamos tu turno de {{2}} en {{3}}: {{4}}. ¡Te
-     > esperamos! Si no querés recibir más estos mensajes, respondé BAJA.
-
+  4. The templates. Every message a client gets by email (booked, deposit
+     received, reminder, moved, cancelled, slot released, deposit too late)
+     also goes by WhatsApp, each one a *Utility* template whose wording lives
+     in `src/lib/notifications/whatsapp-templates.ts`. Put the WhatsApp
+     Business Account ID in `WHATSAPP_WABA_ID` and run
+     `npm run wa:templates -- --create` to submit them all, then
+     `npm run wa:templates -- --status` until they read APPROVED (minutes to
+     a day). Add `--en` for the English versions if a studio uses them.
+     `npm run wa:templates` alone prints them, to paste by hand instead.
   5. Webhook: callback `{APP_URL}/api/whatsapp/webhook`, verify token the same
      string as `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, subscribed to `messages`. It
      marks failed deliveries and handles BAJA / ALTA replies.
-  6. Turn a studio on from the platform console (studio → WhatsApp →
-     Automático, with its monthly messages). Once it sends for real, set
+  6. Give a studio its monthly messages from the platform console (studio →
+     WhatsApp → Automático). The owner can then turn it off and on herself in
+     Ajustes → Avisos por WhatsApp, where she also sees how many she used. Once it sends for real, set
      `WA_AUTO_LIVE` in `src/lib/brand/pricing.ts` so the landing stops saying
      "coming soon" and new trials start with their 50 messages.
 - **Entry point from the marketing site.** A plain redirect, never a proxy:

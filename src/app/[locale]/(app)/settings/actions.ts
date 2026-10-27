@@ -292,3 +292,27 @@ export async function disconnectMercadoPagoAction() {
   });
   revalidatePath("/[locale]/(app)/settings", "page");
 }
+
+/**
+ * Turns automatic WhatsApp on or off for the studio's clients. Only within a
+ * quota the plan already gives: how many messages a month is the platform's
+ * call (each one costs us), whether to use them is the studio's.
+ */
+export async function setWhatsAppAutoAction(formData: FormData) {
+  const user = await assertAdmin();
+  const on = formData.get("on") === "1";
+  const changed = await db.studio.updateMany({
+    where: { id: user.studioId, vertical: "APPOINTMENTS", ...(on ? { waMonthlyQuota: { gt: 0 } } : {}) },
+    data: { waMode: on ? "CLOUD" : "LINK" },
+  });
+  if (!changed.count) return;
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: on ? "studio.whatsapp_auto_on" : "studio.whatsapp_auto_off",
+    entityType: "Studio",
+    entityId: user.studioId,
+  });
+  revalidatePath("/[locale]/(app)/settings", "page");
+}

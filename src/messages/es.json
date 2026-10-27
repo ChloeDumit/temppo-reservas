@@ -401,7 +401,21 @@
     "studioBeauty": "Tu negocio",
     "studioNameBeauty": "Nombre del negocio",
     "whatsappNumberBeauty": "WhatsApp del negocio",
-    "whatsappHintBeauty": "Donde tus clientas te mandan el comprobante de la seña y te escriben desde tu página. Formato internacional."
+    "whatsappHintBeauty": "Donde tus clientas te mandan el comprobante de la seña y te escriben desde tu página. Formato internacional.",
+    "waTitle": "Avisos por WhatsApp",
+    "waOn": "Activado",
+    "waOff": "Desactivado",
+    "waTurnOn": "Activar",
+    "waTurnOff": "Desactivar",
+    "waUsage": "{used} de {quota} mensajes este mes",
+    "waResets": "Se renueva el {date}",
+    "waQuotaHint": "Si se terminan, los avisos siguen saliendo por email y notificación hasta que se renueve el cupo.",
+    "waWhich": "Tus clientas reciben por WhatsApp, además del email:",
+    "waStopHint": "Salen desde el número de Temppo Beauty con el nombre de tu negocio. Si una clienta responde BAJA, deja de recibirlos.",
+    "waNotInPlan": "No incluido en tu plan",
+    "waSoon": "Próximamente",
+    "waPitch": "La confirmación, el recordatorio y los cambios de turno, por WhatsApp y sin que tengas que mandarlos vos.",
+    "waManualHint": "Mientras tanto, en cada turno de la agenda tenés el botón de WhatsApp para escribirle a tu clienta desde tu celular."
   },
   "booking": {
     "title": "Reservar clase",
@@ -1047,7 +1061,8 @@
     "errEmailForMp": "Para pagar con Mercado Pago necesitamos tu email.",
     "errTooManyHolds": "Ya tenés reservas esperando la seña. Pagá esas primero o escribinos.",
     "errGeneric": "No pudimos reservar. Probá de nuevo.",
-    "depositExplainCredit": "Para confirmar el turno se paga una seña de {amount}, que se descuenta del total. Si cancelás con más de {hours} horas de anticipación, te queda como crédito para tu próximo turno."
+    "depositExplainCredit": "Para confirmar el turno se paga una seña de {amount}, que se descuenta del total. Si cancelás con más de {hours} horas de anticipación, te queda como crédito para tu próximo turno.",
+    "phoneHintWhatsApp": "Te mandamos la confirmación y el recordatorio por WhatsApp. Respondé BAJA si no los querés."
   },
   "manage": {
     "title": "Tu turno",

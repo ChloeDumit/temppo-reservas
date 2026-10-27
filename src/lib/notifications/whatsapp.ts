@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { addMonths } from "@/lib/dates";
 import { toWhatsAppNumber } from "@/lib/phone";
+import { WHATSAPP_TEMPLATES, type WhatsAppTemplateKey } from "./whatsapp-templates";
 
 /*
   Automatic WhatsApp through Meta's Cloud API — the paid add-on for appointment
@@ -84,8 +85,8 @@ async function releaseWhatsAppMessage(studioId: string) {
 export type WhatsAppPayload = {
   studioId: string;
   phone: string | null | undefined;
-  /** The template's name exactly as approved in Meta's console. */
-  template: string;
+  /** One of WHATSAPP_TEMPLATES, approved in Meta's console under this name. */
+  template: WhatsAppTemplateKey;
   /** "es" or "en"; the template must be approved in that language. */
   language: string;
   /** Fills {{1}}, {{2}}… in order. */
@@ -101,6 +102,13 @@ export type WhatsAppPayload = {
  * whether it went out; when it did not, the other channels still did.
  */
 export async function notifyWhatsApp(payload: WhatsAppPayload): Promise<boolean> {
+  // Meta rejects a send whose variables don't match the approved template,
+  // after the quota was taken: catch it here, where it is a bug of ours.
+  const expected = WHATSAPP_TEMPLATES[payload.template].params.length;
+  if (payload.params.length !== expected) {
+    console.error(`[whatsapp] ${payload.template} needs ${expected} params, got ${payload.params.length}`);
+    return false;
+  }
   // Production without credentials sends nothing, rather than spending quota
   // on the development echo and logging it as delivered.
   if (!isWhatsAppConfigured() && process.env.NODE_ENV === "production") return false;

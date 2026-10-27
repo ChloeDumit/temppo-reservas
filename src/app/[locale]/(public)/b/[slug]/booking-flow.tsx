@@ -49,6 +49,7 @@ export function BookingFlow({
   cancellationCutoffHours,
   depositRefundable,
   methods,
+  whatsappAuto = false,
 }: {
   slug: string;
   services: FlowService[];
@@ -60,6 +61,8 @@ export function BookingFlow({
   /** In time, the deposit is returned; otherwise it stays as credit. */
   depositRefundable: boolean;
   methods: { mp: boolean; transfer: boolean };
+  /** The studio sends automatic WhatsApp: she is told before she gives her number. */
+  whatsappAuto?: boolean;
 }) {
   const t = useTranslations("bookPublic");
   const locale = useLocale();
@@ -415,7 +418,7 @@ export function BookingFlow({
             <Field label={t("name")}>
               <Input name="name" required minLength={2} maxLength={80} autoComplete="name" />
             </Field>
-            <Field label={t("phone")} hint={t("phoneHint")}>
+            <Field label={t("phone")} hint={t(whatsappAuto ? "phoneHintWhatsApp" : "phoneHint")}>
               <Input name="phone" required type="tel" inputMode="tel" autoComplete="tel" placeholder="099 123 456" />
             </Field>
             <Field label={deposit > 0 && pay === "mp" ? t("email") : t("emailOptional")} hint={t("emailHint")}>

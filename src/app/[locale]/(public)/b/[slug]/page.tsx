@@ -95,6 +95,7 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
             cancellationCutoffHours={studio.cancellationCutoffHours}
             depositRefundable={studio.depositRefundable}
             methods={{ mp: canMp, transfer: canTransfer }}
+            whatsappAuto={studio.waMode === "CLOUD"}
           />
         )}
       </main>

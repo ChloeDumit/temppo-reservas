@@ -401,7 +401,21 @@
     "studioBeauty": "Your business",
     "studioNameBeauty": "Business name",
     "whatsappNumberBeauty": "Business WhatsApp",
-    "whatsappHintBeauty": "Where clients send their deposit receipt and message you from your page. International format."
+    "whatsappHintBeauty": "Where clients send their deposit receipt and message you from your page. International format.",
+    "waTitle": "WhatsApp messages",
+    "waOn": "On",
+    "waOff": "Off",
+    "waTurnOn": "Turn on",
+    "waTurnOff": "Turn off",
+    "waUsage": "{used} of {quota} messages this month",
+    "waResets": "Renews on {date}",
+    "waQuotaHint": "If they run out, messages keep going by email and notification until the quota renews.",
+    "waWhich": "Your clients get by WhatsApp, as well as email:",
+    "waStopHint": "They come from Temppo Beauty's number with your business's name. A client who replies STOP no longer gets them.",
+    "waNotInPlan": "Not in your plan",
+    "waSoon": "Coming soon",
+    "waPitch": "Confirmation, reminder and changes to the appointment, on WhatsApp, without you having to send them.",
+    "waManualHint": "Meanwhile, every appointment in the agenda has a WhatsApp button to message your client from your phone."
   },
   "booking": {
     "title": "Book a class",
@@ -1047,7 +1061,8 @@
     "errEmailForMp": "We need your email to pay with Mercado Pago.",
     "errTooManyHolds": "You already have bookings waiting for a deposit. Pay those first or message us.",
     "errGeneric": "We couldn't book that. Try again.",
-    "depositExplainCredit": "To confirm, you pay a {amount} deposit, taken off the total. Cancel more than {hours} hours ahead and it stays as credit for your next appointment."
+    "depositExplainCredit": "To confirm, you pay a {amount} deposit, taken off the total. Cancel more than {hours} hours ahead and it stays as credit for your next appointment.",
+    "phoneHintWhatsApp": "We'll send your confirmation and reminder on WhatsApp. Reply STOP if you don't want them."
   },
   "manage": {
     "title": "Your appointment",

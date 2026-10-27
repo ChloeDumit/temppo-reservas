@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
 import { PushToggle } from "@/components/app/push-toggle";
 import { MercadoPagoCard } from "./mercadopago-card";
+import { WhatsAppCard } from "./whatsapp-card";
 import { isMercadoPagoOAuthConfigured } from "@/lib/payments/mercadopago-oauth";
 
 export default async function SettingsPage({
@@ -64,6 +65,8 @@ export default async function SettingsPage({
         {studio.vertical === "APPOINTMENTS" && isMercadoPagoOAuthConfigured() && (
           <MercadoPagoCard studioId={studio.id} outcome={mpOutcome} support={await inSupportVisit()} />
         )}
+
+        {beauty && <WhatsAppCard studio={studio} />}
 
         <Card>
           <CardHeader title={tpush("title")} />

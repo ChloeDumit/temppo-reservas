@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/money";
 import { localePath } from "@/i18n/routing";
 import { appUrlFor } from "@/lib/brand/url";
 import { confirmationText, whenText } from "./whatsapp-text";
+import { whatsappToClient } from "./whatsapp-send";
 import type { SettleOutcome } from "./payments";
 
 async function announcedTransfer(appointmentId: string) {
@@ -88,6 +89,24 @@ export async function notifyBooked(appointmentId: string, manageToken: string, c
       relatedId: appt.id,
     });
   }
+  const first = client.name.split(" ")[0];
+  await whatsappToClient(
+    appt.status === "PENDING_PAYMENT"
+      ? {
+          studio,
+          phone: client.phone,
+          appointmentId: appt.id,
+          template: "appointment_held",
+          params: [first, when, appt.serviceName, studio.name, manageUrl],
+        }
+      : {
+          studio,
+          phone: client.phone,
+          appointmentId: appt.id,
+          template: "appointment_booked",
+          params: [first, appt.serviceName, studio.name, when, manageUrl],
+        },
+  );
 
   const staffLine = en
     ? `${client.name} booked ${appt.serviceName} with ${appt.staff.name}: ${when}.`
@@ -162,6 +181,13 @@ export async function afterDepositSettled(appointmentId: string, outcome: Settle
         relatedId: appt.id,
       });
     }
+    await whatsappToClient({
+      studio,
+      phone: client.phone,
+      appointmentId: appt.id,
+      template: "appointment_confirmed",
+      params: [client.name.split(" ")[0], amount, appt.serviceName, studio.name, when],
+    });
     await notifyOwners(studio.id, {
       url: "/agenda",
       template: "appointment_deposit",
@@ -189,6 +215,13 @@ export async function afterDepositSettled(appointmentId: string, outcome: Settle
         relatedId: appt.id,
       });
     }
+    await whatsappToClient({
+      studio,
+      phone: client.phone,
+      appointmentId: appt.id,
+      template: "appointment_deposit_late",
+      params: [client.name.split(" ")[0], amount, appt.serviceName, when, studio.name],
+    });
     await notifyOwners(studio.id, {
       url: "/agenda",
       template: "appointment_deposit_late",
@@ -229,12 +262,12 @@ export async function notifyStaffBookedForYou(appointmentId: string, byUserId: s
 
 /**
  * The business moved or called off her appointment: she hears it from us,
- * not by turning up. Email when we have one; staff also get a WhatsApp
- * button in the agenda for everyone else.
+ * not by turning up. Email when we have one, automatic WhatsApp when the
+ * studio has it; staff also get a WhatsApp button in the agenda.
  */
 export async function notifyClientChanged(appointmentId: string, kind: "moved" | "cancelled") {
   const appt = await load(appointmentId);
-  if (!appt?.client.user.email) return;
+  if (!appt) return;
   const { studio } = appt;
   const client = appt.client.user;
   const when = whenText(appt.startsAt, studio);
@@ -248,15 +281,34 @@ export async function notifyClientChanged(appointmentId: string, kind: "moved" |
       : en
         ? `Hi ${first}, your ${appt.serviceName} at ${studio.name} on ${when} was cancelled. Message us and we'll find you another time.`
         : `Hola ${first}, se canceló tu turno de ${appt.serviceName} en ${studio.name} del ${when}. Escribinos y te buscamos otro horario.`;
-  await notify({
-    studioId: studio.id,
-    to: client.email,
-    template: kind === "moved" ? "appointment_moved" : "appointment_cancelled_by_studio",
-    subject: `${studio.name} — ${appt.serviceName}`,
-    body,
-    relatedType: "Appointment",
-    relatedId: appt.id,
-  });
+  if (client.email) {
+    await notify({
+      studioId: studio.id,
+      to: client.email,
+      template: kind === "moved" ? "appointment_moved" : "appointment_cancelled_by_studio",
+      subject: `${studio.name} — ${appt.serviceName}`,
+      body,
+      relatedType: "Appointment",
+      relatedId: appt.id,
+    });
+  }
+  await whatsappToClient(
+    kind === "moved"
+      ? {
+          studio,
+          phone: client.phone,
+          appointmentId: appt.id,
+          template: "appointment_moved",
+          params: [first, appt.serviceName, studio.name, when, appt.staff.name],
+        }
+      : {
+          studio,
+          phone: client.phone,
+          appointmentId: appt.id,
+          template: "appointment_cancelled",
+          params: [first, appt.serviceName, studio.name, when],
+        },
+  );
 }
 
 /** She cancelled — from her link or her account. The owners hear what it means for the deposit. */
