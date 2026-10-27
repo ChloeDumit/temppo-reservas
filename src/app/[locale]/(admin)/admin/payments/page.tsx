@@ -12,7 +12,7 @@ import {
 } from "@/lib/billing";
 import { formatMoney } from "@/lib/money";
 import { beautyPlanFor, getAdminProduct, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
-import { BEAUTY_TRIAL_DAYS, LAUNCH_SPOTS } from "@/lib/brand/pricing";
+import { BEAUTY_TRIAL_DAYS, LAUNCH_LOCK_MONTHS, LAUNCH_SPOTS } from "@/lib/brand/pricing";
 import { setPlanPricesAction, voidChargeAction } from "../actions";
 
 /**
@@ -151,9 +151,9 @@ export default async function AdminPaymentsPage({
                 <thead className="text-left text-[11px] uppercase tracking-wider text-white/40">
                   <tr>
                     <th className="px-4 py-2 font-medium">Plan</th>
-                    <th className="px-3 py-2 font-medium">Precio</th>
-                    <th className="px-3 py-2 font-medium">Lanzamiento</th>
+                    <th className="px-3 py-2 font-medium">Precio / mes</th>
                     <th className="px-3 py-2 font-medium">Profesionales</th>
+                    <th className="px-3 py-2 font-medium">Sucursales</th>
                     <th className="px-3 py-2 font-medium">WhatsApp auto</th>
                     <th className="px-3 py-2 font-medium">Activas</th>
                   </tr>
@@ -166,12 +166,17 @@ export default async function AdminPaymentsPage({
                         <td className="px-4 py-2.5 font-medium">
                           {p.name} <span className="text-xs text-white/30">{plan}</span>
                         </td>
-                        <td className="px-3 py-2.5 tabular-nums">{money(p.priceUyu * 100)}</td>
-                        <td className="px-3 py-2.5 tabular-nums text-white/60">
-                          {money(p.launchPriceUyu * 100)}
+                        <td className="px-3 py-2.5 tabular-nums">
+                          <span className="font-semibold">{money(p.launchPriceUyu * 100)}</span>
+                          <span className="ml-2 text-xs text-white/30 line-through">
+                            {money(p.priceUyu * 100)}
+                          </span>
                         </td>
                         <td className="px-3 py-2.5 tabular-nums text-white/60">
                           {p.professionals ?? "Sin límite"}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums text-white/60">
+                          {p.locations === null ? "Varias" : p.locations}
                         </td>
                         <td className="px-3 py-2.5 tabular-nums text-white/60">
                           {p.waQuota
@@ -190,9 +195,10 @@ export default async function AdminPaymentsPage({
               </table>
             </div>
             <p className="border-t border-white/10 px-4 py-3 text-xs text-white/40">
-              Precios de la landing, definidos en el código ({BEAUTY_TRIAL_DAYS} días de prueba sin
-              tarjeta; precio de lanzamiento para los primeros {LAUNCH_SPOTS} negocios). Al cobrar a
-              mano, cargá el monto del plan de esta tabla.
+              Los mismos planes y precios que muestra la landing de Beauty. El precio de lanzamiento lo
+              mantienen los primeros {LAUNCH_SPOTS} negocios durante {LAUNCH_LOCK_MONTHS} meses; el
+              tachado es el precio regular. El primer mes ({BEAUTY_TRIAL_DAYS} días) es gratis y sin
+              tarjeta. Al cobrar a mano, cargá el precio de lanzamiento.
             </p>
           </section>
         </>

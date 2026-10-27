@@ -270,7 +270,7 @@ export default async function AdminStudioPage({
             <input
               name="amount"
               inputMode="numeric"
-              placeholder={String(beauty ? beautyPlanFor("STUDIO").priceUyu : Math.round(prices.STUDIO / 100))}
+              placeholder={String(beauty ? beautyPlanFor("STUDIO").launchPriceUyu : Math.round(prices.STUDIO / 100))}
               className="mt-1 block w-28 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
             />
           </label>
