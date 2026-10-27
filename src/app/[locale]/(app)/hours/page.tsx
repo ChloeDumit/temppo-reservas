@@ -77,18 +77,9 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
         }
       />
 
-      <div className="space-y-4">
-        {staff.map((s) => (
-          <Card key={s.id}>
-            <CardHeader title={staff.length > 1 ? s.name : t("yourWeek")} />
-            <CardBody>
-              <HoursForm staffId={s.id} week={weekFor(s.id)} dayNames={dayNames} />
-            </CardBody>
-          </Card>
-        ))}
-      </div>
-
-      <section className="mt-8">
+      {/* Above the weekly hours, so a block just added shows up where the
+          button that added it is, not three screens down. */}
+      <section className="mb-8">
         <SectionLabel>{t("blocks")}</SectionLabel>
         {blocks.length === 0 ? (
           <Card>
@@ -120,6 +111,17 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
           </Card>
         )}
       </section>
+
+      <div className="space-y-4">
+        {staff.map((s) => (
+          <Card key={s.id}>
+            <CardHeader title={staff.length > 1 ? s.name : t("yourWeek")} />
+            <CardBody>
+              <HoursForm staffId={s.id} week={weekFor(s.id)} dayNames={dayNames} />
+            </CardBody>
+          </Card>
+        ))}
+      </div>
 
       {isAdmin && (
         <section id="rules" className="mt-8 scroll-mt-20">

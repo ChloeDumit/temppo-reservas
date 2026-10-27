@@ -59,11 +59,16 @@ async function load(appointmentId: string) {
  * the raw token exists), the studio hears about it, and so does the
  * professional if she is not the one running the place.
  */
-export async function notifyBooked(appointmentId: string, manageToken: string) {
+/**
+ * `contactEmail`: the address typed on this booking, which may not be the
+ * one on her file — a public booking never writes it there (see
+ * findOrCreateClient), but its confirmation still goes to whoever made it.
+ */
+export async function notifyBooked(appointmentId: string, manageToken: string, contactEmail?: string | null) {
   const appt = await load(appointmentId);
   if (!appt) return;
   const { studio } = appt;
-  const client = appt.client.user;
+  const client = { ...appt.client.user, email: contactEmail || appt.client.user.email };
   const manageUrl = manageUrlFor(studio, manageToken);
   const when = whenText(appt.startsAt, studio);
   const en = studio.locale === "en";

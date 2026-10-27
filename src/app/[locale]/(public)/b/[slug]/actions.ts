@@ -126,7 +126,7 @@ export async function bookPublicAction(_prev: BookState, formData: FormData): Pr
   const manageUrl = manageUrlFor(studio, result.manageToken);
 
   if (result.pending && pay === "transfer") await submitDepositTransfer(result.appointmentId);
-  await notifyBooked(result.appointmentId, result.manageToken);
+  await notifyBooked(result.appointmentId, result.manageToken, v.email || null);
 
   if (result.pending && pay === "mp" && v.email) {
     const base = appUrlFor(studio);

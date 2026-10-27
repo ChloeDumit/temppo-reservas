@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/field";
 import { PageHeader, EmptyState } from "@/components/ui/page-header";
+import { SheetForm } from "@/components/app/sheet-form";
+import { NewClientForm } from "./new-client-form";
 
 export default async function ClientsPage({
   params,
@@ -57,7 +59,15 @@ export default async function ClientsPage({
 
   return (
     <>
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        action={
+          <SheetForm label={t("new")} title={t("new")}>
+            <NewClientForm />
+          </SheetForm>
+        }
+      />
       <form className="mb-4">
         <Input name="q" defaultValue={query} placeholder={t("search")} type="search" />
       </form>

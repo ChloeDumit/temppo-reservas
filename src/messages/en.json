@@ -1144,7 +1144,7 @@
     "title": "Clients",
     "subtitle": "Everyone who has ever booked, with their file.",
     "search": "Search by name, mobile or email",
-    "empty": "No clients yet. They appear on their own when they book.",
+    "empty": "No clients yet. They appear when they book, or add them with “New client”.",
     "noMatches": "Nobody matches that search.",
     "allergyBadge": "Allergies",
     "blocked": "Blocked",
@@ -1170,7 +1170,15 @@
     "noShows": "No-shows",
     "file": "File",
     "history": "History",
-    "noHistory": "No appointments yet."
+    "noHistory": "No appointments yet.",
+    "new": "New client",
+    "add": "Add client",
+    "adding": "Adding…",
+    "optional": "optional",
+    "errPhone": "Check the phone number.",
+    "errGeneric": "Couldn't save. Try again.",
+    "exists": "You already have a client with that phone or email.",
+    "openFile": "Open her file"
   },
   "myAppointments": {
     "title": "My appointments",

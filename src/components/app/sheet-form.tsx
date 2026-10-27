@@ -52,6 +52,7 @@ export function SheetForm({
         variant={variant}
         size={size}
         className={className}
+        aria-haspopup="dialog"
         onClick={() => setOpen(true)}
       >
         {icon && <Icon name={icon} className="size-4" />}

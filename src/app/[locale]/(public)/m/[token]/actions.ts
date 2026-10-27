@@ -107,9 +107,8 @@ export async function payDepositAction(_prev: ManageState, formData: FormData): 
   if (method === "mp" && methods.mp) {
     const email = String(formData.get("email") ?? "").trim().toLowerCase() || appt.client.user.email;
     if (!email || !z.string().email().safeParse(email).success) return { error: "emailForMp" };
-    if (!appt.client.user.email) {
-      await db.user.update({ where: { id: appt.client.user.id }, data: { email } }).catch(() => null);
-    }
+    // Used for the checkout only: an email typed on a manage link is not
+    // proof enough to put on her account.
     const manageUrl = manageUrlFor(appt.studio, token);
     const url = await startDepositCheckout({
       appointmentId: appt.id,

@@ -5,8 +5,9 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { assertStaff, assertAdmin } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
+import { findClient } from "@/lib/appointments/clients";
 
-export type ClientState = { error?: string; ok?: boolean } | null;
+export type ClientState = { error?: string; ok?: boolean; id?: string } | null;
 
 const schema = z.object({
   id: z.string().min(1),
@@ -63,4 +64,54 @@ export async function unblockClientAction(formData: FormData) {
     entityId: id,
   });
   revalidatePath("/[locale]/(app)/clients/[id]", "page");
+}
+
+const newClientSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  phone: z.string().trim().min(6).max(30),
+  email: z.union([z.literal(""), z.string().trim().toLowerCase().email()]).optional(),
+  allergies: z.string().trim().max(500).optional(),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+/**
+ * Adds a regular before she books — so her file, allergies and phone are
+ * there from the first appointment. The same phone or email is the same
+ * client, so a match is pointed to rather than duplicated.
+ */
+export async function createClientAction(_prev: ClientState, formData: FormData): Promise<ClientState> {
+  const user = await assertStaff();
+  const parsed = newClientSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const field = parsed.error.issues[0]?.path[0];
+    return { error: field === "email" ? "email" : field === "phone" ? "phone" : "generic" };
+  }
+  const v = parsed.data;
+
+  const existing = await findClient(user.studioId, { phone: v.phone, email: v.email });
+  if (existing?.studentProfile) return { error: "exists", id: existing.studentProfile.id };
+
+  const created = await db.user.create({
+    data: {
+      studioId: user.studioId,
+      name: v.name,
+      phone: v.phone,
+      email: v.email || null,
+      role: "STUDENT",
+      studentProfile: { create: { allergies: v.allergies || null, notes: v.notes || null } },
+    },
+    include: { studentProfile: true },
+  });
+
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "client.create",
+    entityType: "StudentProfile",
+    entityId: created.studentProfile!.id,
+  });
+
+  revalidatePath("/[locale]/(app)/clients", "page");
+  return { ok: true, id: created.studentProfile!.id };
 }
