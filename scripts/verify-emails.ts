@@ -86,6 +86,13 @@ async function main() {
   });
   check("prefers the studio's own logo", withLogo.includes("cdn.example.com/anima.png"), true);
 
+  const uploaded = render({ branding: { ...anima, logoUrl: "/api/logo/studio1?v=abc" } });
+  check(
+    "gives an uploaded logo the app's host",
+    uploaded.includes('src="https://reservas.temppo.uy/api/logo/studio1?v=abc"'),
+    true,
+  );
+
   console.log("\nLocale");
 
   const english = render({ branding: { ...anima, locale: "en" } });

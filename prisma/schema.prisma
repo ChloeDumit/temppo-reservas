@@ -41,6 +41,7 @@ model Studio {
   /// Students send transfer receipts here; also used for the support link.
   whatsappNumber String?
 
+  /// An outside URL, or /api/logo/<id>?v=… once a file has been uploaded.
   logoUrl     String?
   accentColor String  @default("#E07A5F")
 
@@ -118,6 +119,7 @@ model Studio {
   payouts           StudioPayout[]
   inboxItems        InboxItem[]
   mercadoPago       MercadoPagoAccount?
+  logo              StudioLogo?
 
   locations         Location[]
   users             User[]
@@ -1182,6 +1184,17 @@ model InboxItem {
 
   @@index([userId, createdAt])
   @@index([userId, readAt])
+}
+
+/// The logo a studio uploaded in settings, served from /api/logo/<studioId>.
+/// Kept off Studio so the row loaded on every request never carries the bytes.
+model StudioLogo {
+  studioId String @id
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  data      Bytes
+  mimeType  String
+  updatedAt DateTime @updatedAt
 }
 
 /// A studio's own Mercado Pago account, connected through OAuth. Tokens are

@@ -122,7 +122,12 @@ export function renderEmail({
     (isEnglish ? `Open ${productName}` : `Abrir ${productName}`);
 
   // A studio logo when there is one, otherwise the mascot from the app itself.
-  const logo = branding.logoUrl || `${appUrl}${branding.iconBase ?? ""}/icon-192.png`;
+  // An uploaded logo is stored as a path on the app; a mail client needs the host.
+  const logo = branding.logoUrl
+    ? branding.logoUrl.startsWith("/")
+      ? `${appUrl}${branding.logoUrl}`
+      : branding.logoUrl
+    : `${appUrl}${branding.iconBase ?? ""}/icon-192.png`;
 
   const button = link
     ? `

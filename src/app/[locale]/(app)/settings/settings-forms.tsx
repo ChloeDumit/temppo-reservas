@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Field, Input, Select } from "@/components/ui/field";
+import { Button, buttonClass } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
   createLocationAction,
@@ -32,6 +33,39 @@ function useMessage(state: ActionState) {
   return te("generic");
 }
 
+/** Longest side of a stored logo: sharp at the sizes it is shown, and small enough to store. */
+const LOGO_SIDE = 512;
+
+/**
+ * Redraws the picked image as a PNG no larger than LOGO_SIDE, so a photo
+ * straight off a phone stores in kilobytes and an SVG becomes something email
+ * clients can show. Transparency survives; PNG keeps it.
+ */
+async function shrinkLogo(file: File) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    // An SVG with no width or height of its own reports none; draw it square.
+    const width = image.naturalWidth || LOGO_SIDE;
+    const height = image.naturalHeight || LOGO_SIDE;
+    // Vectors scale up cleanly; pixels are only ever made smaller.
+    const fit = LOGO_SIDE / Math.max(width, height);
+    const scale = file.type === "image/svg+xml" ? fit : Math.min(1, fit);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("toBlob");
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export function StudioForm({
   values,
   beauty = false,
@@ -54,8 +88,49 @@ export function StudioForm({
   const [accent, setAccent] = useState(values.accentColor);
   const message = useMessage(state);
 
+  // The logo travels with the rest of the form, appended on submit.
+  const [logo, setLogo] = useState<Blob | null>(null);
+  const [logoRemoved, setLogoRemoved] = useState(false);
+  const [preview, setPreview] = useState(values.logoUrl);
+  const [logoError, setLogoError] = useState<string>();
+  const serverLogoError =
+    state?.error === "logoInvalid" || state?.error === "logoTooBig" ? t(state.error) : undefined;
+
+  // Saved: what is on screen is now what is stored, so don't send it twice.
+  useEffect(() => {
+    if (!state?.ok) return;
+    setLogo(null);
+    setLogoRemoved(false);
+  }, [state]);
+
+  async function pickLogo(file: File | undefined) {
+    if (!file) return;
+    setLogoError(undefined);
+    try {
+      const blob = await shrinkLogo(file);
+      setLogo(blob);
+      setLogoRemoved(false);
+      setPreview(URL.createObjectURL(blob));
+    } catch {
+      setLogoError(t("logoInvalid"));
+    }
+  }
+
+  function removeLogo() {
+    setLogo(null);
+    setLogoRemoved(true);
+    setPreview("");
+    setLogoError(undefined);
+  }
+
+  function save(formData: FormData) {
+    if (logo) formData.set("logo", logo, "logo.png");
+    else if (logoRemoved) formData.set("logoRemove", "1");
+    submit(formData);
+  }
+
   return (
-    <form action={submit} className="space-y-4">
+    <form action={save} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t(beauty ? "studioNameBeauty" : "studioName")}>
           <Input name="name" required maxLength={80} defaultValue={values.name} />
@@ -109,13 +184,37 @@ export function StudioForm({
               />
             </div>
           </Field>
-          <Field label={t("logo")} hint={t("logoHint")} error={message}>
-            <Input
-              name="logoUrl"
-              type="url"
-              defaultValue={values.logoUrl}
-              placeholder="https://…/logo.png"
-            />
+          <Field label={t("logo")} hint={t("logoHint")} error={logoError ?? serverLogoError ?? message}>
+            <div className="flex items-center gap-3">
+              <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line-strong bg-surface">
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={preview} alt="" className="size-full object-contain" />
+                ) : (
+                  <span className="text-xs text-muted">—</span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <label className={buttonClass("secondary", "sm", "cursor-pointer")}>
+                  {preview ? t("logoChange") : t("logoUpload")}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="sr-only"
+                    onChange={(event) => {
+                      void pickLogo(event.target.files?.[0]);
+                      // Picking the same file again should still count.
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                {preview && (
+                  <Button type="button" variant="ghost" size="sm" onClick={removeLogo}>
+                    {t("logoRemove")}
+                  </Button>
+                )}
+              </div>
+            </div>
           </Field>
         </div>
       </div>
