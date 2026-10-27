@@ -33,6 +33,8 @@ export default async function ReportsPage({
 
   const user = await requireAdmin();
   const studio = user.studio;
+  // Teacher payroll is paid per class taught; an appointment business has none.
+  const beauty = studio.vertical === "APPOINTMENTS";
   const t = await getTranslations("reports");
   const tp = await getTranslations("payments");
 
@@ -57,7 +59,7 @@ export default async function ReportsPage({
   const [finance, attendance, payroll, incomeRows] = await Promise.all([
     financialSummary(studio.id, range),
     attendanceSummary(studio.id, range),
-    instructorPayroll(studio.id, range),
+    beauty ? Promise.resolve([]) : instructorPayroll(studio.id, range),
     db.transaction.findMany({
       where: { studioId: studio.id, type: "INCOME", occurredAt: { gte: from, lt: to } },
       select: { amountCents: true, occurredAt: true },
@@ -119,7 +121,7 @@ export default async function ReportsPage({
         <Stat label={tp("balance")} value={money(finance.net)} tone={finance.net >= 0 ? "positive" : "critical"} />
         <Stat label={t("attended")} value={attendance.attended} />
         <Stat label={t("noShow")} value={attendance.noShow} tone={attendance.noShow > 0 ? "accent" : undefined} />
-        <Stat label={t("payrollTotal")} value={money(payrollTotal)} />
+        {!beauty && <Stat label={t("payrollTotal")} value={money(payrollTotal)} />}
       </div>
 
       <Card className="mb-5">
@@ -133,79 +135,81 @@ export default async function ReportsPage({
         </CardBody>
       </Card>
 
-      <Card className="mb-5">
-        <CardHeader title={t("payroll")} />
-        {payroll.length === 0 ? (
-          <EmptyState message={t("payrollEmpty")} />
-        ) : (
-          <>
-            <ul className="divide-y divide-line lg:hidden">
-              {payroll.map((row) => (
-                <li key={row.instructorId} className="flex items-center gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-medium text-ink">{row.name}</p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {row.classes} {t("classes").toLowerCase()} · {(row.minutes / 60).toFixed(1)}h
-                      · {t(`basis${row.basis}`)}
+      {!beauty && (
+        <Card className="mb-5">
+          <CardHeader title={t("payroll")} />
+          {payroll.length === 0 ? (
+            <EmptyState message={t("payrollEmpty")} />
+          ) : (
+            <>
+              <ul className="divide-y divide-line lg:hidden">
+                {payroll.map((row) => (
+                  <li key={row.instructorId} className="flex items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-medium text-ink">{row.name}</p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {row.classes} {t("classes").toLowerCase()} · {(row.minutes / 60).toFixed(1)}h
+                        · {t(`basis${row.basis}`)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-[15px] font-semibold tabular-nums text-ink">
+                      {money(row.payCents)}
                     </p>
-                  </div>
-                  <p className="shrink-0 text-[15px] font-semibold tabular-nums text-ink">
-                    {money(row.payCents)}
-                  </p>
+                  </li>
+                ))}
+                <li className="flex items-center justify-between px-4 py-3">
+                  <span className="text-sm font-medium">{t("payrollTotal")}</span>
+                  <span className="font-display text-lg font-semibold tabular-nums">
+                    {money(payrollTotal)}
+                  </span>
                 </li>
-              ))}
-              <li className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm font-medium">{t("payrollTotal")}</span>
-                <span className="font-display text-lg font-semibold tabular-nums">
-                  {money(payrollTotal)}
-                </span>
-              </li>
-            </ul>
+              </ul>
 
-            <div className="hidden lg:block">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                    <th className="px-5 py-2 font-medium">{t("instructor")}</th>
-                    <th className="px-4 py-2 font-medium">{t("classes")}</th>
-                    <th className="px-4 py-2 font-medium">{t("hours")}</th>
-                    <th className="px-4 py-2 font-medium">{t("attendees")}</th>
-                    <th className="px-4 py-2 font-medium">{t("basis")}</th>
-                    <th className="px-4 py-2 text-right font-medium">{t("pay")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {payroll.map((row) => (
-                    <tr key={row.instructorId}>
-                      <td className="px-5 py-2.5 font-medium">{row.name}</td>
-                      <td className="px-4 py-2.5 tabular-nums">{row.classes}</td>
-                      <td className="px-4 py-2.5 tabular-nums">{(row.minutes / 60).toFixed(1)}</td>
-                      <td className="px-4 py-2.5 tabular-nums">{row.attendees}</td>
-                      <td className="px-4 py-2.5 text-muted">{t(`basis${row.basis}`)}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums">{money(row.payCents)}</td>
+              <div className="hidden lg:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
+                      <th className="px-5 py-2 font-medium">{t("instructor")}</th>
+                      <th className="px-4 py-2 font-medium">{t("classes")}</th>
+                      <th className="px-4 py-2 font-medium">{t("hours")}</th>
+                      <th className="px-4 py-2 font-medium">{t("attendees")}</th>
+                      <th className="px-4 py-2 font-medium">{t("basis")}</th>
+                      <th className="px-4 py-2 text-right font-medium">{t("pay")}</th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-line-strong">
-                    <td className="px-5 py-2.5 font-medium" colSpan={5}>
-                      {t("payrollTotal")}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-display text-base font-semibold tabular-nums">
-                      {money(payrollTotal)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </>
-        )}
-      </Card>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {payroll.map((row) => (
+                      <tr key={row.instructorId}>
+                        <td className="px-5 py-2.5 font-medium">{row.name}</td>
+                        <td className="px-4 py-2.5 tabular-nums">{row.classes}</td>
+                        <td className="px-4 py-2.5 tabular-nums">{(row.minutes / 60).toFixed(1)}</td>
+                        <td className="px-4 py-2.5 tabular-nums">{row.attendees}</td>
+                        <td className="px-4 py-2.5 text-muted">{t(`basis${row.basis}`)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums">{money(row.payCents)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-line-strong">
+                      <td className="px-5 py-2.5 font-medium" colSpan={5}>
+                        {t("payrollTotal")}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-display text-base font-semibold tabular-nums">
+                        {money(payrollTotal)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          )}
+        </Card>
+      )}
 
       <Card>
         <CardHeader title={t("exports")} description={t("exportsHint")} />
         <CardBody className="flex flex-wrap gap-2">
-          {EXPORTS.map(([kind, label]) => (
+          {EXPORTS.filter(([kind]) => !beauty || kind !== "payroll").map(([kind, label]) => (
             <a
               key={kind}
               href={`/api/export/${kind}${exportQuery}`}

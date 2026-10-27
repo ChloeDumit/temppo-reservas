@@ -13,6 +13,8 @@ import { hashPassword } from "@/lib/auth/password";
 import { generateTempPassword } from "@/lib/auth/temp-password";
 import { notify } from "@/lib/notifications";
 import { disconnectMercadoPago } from "@/lib/payments/mercadopago-oauth";
+import { brandByKey } from "@/lib/brand/registry";
+import { appUrlFor } from "@/lib/brand/url";
 
 export type ActionState = {
   error?: string;
@@ -216,13 +218,15 @@ export async function inviteMemberAction(
     },
   });
 
-  const base = process.env.APP_URL || "http://localhost:3000";
+  // The link opens on the studio's own brand, where its staff sign in.
+  const base = appUrlFor(user.studio);
+  const product = brandByKey(user.studio.brand).name;
   await notify({
     studioId: user.studioId,
     to: created.email,
     template: "team_invite",
-    subject: `${user.studio.name} — TEMPPO Reservas`,
-    body: `Hola ${created.name},\n\n${user.name} te invitó a gestionar ${user.studio.name} en TEMPPO Reservas.\n\nEntrá acá: ${base}/api/auth/magic?token=${token}&locale=${user.studio.locale}`,
+    subject: `${user.studio.name} — ${product}`,
+    body: `Hola ${created.name},\n\n${user.name} te invitó a gestionar ${user.studio.name} en ${product}.\n\nEntrá acá: ${base}/api/auth/magic?token=${token}&locale=${user.studio.locale}`,
     relatedType: "User",
     relatedId: created.id,
   });

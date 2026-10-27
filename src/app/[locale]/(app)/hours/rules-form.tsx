@@ -12,6 +12,7 @@ export type Rules = {
   slotStepMinutes: number;
   cancellationCutoffHours: number;
   holdMinutes: number;
+  reminderHoursBefore: number;
   depositRefundable: boolean;
   acceptMercadoPago: boolean;
   acceptTransfer: boolean;
@@ -53,6 +54,9 @@ export function RulesForm({ rules }: { rules: Rules }) {
         </Field>
         <Field label={t("hold")} hint={t("holdHint")}>
           <Input name="holdMinutes" type="number" min={5} max={1440} defaultValue={rules.holdMinutes} />
+        </Field>
+        <Field label={t("reminder")} hint={t("reminderHint")}>
+          <Input name="reminderHoursBefore" type="number" min={1} max={168} defaultValue={rules.reminderHoursBefore} />
         </Field>
       </div>
       <fieldset className="space-y-2.5 rounded-[var(--radius-md)] bg-sunken p-3">

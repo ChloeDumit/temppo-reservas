@@ -23,6 +23,8 @@ export default async function SettingsPage({
 
   const user = await requireAdmin();
   const studio = user.studio;
+  // An appointment business has no classes, fixed spots or teachers on pay.
+  const beauty = studio.vertical === "APPOINTMENTS";
   const t = await getTranslations("settings");
   const tc = await getTranslations("common");
   const tpush = await getTranslations("push");
@@ -70,21 +72,25 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        <Card id="rules">
-          <CardHeader title={t("rules")} />
-          <CardBody>
-            <RulesForm
-              values={{
-                cancellationCutoffHours: studio.cancellationCutoffHours,
-                reminderHoursBefore: studio.reminderHoursBefore,
-                waitlistClaimWindowMins: studio.waitlistClaimWindowMins,
-                noShowLimit: studio.noShowLimit,
-                monthlyChangesAllowed: studio.monthlyChangesAllowed,
-                bookingOpensDaysAhead: studio.bookingOpensDaysAhead,
-              }}
-            />
-          </CardBody>
-        </Card>
+        {/* Class rules — waitlist, fixed-spot changes, no-show limits. An
+            appointment business sets its booking rules in Horarios instead. */}
+        {!beauty && (
+          <Card id="rules">
+            <CardHeader title={t("rules")} />
+            <CardBody>
+              <RulesForm
+                values={{
+                  cancellationCutoffHours: studio.cancellationCutoffHours,
+                  reminderHoursBefore: studio.reminderHoursBefore,
+                  waitlistClaimWindowMins: studio.waitlistClaimWindowMins,
+                  noShowLimit: studio.noShowLimit,
+                  monthlyChangesAllowed: studio.monthlyChangesAllowed,
+                  bookingOpensDaysAhead: studio.bookingOpensDaysAhead,
+                }}
+              />
+            </CardBody>
+          </Card>
+        )}
 
         <Card id="locations">
           <CardHeader title={t("locations")} />
@@ -122,7 +128,7 @@ export default async function SettingsPage({
                     <p className="truncate text-xs text-muted">{member.email}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    {member.instructorProfile?.payPerClassCents ? (
+                    {!beauty && member.instructorProfile?.payPerClassCents ? (
                       <span className="text-xs tabular-nums text-muted">
                         {formatMoney(
                           member.instructorProfile.payPerClassCents,
@@ -132,14 +138,14 @@ export default async function SettingsPage({
                       </span>
                     ) : null}
                     <Badge tone={member.role === "OWNER" ? "accent" : "neutral"}>
-                      {t(`role${member.role}`)}
+                      {beauty && member.role === "INSTRUCTOR" ? t("roleProfessional") : t(`role${member.role}`)}
                     </Badge>
                   </div>
                 </li>
               ))}
             </ul>
             <div className="border-t border-line pt-4">
-              <InviteForm currency={studio.currency} />
+              <InviteForm currency={studio.currency} beauty={beauty} />
             </div>
           </CardBody>
         </Card>

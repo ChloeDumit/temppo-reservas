@@ -133,6 +133,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                   slotStepMinutes: studio.slotStepMinutes,
                   cancellationCutoffHours: studio.cancellationCutoffHours,
                   holdMinutes: studio.holdMinutes,
+                  reminderHoursBefore: studio.reminderHoursBefore,
                   depositRefundable: studio.depositRefundable,
                   acceptMercadoPago: studio.acceptMercadoPago,
                   acceptTransfer: studio.acceptTransfer,

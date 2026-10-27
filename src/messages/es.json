@@ -386,7 +386,9 @@
     "mpConnectedHint": "Las señas online entran directo a esta cuenta. Las devoluciones las hacés desde tu Mercado Pago.",
     "mpConnectedNow": "¡Listo! Tu Mercado Pago quedó conectado.",
     "mpError": "No pudimos conectar tu cuenta. Probá de nuevo en un rato.",
-    "mpDisconnect": "Desconectar"
+    "mpDisconnect": "Desconectar",
+    "roleProfessional": "Profesional",
+    "invitePasswordHintBeauty": "Pasásela a la profesional para que entre ahora. Se la va a cambiar la primera vez. También le llega un enlace por email."
   },
   "booking": {
     "title": "Reservar clase",
@@ -968,7 +970,9 @@
     "acceptTransfer": "Transferencia",
     "acceptTransferHint": "La clienta te manda el comprobante por WhatsApp y vos la confirmás.",
     "acceptTransferNeedsWhatsapp": "Cargá tu WhatsApp en Ajustes para poder usarla.",
-    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña."
+    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña.",
+    "reminder": "Recordatorio",
+    "reminderHint": "Cuántas horas antes del turno le recordamos a la clienta."
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",

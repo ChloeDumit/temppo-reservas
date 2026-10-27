@@ -2,7 +2,16 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { getAdminProduct, PRODUCT_LABEL } from "@/lib/admin/product";
 import { toggleUserActiveAction } from "../actions";
+
+/** Beauty's own words for the shared roles. */
+const BEAUTY_ROLE: Record<string, string> = {
+  OWNER: "dueña",
+  ADMIN: "administración",
+  INSTRUCTOR: "profesional",
+  STUDENT: "clienta",
+};
 
 /** Cross-tenant user search — the "who is this person" lookup. */
 export default async function AdminUsersPage({
@@ -18,16 +27,20 @@ export default async function AdminUsersPage({
   await requirePlatformAdmin();
 
   const query = (q ?? "").trim();
+  const product = await getAdminProduct();
 
   const users = await db.user.findMany({
-    where: query
-      ? {
-          OR: [
-            { email: { contains: query, mode: "insensitive" } },
-            { name: { contains: query, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
+    where: {
+      studio: { brand: product },
+      ...(query
+        ? {
+            OR: [
+              { email: { contains: query, mode: "insensitive" } },
+              { name: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
     include: { studio: { select: { id: true, name: true, suspendedAt: true } } },
     orderBy: { createdAt: "desc" },
     // Unbounded would be a footgun once this has real volume.
@@ -38,7 +51,9 @@ export default async function AdminUsersPage({
 
   return (
     <>
-      <h1 className="mb-3 text-lg font-semibold">Usuarios</h1>
+      <h1 className="mb-3 text-lg font-semibold">
+        Usuarios <span className="text-sm font-normal text-white/40">· {PRODUCT_LABEL[product]}</span>
+      </h1>
 
       <form className="mb-5">
         <input
@@ -70,7 +85,7 @@ export default async function AdminUsersPage({
                   )}
                 </p>
                 <p className="truncate text-xs text-white/40">
-                  {user.email} · {user.role} ·{" "}
+                  {user.email} · {product === "beauty" ? (BEAUTY_ROLE[user.role] ?? user.role) : user.role} ·{" "}
                   <Link
                     href={`/admin/studios/${user.studio.id}`}
                     className="underline underline-offset-2"

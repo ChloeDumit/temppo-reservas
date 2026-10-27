@@ -228,7 +228,11 @@ export function LocationForm() {
   );
 }
 
-export function InviteForm({ currency }: { currency: string }) {
+/**
+ * `beauty`: an appointment business has professionals, not teachers paid per
+ * class, so the role reads "Profesional" and there is no pay to set.
+ */
+export function InviteForm({ currency, beauty = false }: { currency: string; beauty?: boolean }) {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const ts = useTranslations("students");
@@ -249,7 +253,7 @@ export function InviteForm({ currency }: { currency: string }) {
           <p className="mt-1.5 font-display text-3xl font-bold tracking-wider text-accent">
             {state.tempPassword}
           </p>
-          <p className="mt-2 text-xs text-muted">{t("invitePasswordHint")}</p>
+          <p className="mt-2 text-xs text-muted">{t(beauty ? "invitePasswordHintBeauty" : "invitePasswordHint")}</p>
         </div>
 
         <p className="rounded-md bg-caution-soft px-3 py-2 text-xs text-caution">
@@ -270,16 +274,17 @@ export function InviteForm({ currency }: { currency: string }) {
         </Field>
         <Field label={t("role")}>
           <Select name="role" value={role} onChange={(event) => setRole(event.target.value)}>
-            <option value="INSTRUCTOR">{t("roleINSTRUCTOR")}</option>
+            <option value="INSTRUCTOR">{t(beauty ? "roleProfessional" : "roleINSTRUCTOR")}</option>
             <option value="ADMIN">{t("roleADMIN")}</option>
           </Select>
         </Field>
-        {role === "INSTRUCTOR" && (
+        {role === "INSTRUCTOR" && !beauty && (
           <Field label={`${t("payPerClass")} (${currency})`} error={message}>
             <Input name="payPerClass" inputMode="decimal" placeholder="900" />
           </Field>
         )}
       </div>
+      {(beauty || role !== "INSTRUCTOR") && message && <p className="text-xs text-critical">{message}</p>}
       <SubmitButton pendingLabel={tc("saving")}>{t("newMember")}</SubmitButton>
     </form>
   );

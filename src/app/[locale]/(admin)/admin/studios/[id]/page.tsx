@@ -19,6 +19,7 @@ import {
   toggleUserActiveAction,
   updateStudioConfigAction,
 } from "../../actions";
+import { beautyPlanFor, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
 
 const TIMEZONES = [
   "America/Montevideo",
@@ -68,7 +69,7 @@ export default async function AdminStudioPage({
     where: { id },
     include: {
       users: { orderBy: [{ role: "asc" }, { name: "asc" }] },
-      _count: { select: { classInstances: true, bookings: true, classTemplates: true } },
+      _count: { select: { classInstances: true, bookings: true, classTemplates: true, appointments: true, services: true } },
     },
   });
 
@@ -92,10 +93,20 @@ export default async function AdminStudioPage({
   const date = (d: Date) =>
     new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(d);
 
+  const beauty = studio.brand === "beauty";
+  const staffCount = studio.users.filter((u) => u.role !== "STUDENT").length;
   const facts = [
-    { label: "Usuarios", value: studio.users.length },
-    { label: "Clases recurrentes", value: studio._count.classTemplates },
-    { label: "Reservas", value: studio._count.bookings },
+    ...(beauty
+      ? [
+          { label: "Profesionales", value: staffCount },
+          { label: "Clientas", value: studio.users.length - staffCount },
+          { label: "Turnos", value: studio._count.appointments },
+        ]
+      : [
+          { label: "Usuarios", value: studio.users.length },
+          { label: "Clases recurrentes", value: studio._count.classTemplates },
+          { label: "Reservas", value: studio._count.bookings },
+        ]),
     {
       label: "Ingresos del mes",
       value: formatMoney(income._sum.amountCents ?? 0, studio.currency, locale),
@@ -105,12 +116,19 @@ export default async function AdminStudioPage({
   return (
     <>
       <Link href="/admin" className="text-sm text-white/50 underline underline-offset-4">
-        ← Estudios
+        ← {beauty ? "Negocios" : "Estudios"}
       </Link>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{studio.name}</h1>
+          <span
+            className={`mt-1 inline-block rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[11px] font-semibold ${
+              beauty ? "bg-[#DE8BA3]/20 text-[#DE8BA3]" : "bg-[#E07A5F]/20 text-[#E07A5F]"
+            }`}
+          >
+            {PRODUCT_LABEL[beauty ? "beauty" : "temppo"]}
+          </span>
           <p className="mt-1 text-sm text-white/40">
             /{studio.slug} · {studio.timezone} · desde {date(studio.createdAt)}
           </p>
@@ -145,7 +163,7 @@ export default async function AdminStudioPage({
           >
             {PLANS.map((plan) => (
               <option key={plan} value={plan} className="bg-ink">
-                {plan}
+                {planLabel(studio.brand, plan)}
               </option>
             ))}
           </select>
@@ -236,7 +254,7 @@ export default async function AdminStudioPage({
             >
               {PAID_PLANS.map((plan) => (
                 <option key={plan} value={plan} className="bg-ink">
-                  {plan}
+                  {planLabel(studio.brand, plan)}
                 </option>
               ))}
             </select>
@@ -252,7 +270,7 @@ export default async function AdminStudioPage({
             <input
               name="amount"
               inputMode="numeric"
-              placeholder={String(Math.round(prices.STUDIO / 100))}
+              placeholder={String(beauty ? beautyPlanFor("STUDIO").priceUyu : Math.round(prices.STUDIO / 100))}
               className="mt-1 block w-28 rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
             />
           </label>

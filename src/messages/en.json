@@ -386,7 +386,9 @@
     "mpConnectedHint": "Online deposits go straight into this account. Refunds are made from your Mercado Pago.",
     "mpConnectedNow": "Done! Your Mercado Pago is connected.",
     "mpError": "We couldn't connect your account. Try again in a while.",
-    "mpDisconnect": "Disconnect"
+    "mpDisconnect": "Disconnect",
+    "roleProfessional": "Professional",
+    "invitePasswordHintBeauty": "Give it to the professional so she can sign in now. She'll change it the first time. She also gets a link by email."
   },
   "booking": {
     "title": "Book a class",
@@ -968,7 +970,9 @@
     "acceptTransfer": "Bank transfer",
     "acceptTransferHint": "The client sends you the receipt on WhatsApp and you confirm it.",
     "acceptTransferNeedsWhatsapp": "Add your WhatsApp in Settings to use it.",
-    "noMethodsHint": "With both off, bookings come in confirmed with no deposit."
+    "noMethodsHint": "With both off, bookings come in confirmed with no deposit.",
+    "reminder": "Reminder",
+    "reminderHint": "How many hours before the appointment we remind the client."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
