@@ -18,6 +18,7 @@ import {
 import { slugify } from "@/lib/slug";
 import { createPayout } from "@/lib/appointments/payments";
 import { parseMoneyToCents } from "@/lib/money";
+import { deleteLogo, readLogo, storeLogo } from "@/lib/logo/store";
 import type { Plan } from "@/generated/prisma/enums";
 
 /**
@@ -343,6 +344,36 @@ export async function updateStudioConfigAction(formData: FormData) {
     entityType: "Studio",
     entityId: studioId,
     metadata: { slug: nextSlug, from: studio.slug },
+  });
+
+  await finishAdminAction(formData.get("returnTo"));
+}
+
+/**
+ * Uploads or removes a studio's logo for them — a photo the owner sent over
+ * WhatsApp, say. Same storage and checks as the studio's own settings.
+ */
+export async function setStudioLogoAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const studioId = String(formData.get("studioId") ?? "");
+  const studio = await db.studio.findUnique({ where: { id: studioId }, select: { id: true } });
+  if (!studio) return;
+
+  const remove = formData.get("remove") === "1";
+  const logo = remove ? null : await readLogo(formData.get("logo"));
+  if (!remove && (!logo || typeof logo === "string")) return;
+
+  const logoUrl = logo && typeof logo === "object" ? await storeLogo(studioId, logo) : null;
+  if (!logoUrl) await deleteLogo(studioId);
+  await db.studio.update({ where: { id: studioId }, data: { logoUrl } });
+
+  await recordAudit({
+    studioId,
+    actorId: admin.id,
+    actorLabel: `${admin.name} (plataforma)`,
+    action: remove ? "platform.studio_logo_removed" : "platform.studio_logo",
+    entityType: "Studio",
+    entityId: studioId,
   });
 
   await finishAdminAction(formData.get("returnTo"));
