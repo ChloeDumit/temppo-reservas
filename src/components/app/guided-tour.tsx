@@ -17,14 +17,7 @@ import { markTourSeenAction, tourProgressAction } from "@/app/[locale]/(app)/tou
  * export async functions, and a stray type export there takes the whole client
  * bundle down with it rather than failing where it was written.
  */
-type TourProgress = {
-  locations: number;
-  teachers: number;
-  packs: number;
-  classes: number;
-  students: number;
-  spots: number;
-};
+type TourProgress = Record<string, number>;
 
 const SEEN_KEY = "temppo:tour-seen";
 /** Where the tour got to, so leaving the page to do a step does not lose it. */
@@ -79,7 +72,7 @@ type Step = {
   /** Where the step is carried out. Offered as "take me there". */
   href?: string;
   /** The count that decides whether this step is already done. */
-  needs?: keyof TourProgress;
+  needs?: string;
 };
 
 /*
@@ -125,13 +118,46 @@ const STUDENT_STEPS: Step[] = [
   { key: "doneStudent", phase: "daily" },
 ];
 
+/*
+  A beauty business sets up in the order its booking page needs: who it is
+  and where to send a transfer receipt, what it sells, when it works, how a
+  deposit is paid. Then the people and the link that brings clients in.
+*/
+const BEAUTY_SETUP_STEPS: Step[] = [
+  { key: "beautyWelcome", phase: "setup" },
+  { key: "beautyStudio", phase: "setup", href: "/settings#studio", needs: "whatsapp" },
+  { key: "beautyServices", phase: "setup", href: "/services", needs: "services" },
+  { key: "beautyHours", phase: "setup", href: "/hours", needs: "hours" },
+  { key: "beautyDeposits", phase: "setup", href: "/hours#rules" },
+  { key: "beautyMercadoPago", phase: "setup", href: "/settings#mercadopago", needs: "mercadoPago" },
+  { key: "beautyTeam", phase: "setup", href: "/settings#team" },
+  { key: "beautyClients", phase: "setup", href: "/clients", needs: "clients" },
+  { key: "beautyShare", phase: "setup", href: "/dashboard" },
+];
+
+const BEAUTY_DAILY_STEPS: Step[] = [
+  { key: "beautyHome", phase: "daily", target: "tab:/dashboard" },
+  { key: "beautyAgenda", phase: "daily", target: "tab:/agenda" },
+  { key: "beautyClientsDaily", phase: "daily", target: "tab:/clients" },
+  { key: "beautyPayments", phase: "daily", href: "/payments" },
+  { key: "beautyDone", phase: "daily" },
+];
+
 /**
  * The steps this role can actually carry out.
  *
  * An instructor teaches; they cannot open settings, packs or students, so
  * walking them through setting those up would be a tour of locked doors.
  */
-function stepsFor(role: Role): Step[] {
+function stepsFor(role: Role, beauty: boolean, mercadoPago: boolean): Step[] {
+  if (beauty) {
+    if (role === "OWNER" || role === "ADMIN") {
+      // Connecting Mercado Pago only exists once the platform has it set up.
+      const setup = BEAUTY_SETUP_STEPS.filter((s) => mercadoPago || s.key !== "beautyMercadoPago");
+      return [...setup, ...BEAUTY_DAILY_STEPS];
+    }
+    return [{ key: "beautyWelcomeStaff", phase: "daily" }, ...BEAUTY_DAILY_STEPS];
+  }
   if (role === "STUDENT") return STUDENT_STEPS;
   if (role === "OWNER" || role === "ADMIN") return [...SETUP_STEPS, ...DAILY_STEPS];
   return [{ key: "welcomeStaff", phase: "daily" }, ...DAILY_STEPS];
@@ -157,10 +183,16 @@ type Rect = { top: number; left: number; width: number; height: number };
 export function GuidedTour({
   role,
   alreadySeen,
+  beauty = false,
+  mercadoPago = false,
 }: {
   role: Role;
   /** From the account record — the durable answer to "has this run before". */
   alreadySeen: boolean;
+  /** An appointment business, which sets up services and hours, not classes. */
+  beauty?: boolean;
+  /** Whether studios can connect their own Mercado Pago yet. */
+  mercadoPago?: boolean;
 }) {
   const t = useTranslations("tour");
   const router = useRouter();
@@ -170,7 +202,7 @@ export function GuidedTour({
   const [rect, setRect] = useState<Rect | null>(null);
   const [progress, setProgress] = useState<TourProgress | null>(null);
 
-  const steps = stepsFor(role);
+  const steps = stepsFor(role, beauty, mercadoPago);
   const step = steps[index];
 
   const loadProgress = useCallback(() => {

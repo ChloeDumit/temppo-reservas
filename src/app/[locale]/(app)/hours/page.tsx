@@ -122,7 +122,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
       </section>
 
       {isAdmin && (
-        <section className="mt-8">
+        <section id="rules" className="mt-8 scroll-mt-20">
           <SectionLabel>{t("rules")}</SectionLabel>
           <Card>
             <CardBody>

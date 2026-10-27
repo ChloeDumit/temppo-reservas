@@ -14,6 +14,7 @@ import { navFor, splitNav } from "@/components/app/nav-items";
 import { InstallPrompt } from "@/components/app/install-prompt";
 import { InboxBell, InboxProvider } from "@/components/app/inbox-bell";
 import { GuidedTour } from "@/components/app/guided-tour";
+import { isMercadoPagoOAuthConfigured } from "@/lib/payments/mercadopago-oauth";
 import { LocationSwitcher } from "@/components/app/location-switcher";
 import { locationsFor, currentLocationId } from "@/lib/locations";
 
@@ -136,9 +137,14 @@ export default async function AppLayout({
         </main>
       </div>
 
-      {/* Runs once on first sign-in; replayable from the account sheet. The
-          tour walks through classes and packs, so appointment businesses skip it. */}
-      {!beauty && <GuidedTour role={user.role} alreadySeen={Boolean(user.tourSeenAt)} />}
+      {/* Runs once on first sign-in; replayable from the account sheet. An
+          appointment business gets its own steps: services and hours, not classes. */}
+      <GuidedTour
+        role={user.role}
+        alreadySeen={Boolean(user.tourSeenAt)}
+        beauty={beauty}
+        mercadoPago={beauty && isMercadoPagoOAuthConfigured()}
+      />
 
       <MobileTabBar
         primary={primary}
