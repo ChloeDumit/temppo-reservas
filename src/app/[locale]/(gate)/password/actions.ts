@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { assertUser } from "@/lib/auth/guards";
+import { assertUser, inSupportVisit } from "@/lib/auth/guards";
 import { hashPassword } from "@/lib/auth/password";
 import { recordAudit } from "@/lib/audit";
 import { homePathFor } from "@/lib/auth/guards";
@@ -25,6 +25,8 @@ export async function setPasswordAction(
   formData: FormData,
 ): Promise<PasswordState> {
   const user = await assertUser();
+  // Her password is hers to choose, not support's.
+  if (await inSupportVisit()) return { error: "support" };
   const parsed = schema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {

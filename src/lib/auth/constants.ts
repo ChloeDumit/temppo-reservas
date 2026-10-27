@@ -1,6 +1,10 @@
 // Kept dependency-free: the middleware (edge runtime) imports this.
 export const SESSION_COOKIE = "temppo_session";
 export const SESSION_TTL_DAYS = 30;
+// A platform admin's visit to a studio's app, in a cookie of its own so their
+// own session is still there when they leave. Short on purpose.
+export const SUPPORT_COOKIE = "temppo_support";
+export const SUPPORT_TTL_MINUTES = 60;
 export const MAGIC_LINK_TTL_MINUTES = 15;
 // The studio picker is a hand-off inside one sitting, not something to
 // come back to later, so it expires well before a magic link would.

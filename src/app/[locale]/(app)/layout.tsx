@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
+import { getSupportSession } from "@/lib/auth/session";
+import { exitSupportAction } from "./support-actions";
 import { brandByKey, brandOverrideAllowed, getBrand } from "@/lib/brand/server";
 import { appUrlFor } from "@/lib/brand/url";
 import { accentVars } from "@/lib/color";
@@ -31,6 +33,8 @@ export default async function AppLayout({
   const user = await requireUser();
   const studio = user.studio;
   const ts = await getTranslations("settings");
+  const support = await getSupportSession();
+  const tsup = await getTranslations("support");
 
   const tc = await getTranslations("common");
 
@@ -78,6 +82,28 @@ export default async function AppLayout({
     // Studio branding is applied here, on every plan.
     <InboxProvider pushKey={pushKey} enabled={isStaff}>
     <div className="accent-scope min-h-dvh" style={accentVars(studio.accentColor)}>
+      {/*
+        A platform admin inside a studio's app. Dark and outside the studio's
+        colours, like the console, so it never passes for part of the app.
+      */}
+      {support && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-ink px-4 py-2 pt-safe text-sm text-white">
+          <p className="min-w-0 flex-1">{tsup("banner", { studio: studio.name, name: user.name })}</p>
+          <span className="text-xs text-white/50">
+            {tsup("until", {
+              time: new Intl.DateTimeFormat(locale, { timeStyle: "short", timeZone: studio.timezone }).format(support.expiresAt),
+            })}
+          </span>
+          <form action={exitSupportAction}>
+            <button
+              type="submit"
+              className="rounded-[var(--radius-pill)] bg-white/15 px-3 py-1 text-xs font-medium hover:bg-white/25"
+            >
+              {tsup("exit")}
+            </button>
+          </form>
+        </div>
+      )}
       {/*
         Phone header: compact and identity-only. Navigation lives at the
         bottom where the thumb is, so nothing important sits up here.
@@ -141,7 +167,7 @@ export default async function AppLayout({
           appointment business gets its own steps: services and hours, not classes. */}
       <GuidedTour
         role={user.role}
-        alreadySeen={Boolean(user.tourSeenAt)}
+        alreadySeen={Boolean(user.tourSeenAt) || Boolean(support)}
         beauty={beauty}
         mercadoPago={beauty && isMercadoPagoOAuthConfigured()}
       />

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
-import { ADMIN_ROLES } from "@/lib/auth/guards";
+import { ADMIN_ROLES, inSupportVisit } from "@/lib/auth/guards";
 import { signPayload } from "@/lib/crypto/secret-box";
 import { authorizationUrl, isMercadoPagoOAuthConfigured } from "@/lib/payments/mercadopago-oauth";
 import { appUrlFor } from "@/lib/brand/url";
@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user || !user.studioId || !ADMIN_ROLES.includes(user.role)) {
+  // The account linked must be one the owner signs in to herself.
+  if (!user || !user.studioId || !ADMIN_ROLES.includes(user.role) || (await inSupportVisit())) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   if (!isMercadoPagoOAuthConfigured()) {

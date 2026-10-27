@@ -1,7 +1,7 @@
 import createIntlMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing, localePath } from "@/i18n/routing";
-import { SESSION_COOKIE } from "@/lib/auth/constants";
+import { SESSION_COOKIE, SUPPORT_COOKIE } from "@/lib/auth/constants";
 
 const BRAND_COOKIE = "brand_override";
 const BRAND_OVERRIDE_ALLOWED = process.env.NODE_ENV !== "production" || process.env.BRAND_OVERRIDE === "1";
@@ -26,7 +26,7 @@ export default function middleware(request: NextRequest) {
   const { locale, path } = splitLocale(request.nextUrl.pathname);
 
   if (PROTECTED.some((p) => path === p || path.startsWith(p + "/"))) {
-    if (!request.cookies.get(SESSION_COOKIE)) {
+    if (!request.cookies.get(SESSION_COOKIE) && !request.cookies.get(SUPPORT_COOKIE)) {
       // Keep the visitor's locale on the way to the login screen, and send
       // them somewhere that exists — an unprefixed /login would just bounce
       // through the intl middleware for a second round trip.

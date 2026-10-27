@@ -19,6 +19,7 @@ import {
   toggleUserActiveAction,
   updateStudioConfigAction,
 } from "../../actions";
+import { supportTargetFor } from "@/lib/auth/support";
 import { beautyPlanFor, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
 import { StudioLogoForm } from "./logo-form";
 
@@ -76,7 +77,7 @@ export default async function AdminStudioPage({
 
   if (!studio) notFound();
 
-  const [income, recentAudit, subscription, charges, prices] = await Promise.all([
+  const [income, recentAudit, subscription, charges, prices, supportTarget] = await Promise.all([
     db.transaction.aggregate({
       where: { studioId: id, type: "INCOME", occurredAt: { gte: monthStart } },
       _sum: { amountCents: true },
@@ -89,6 +90,7 @@ export default async function AdminStudioPage({
     subscriptionFor(id),
     chargesFor(id, 6),
     planPrices(),
+    supportTargetFor(id),
   ]);
 
   const date = (d: Date) =>
@@ -134,11 +136,32 @@ export default async function AdminStudioPage({
             /{studio.slug} · {studio.timezone} · desde {date(studio.createdAt)}
           </p>
         </div>
-        {studio.suspendedAt && (
-          <span className="rounded-[var(--radius-pill)] bg-red-500/20 px-3 py-1 text-xs text-red-300">
-            Suspendido {date(studio.suspendedAt)}
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {studio.suspendedAt && (
+            <span className="rounded-[var(--radius-pill)] bg-red-500/20 px-3 py-1 text-xs text-red-300">
+              Suspendido {date(studio.suspendedAt)}
+            </span>
+          )}
+          {/*
+            Everything the studio can change in its own app, changed for it.
+            Signs in as the owner for an hour; each change is logged as ours.
+            A plain POST rather than a server action: the answer is a redirect
+            to the studio's host that sets a cookie there, which only a real
+            navigation carries through.
+          */}
+          {supportTarget && (
+            <form method="post" action="/api/support/start">
+              <input type="hidden" name="studioId" value={studio.id} />
+              <button
+                type="submit"
+                title={`Entra a su app como ${supportTarget.name}. Todo queda registrado a tu nombre.`}
+                className="rounded-[var(--radius-pill)] bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-white/90"
+              >
+                Entrar como soporte
+              </button>
+            </form>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -2,7 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import type { Role } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
-import { getCurrentUser, type SessionUser } from "./session";
+import { getCurrentUser, getSupportSession, type SessionUser } from "./session";
 
 export const STAFF_ROLES: Role[] = ["OWNER", "ADMIN", "INSTRUCTOR"];
 export const ADMIN_ROLES: Role[] = ["OWNER", "ADMIN"];
@@ -17,14 +17,16 @@ export async function requireUser(): Promise<SessionUser> {
     and platform admins are exempt so the console cannot lock its own
     operator out of the studio they belong to.
   */
-  if (user.studio.suspendedAt && !user.isPlatformAdmin) redirect("/suspended");
+  // Support gets in regardless: fixing what is wrong is the point of the visit.
+  const support = await getSupportSession();
+  if (user.studio.suspendedAt && !user.isPlatformAdmin && !support) redirect("/suspended");
 
   /*
     Someone holding a temporary password gets no further than the password
     screen. Checked on every request rather than at login, so a session opened
     with a shared password cannot wander off into the app.
   */
-  if (user.mustChangePassword) redirect("/password");
+  if (user.mustChangePassword && !support) redirect("/password");
 
   return user;
 }
@@ -105,4 +107,13 @@ export async function assertPlatformAdmin(): Promise<SessionUser> {
   if (!user) throw new Error("UNAUTHENTICATED");
   if (!user.isPlatformAdmin) throw new Error("FORBIDDEN");
   return user;
+}
+
+/**
+ * True while a platform admin is in a studio's app on its behalf. The few
+ * things that belong to the account holder alone — their own password, a
+ * payment account, a subscription, push on their phone — check this and refuse.
+ */
+export async function inSupportVisit() {
+  return (await getSupportSession()) !== null;
 }
