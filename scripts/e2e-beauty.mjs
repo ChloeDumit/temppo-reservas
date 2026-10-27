@@ -330,15 +330,24 @@ for (const viewport of ONLY === "screens" ? [] : ["phone", "desktop"]) {
     await page.getByText(`Agenda ${stamp}`).first().waitFor({ timeout: 10000 });
   });
 
-  await flow(page, tag("open it, take a note and mark she came"), async () => {
+  await flow(page, tag("open it, take a note and charge it"), async () => {
     await page.getByText(`Agenda ${stamp}`).first().click();
     const d = sheet(page);
     await d.waitFor({ state: "visible" });
     await d.locator("textarea[name=staffNotes]").fill("Color 7.1");
     await d.getByRole("button", { name: es.agenda.saveNote }).click();
-    await page.waitForTimeout(800);
-    await sheet(page).getByRole("button", { name: es.agenda.markDone }).click();
-    await page.waitForTimeout(1200);
+    await d.getByText(es.agenda.noteSaved).waitFor({ timeout: 8000 });
+    await d.getByRole("button", { name: es.agenda.charge, exact: true }).click();
+    await d.getByText(es.agenda.fullyPaid).waitFor({ timeout: 8000 });
+    await page.keyboard.press("Escape");
+  });
+
+  await flow(page, tag("set transfer details"), async () => {
+    await page.goto(`${BASE}/es/hours#rules`, { waitUntil: "networkidle" });
+    const form = page.locator("form:has(textarea[name=transferInstructions])");
+    await form.locator("textarea[name=transferInstructions]").fill(`BROU ${stamp}`);
+    await form.locator("button[type=submit]").click();
+    await form.getByText(/Guardado|Listo|✓/).first().waitFor({ timeout: 8000 });
   });
 
   // A client books on the public page and pays by transfer.
@@ -366,6 +375,7 @@ for (const viewport of ONLY === "screens" ? [] : ["phone", "desktop"]) {
     await pub.waitForURL(/\/m\/[^/?]+/, { timeout: 15000 });
     manageUrl = pub.url();
     await pub.getByText(es.manage.statusPending).first().waitFor();
+    await pub.getByText(`BROU ${stamp}`).waitFor({ timeout: 5000 });
   });
 
   await flow(page, tag("the studio approves the transfer"), async () => {
@@ -387,8 +397,7 @@ for (const viewport of ONLY === "screens" ? [] : ["phone", "desktop"]) {
     await slot.waitFor({ timeout: 15000 });
     const before = await pub.locator("main").innerText();
     await slot.click();
-    const confirm = pub.locator("form button[type=submit]").last();
-    if (await confirm.isVisible().catch(() => false)) await confirm.click();
+    await pub.getByRole("button", { name: /^Pasar a / }).click();
     await until(async () => (await pub.locator("main").innerText()) !== before, 10000);
   });
 
@@ -404,7 +413,7 @@ for (const viewport of ONLY === "screens" ? [] : ["phone", "desktop"]) {
     await page.goto(`${BASE}/es/settings`, { waitUntil: "networkidle" });
     const form = page.locator("#studio form");
     await form.locator("button[type=submit]").click();
-    await form.getByText(/Guardado|Cambios guardados|✓/).first().waitFor({ timeout: 8000 });
+    await form.getByText(es.common.saved).first().waitFor({ timeout: 8000 });
   });
 
   let tempPassword = "";
