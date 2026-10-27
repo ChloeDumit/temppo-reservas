@@ -42,7 +42,8 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
   ]);
 
   const staffIds = new Set(staff.map((s) => s.id));
-  const flowServices: FlowService[] = services.map((s) => ({
+  const flowServices: FlowService[] = services
+    .map((s) => ({
     id: s.id,
     name: s.name,
     description: s.description,
@@ -55,7 +56,9 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
     addOns: addOns
       .filter((a) => a.serviceId === null || a.serviceId === s.id)
       .map((a) => ({ id: a.id, name: a.name, durationMin: a.durationMin, priceCents: a.priceCents })),
-  }));
+    }))
+    // Nobody with hours does it: listing it would only lead to "no times".
+    .filter((s) => s.staffIds.length > 0);
 
   const { mp: canMp, transfer: canTransfer } = depositMethods(studio);
   const contact = waLink(studio.whatsappNumber, t("hello", { studio: studio.name }));
@@ -90,6 +93,7 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
             timeZone={studio.timezone}
             today={dateKeyInZone(new Date(), studio.timezone)}
             cancellationCutoffHours={studio.cancellationCutoffHours}
+            depositRefundable={studio.depositRefundable}
             methods={{ mp: canMp, transfer: canTransfer }}
           />
         )}

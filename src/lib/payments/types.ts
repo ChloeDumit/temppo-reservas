@@ -22,6 +22,12 @@ export type CheckoutRequest = {
   accessToken?: string;
   /** The platform's cut of a payment charged into a studio's account. */
   marketplaceFeeCents?: number;
+  /**
+   * After this the checkout no longer takes payment — a deposit is held for
+   * minutes, and money arriving for a slot already released helps nobody.
+   * Also limits payment to methods that settle at once (no cash vouchers).
+   */
+  expiresAt?: Date;
 };
 
 export type CheckoutSession = {

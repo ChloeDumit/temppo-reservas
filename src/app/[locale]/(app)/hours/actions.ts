@@ -157,6 +157,7 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
       depositRefundable: formData.get("depositRefundable") === "on",
       acceptMercadoPago: formData.get("acceptMercadoPago") === "on",
       acceptTransfer: formData.get("acceptTransfer") === "on",
+      transferInstructions: String(formData.get("transferInstructions") ?? "").trim().slice(0, 500) || null,
     },
   });
 

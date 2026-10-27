@@ -70,6 +70,8 @@ export async function startDepositCheckout(opts: {
     successUrl: opts.successUrl,
     failureUrl: opts.failureUrl,
     notificationUrl: notificationUrl.toString(),
+    // A little past the hold, so a card mid-payment as it ends still goes through.
+    ...(appt.holdExpiresAt ? { expiresAt: new Date(appt.holdExpiresAt.getTime() + 5 * 60_000) } : {}),
     ...(studioToken
       ? { accessToken: studioToken, marketplaceFeeCents: marketplaceFeeCents(appt.depositCents) }
       : {}),

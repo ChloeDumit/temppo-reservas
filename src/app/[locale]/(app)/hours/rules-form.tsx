@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { saveBookingRulesAction, type ActionState } from "./actions";
 
@@ -16,6 +16,7 @@ export type Rules = {
   depositRefundable: boolean;
   acceptMercadoPago: boolean;
   acceptTransfer: boolean;
+  transferInstructions: string;
   hasWhatsapp: boolean;
 };
 
@@ -75,6 +76,15 @@ export function RulesForm({ rules }: { rules: Rules }) {
             <span className="block text-xs text-muted">{rules.hasWhatsapp ? t("acceptTransferHint") : t("acceptTransferNeedsWhatsapp")}</span>
           </span>
         </label>
+        <Field label={t("transferInstructions")} hint={t("transferInstructionsHint")}>
+          <Textarea
+            name="transferInstructions"
+            maxLength={500}
+            rows={3}
+            defaultValue={rules.transferInstructions}
+            placeholder={t("transferInstructionsPlaceholder")}
+          />
+        </Field>
         <p className="text-xs text-muted">{t("noMethodsHint")}</p>
       </fieldset>
       <label className="flex items-start gap-2.5 text-sm text-ink">

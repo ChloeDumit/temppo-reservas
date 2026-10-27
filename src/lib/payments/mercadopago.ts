@@ -104,6 +104,13 @@ export const mercadoPago: PaymentProvider = {
         auto_return: "approved",
         notification_url: request.notificationUrl,
         ...(request.marketplaceFeeCents ? { marketplace_fee: request.marketplaceFeeCents / 100 } : {}),
+        ...(request.expiresAt
+          ? {
+              expires: true,
+              expiration_date_to: request.expiresAt.toISOString(),
+              payment_methods: { excluded_payment_types: [{ id: "ticket" }, { id: "atm" }] },
+            }
+          : {}),
       }),
     });
 

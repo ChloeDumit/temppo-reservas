@@ -142,6 +142,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                   depositRefundable: studio.depositRefundable,
                   acceptMercadoPago: studio.acceptMercadoPago,
                   acceptTransfer: studio.acceptTransfer,
+                  transferInstructions: studio.transferInstructions ?? "",
                   hasWhatsapp: Boolean(studio.whatsappNumber),
                 }}
               />

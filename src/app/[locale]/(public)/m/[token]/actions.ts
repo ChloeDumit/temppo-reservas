@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { notifyOwners } from "@/lib/notifications";
+import { notifyClientCancelled } from "@/lib/appointments/notify";
 import { depositMethods } from "@/lib/appointments/methods";
 import { appUrlFor } from "@/lib/brand/url";
 import { cancelAppointment, findByManageToken, rescheduleAppointment } from "@/lib/appointments/book";
@@ -31,7 +32,6 @@ export async function cancelByTokenAction(_prev: ManageState, formData: FormData
   const result = await cancelAppointment({ studio: appt.studio, appointmentId: appt.id, by: "client" });
   if (!result.ok) return { error: result.code };
 
-  const en = appt.studio.locale === "en";
   await recordAudit({
     studioId: appt.studioId,
     actorLabel: appt.client.user.name,
@@ -40,16 +40,7 @@ export async function cancelByTokenAction(_prev: ManageState, formData: FormData
     entityId: appt.id,
     metadata: { depositStatus: result.depositStatus },
   });
-  await notifyOwners(appt.studioId, {
-    url: "/agenda",
-    template: "appointment_cancelled",
-    subject: en ? `Cancelled — ${appt.client.user.name}` : `Canceló — ${appt.client.user.name}`,
-    body: en
-      ? `${appt.client.user.name} cancelled ${appt.serviceName} on ${whenText(appt.startsAt, appt.studio)}.${result.late ? " Late: the deposit is kept." : ""}`
-      : `${appt.client.user.name} canceló ${appt.serviceName} del ${whenText(appt.startsAt, appt.studio)}.${result.late ? " Fuera de término: la seña queda." : ""}`,
-    relatedType: "Appointment",
-    relatedId: appt.id,
-  });
+  await notifyClientCancelled(appt.id, result.depositStatus);
 
   revalidatePath(PAGE, "page");
   return { ok: true };
@@ -95,6 +86,8 @@ export async function payDepositAction(_prev: ManageState, formData: FormData): 
   const method = String(formData.get("method") ?? "");
   const appt = await findByManageToken(token);
   if (!appt || appt.status !== "PENDING_PAYMENT") return { error: "notFound" };
+  // The hold ran out: the time may already be someone else's.
+  if (appt.holdExpiresAt && appt.holdExpiresAt <= new Date()) return { error: "notFound" };
 
   const methods = depositMethods(appt.studio);
   if (method === "transfer" && methods.transfer) {

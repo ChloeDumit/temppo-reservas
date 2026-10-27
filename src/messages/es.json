@@ -983,7 +983,10 @@
     "reminderHint": "Cuántas horas antes del turno le recordamos a la clienta.",
     "blockClashes": "{count, plural, one {Bloqueado. Ojo: queda # turno dentro de ese horario. Movelo o avisale a la clienta.} other {Bloqueado. Ojo: quedan # turnos dentro de ese horario. Movelos o avisales a las clientas.}}",
     "seeAgenda": "Ver en la agenda",
-    "blockError": "No se pudo bloquear. Revisá los datos y probá de nuevo."
+    "blockError": "No se pudo bloquear. Revisá los datos y probá de nuevo.",
+    "transferInstructions": "Datos para transferir",
+    "transferInstructionsHint": "Se los mostramos a la clienta junto a su código de pago.",
+    "transferInstructionsPlaceholder": "BROU caja de ahorro 001234567-00001, a nombre de Lucía Pérez"
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",
@@ -1028,7 +1031,8 @@
     "errName": "Escribí tu nombre.",
     "errEmailForMp": "Para pagar con Mercado Pago necesitamos tu email.",
     "errTooManyHolds": "Ya tenés reservas esperando la seña. Pagá esas primero o escribinos.",
-    "errGeneric": "No pudimos reservar. Probá de nuevo."
+    "errGeneric": "No pudimos reservar. Probá de nuevo.",
+    "depositExplainCredit": "Para confirmar el turno se paga una seña de {amount}, que se descuenta del total. Si cancelás con más de {hours} horas de anticipación, te queda como crédito para tu próximo turno."
   },
   "manage": {
     "title": "Tu turno",
@@ -1076,7 +1080,13 @@
     "pastCutoff": "Ya pasó el plazo para cambiar sin costo.",
     "bookAgain": "Reservar otro turno",
     "writeToStudio": "Escribirle al estudio",
-    "errGeneric": "Algo salió mal. Probá de nuevo."
+    "errGeneric": "Algo salió mal. Probá de nuevo.",
+    "saveLink": "Guardá este link: es tu forma de volver a tu turno para pagar, cambiarlo o cancelarlo.",
+    "copyLink": "Copiar link",
+    "copied": "¡Copiado!",
+    "sendToMyWhatsapp": "Mandármelo por WhatsApp",
+    "selfMessage": "Mi turno de {service}: {url}",
+    "confirmMove": "Pasar a {time}"
   },
   "agenda": {
     "title": "Agenda",

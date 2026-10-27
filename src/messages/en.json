@@ -983,7 +983,10 @@
     "reminderHint": "How many hours before the appointment we remind the client.",
     "blockClashes": "{count, plural, one {Blocked. Note: # appointment is still inside that time. Move it or tell the client.} other {Blocked. Note: # appointments are still inside that time. Move them or tell the clients.}}",
     "seeAgenda": "See it in the agenda",
-    "blockError": "Couldn't block it. Check the details and try again."
+    "blockError": "Couldn't block it. Check the details and try again.",
+    "transferInstructions": "Transfer details",
+    "transferInstructionsHint": "Shown to the client next to her payment code.",
+    "transferInstructionsPlaceholder": "Bank, account number, account holder"
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
@@ -1028,7 +1031,8 @@
     "errName": "Enter your name.",
     "errEmailForMp": "We need your email to pay with Mercado Pago.",
     "errTooManyHolds": "You already have bookings waiting for a deposit. Pay those first or message us.",
-    "errGeneric": "We couldn't book that. Try again."
+    "errGeneric": "We couldn't book that. Try again.",
+    "depositExplainCredit": "To confirm, you pay a {amount} deposit, taken off the total. Cancel more than {hours} hours ahead and it stays as credit for your next appointment."
   },
   "manage": {
     "title": "Your appointment",
@@ -1076,7 +1080,13 @@
     "pastCutoff": "The free change window has passed.",
     "bookAgain": "Book another appointment",
     "writeToStudio": "Message the studio",
-    "errGeneric": "Something went wrong. Try again."
+    "errGeneric": "Something went wrong. Try again.",
+    "saveLink": "Save this link: it's how you get back to your booking to pay, change or cancel it.",
+    "copyLink": "Copy link",
+    "copied": "Copied!",
+    "sendToMyWhatsapp": "Send it to my WhatsApp",
+    "selfMessage": "My {service} appointment: {url}",
+    "confirmMove": "Move to {time}"
   },
   "agenda": {
     "title": "Agenda",

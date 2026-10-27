@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { PageHeader, EmptyState, SectionLabel } from "@/components/ui/page-header";
 import { STATUS_TONE } from "../agenda/appointment-sheet";
-import { cancelMyAppointmentAction } from "./actions";
+import { CancelMyAppointment } from "./cancel-button";
 
 export default async function MyAppointmentsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -41,12 +41,13 @@ export default async function MyAppointmentsPage({ params }: { params: Promise<{
         </p>
       </div>
       {canCancel ? (
-        <form action={cancelMyAppointmentAction}>
-          <input type="hidden" name="id" value={a.id} />
-          <Button type="submit" size="sm" variant="ghost">
-            {a.startsAt.getTime() - now.getTime() < cutoffMs && a.depositStatus === "PAID" ? t("cancelLosesDeposit") : t("cancel")}
-          </Button>
-        </form>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {a.status === "PENDING_PAYMENT" && <Badge tone="caution">{ta("statusPENDING_PAYMENT")}</Badge>}
+          <CancelMyAppointment
+            id={a.id}
+            label={a.startsAt.getTime() - now.getTime() < cutoffMs && a.depositStatus === "PAID" ? t("cancelLosesDeposit") : t("cancel")}
+          />
+        </div>
       ) : (
         <Badge tone={STATUS_TONE[a.status]}>{ta(`status${a.status}` as "statusCONFIRMED")}</Badge>
       )}

@@ -47,6 +47,7 @@ export function BookingFlow({
   timeZone,
   today,
   cancellationCutoffHours,
+  depositRefundable,
   methods,
 }: {
   slug: string;
@@ -56,6 +57,8 @@ export function BookingFlow({
   timeZone: string;
   today: string;
   cancellationCutoffHours: number;
+  /** In time, the deposit is returned; otherwise it stays as credit. */
+  depositRefundable: boolean;
   methods: { mp: boolean; transfer: boolean };
 }) {
   const t = useTranslations("bookPublic");
@@ -133,6 +136,8 @@ export function BookingFlow({
     ? ({
         SLOT_TAKEN: t("errSlotTaken"),
         UNAVAILABLE: t("errSlotTaken"),
+        IN_PAST: t("errSlotTaken"),
+        NOT_FOUND: t("errSlotTaken"),
         BLOCKED: t("errBlocked"),
         phone: t("errPhone"),
         email: t("errEmail"),
@@ -142,14 +147,21 @@ export function BookingFlow({
       } as Record<string, string>)[state.error] ?? t("errGeneric")
     : null;
 
-  // Back to the times when the one chosen was taken meanwhile.
+  // Back to the times when the one chosen was taken meanwhile — saying so
+  // there, since the details step with its message is no longer on screen.
+  const [timeNote, setTimeNote] = useState<string | null>(null);
+  const [handled, setHandled] = useState<typeof state>(null);
   useEffect(() => {
-    if (state?.error === "SLOT_TAKEN" || state?.error === "UNAVAILABLE") {
+    if (state && state !== handled && ["SLOT_TAKEN", "UNAVAILABLE", "IN_PAST", "NOT_FOUND"].includes(state.error ?? "")) {
+      setHandled(state);
+      setTimeNote(t("errSlotTaken"));
       setStart(null);
       setDays(null);
       setStep("time");
     }
-  }, [state]);
+  }, [state, handled, t]);
+  // An error already acted on is not shown again on the next attempt.
+  const detailsError = state === handled ? null : errorText;
 
   const back = (to: Step) => (
     <button type="button" onClick={() => setStep(to)} className="text-sm font-medium text-accent">
@@ -316,6 +328,7 @@ export function BookingFlow({
             </div>
           </div>
 
+          {timeNote && <p className="rounded-[var(--radius-md)] bg-critical-soft px-3 py-2 text-sm text-critical">{timeNote}</p>}
           {days === null || loading ? (
             <div className="flex justify-center py-10">
               <Spinner />
@@ -365,6 +378,7 @@ export function BookingFlow({
                         type="button"
                         onClick={() => {
                           setStart(s.start);
+                          setTimeNote(null);
                           setStep("details");
                         }}
                         className={cn(
@@ -415,7 +429,7 @@ export function BookingFlow({
           {deposit > 0 && (
             <div className={cn(card, "space-y-3 p-4")}>
               <p className="text-sm text-ink">
-                {t("depositExplain", { amount: money(deposit), hours: cancellationCutoffHours })}
+                {t(depositRefundable ? "depositExplain" : "depositExplainCredit", { amount: money(deposit), hours: cancellationCutoffHours })}
               </p>
               {methods.mp && methods.transfer && (
                 <div className="grid grid-cols-2 gap-2">
@@ -437,7 +451,7 @@ export function BookingFlow({
             </div>
           )}
 
-          {errorText && <p className="text-sm text-critical">{errorText}</p>}
+          {detailsError && <p className="text-sm text-critical">{detailsError}</p>}
 
           <SubmitButton pendingLabel={t("booking")} className="w-full">
             {deposit > 0 ? (pay === "mp" ? t("bookAndPay", { amount: money(deposit) }) : t("bookTransfer")) : t("book")}
