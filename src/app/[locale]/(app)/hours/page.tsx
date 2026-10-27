@@ -10,24 +10,14 @@ import { SheetForm } from "@/components/app/sheet-form";
 import { HoursForm, type DayShifts } from "./hours-form";
 import { TimeOffForm } from "./time-off-form";
 import { RulesForm } from "./rules-form";
-import { deleteTimeOffAction, disconnectMercadoPagoAction } from "./actions";
-import { Badge } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
-import { isMercadoPagoOAuthConfigured } from "@/lib/payments/mercadopago-oauth";
+import { deleteTimeOffAction } from "./actions";
 
 function hhmm(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }
 
-export default async function HoursPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<{ mp?: string }>;
-}) {
+export default async function HoursPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const { mp: mpOutcome } = await searchParams;
   setRequestLocale(locale);
 
   const user = await requireAppointmentStaff();
@@ -37,13 +27,6 @@ export default async function HoursPage({
   const tc = await getTranslations("common");
 
   const now = new Date();
-  const mpAccount =
-    isAdmin && isMercadoPagoOAuthConfigured()
-      ? await db.mercadoPagoAccount.findUnique({
-          where: { studioId: studio.id },
-          select: { nickname: true, email: true, connectedAt: true },
-        })
-      : null;
   const [staff, hours, blocks] = await Promise.all([
     db.user.findMany({
       where: {
@@ -156,40 +139,6 @@ export default async function HoursPage({
                   hasWhatsapp: Boolean(studio.whatsappNumber),
                 }}
               />
-            </CardBody>
-          </Card>
-        </section>
-      )}
-
-      {isAdmin && isMercadoPagoOAuthConfigured() && (
-        <section id="mercadopago" className="mt-8 scroll-mt-6">
-          <SectionLabel>{t("mpTitle")}</SectionLabel>
-          <Card>
-            <CardBody className="space-y-3">
-              {mpOutcome === "connected" && <p className="text-sm text-positive">{t("mpConnectedNow")}</p>}
-              {mpOutcome === "error" && <p className="text-sm text-critical">{t("mpError")}</p>}
-              {mpAccount ? (
-                <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone="positive">{t("mpConnected")}</Badge>
-                    <span className="text-sm text-ink">{mpAccount.nickname ?? mpAccount.email ?? ""}</span>
-                  </div>
-                  <p className="text-xs text-muted">{t("mpConnectedHint")}</p>
-                  <form action={disconnectMercadoPagoAction}>
-                    <Button type="submit" variant="ghost" size="sm">
-                      {t("mpDisconnect")}
-                    </Button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-ink-soft">{t("mpPitch")}</p>
-                  <a href="/api/mercadopago/connect" className={buttonClass("primary", "md")}>
-                    {t("mpConnect")}
-                  </a>
-                  <p className="text-xs text-muted">{t("mpFallback")}</p>
-                </>
-              )}
             </CardBody>
           </Card>
         </section>

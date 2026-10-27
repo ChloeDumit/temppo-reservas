@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 /**
  * Where Mercado Pago sends the owner back. Trusts only the signed state for
  * which studio this is, checks she still runs it, keeps the account, and
- * returns her to her own settings on her own domain.
+ * returns her to Ajustes on her own domain.
  */
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const back = (outcome: string) =>
-    NextResponse.redirect(`${appUrlFor(user.studio)}${localePath(user.studio.locale, "/hours")}?mp=${outcome}#mercadopago`);
+    NextResponse.redirect(`${appUrlFor(user.studio)}${localePath(user.studio.locale, "/settings")}?mp=${outcome}#mercadopago`);
 
   const code = params.get("code");
   // She cancelled at Mercado Pago, or it refused.

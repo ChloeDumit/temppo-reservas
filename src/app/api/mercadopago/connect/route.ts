@@ -20,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   if (!isMercadoPagoOAuthConfigured()) {
-    const back = `${appUrlFor(user.studio)}${localePath(user.studio.locale, "/hours")}?mp=unavailable`;
+    const back = `${appUrlFor(user.studio)}${localePath(user.studio.locale, "/settings")}?mp=unavailable`;
     return NextResponse.redirect(back);
   }
 

@@ -377,7 +377,16 @@
     "whatsappHint": "Where students send payment receipts. International format.",
     "monthlyChanges": "Changes per month",
     "monthlyChangesHint": "How many fixed-spot classes a student may move each month. Cancel beyond it and the class is lost. 0 = no changes.",
-    "invitePasswordHint": "Read it out so they can sign in now. They'll change it on first use. A link is emailed to them too."
+    "invitePasswordHint": "Read it out so they can sign in now. They'll change it on first use. A link is emailed to them too.",
+    "mpTitle": "Mercado Pago",
+    "mpPitch": "Connect your account and the deposits clients pay through Mercado Pago reach you directly, right away.",
+    "mpConnect": "Connect Mercado Pago",
+    "mpFallback": "Until you connect it, we collect online deposits and transfer them to you.",
+    "mpConnected": "Connected",
+    "mpConnectedHint": "Online deposits go straight into this account. Refunds are made from your Mercado Pago.",
+    "mpConnectedNow": "Done! Your Mercado Pago is connected.",
+    "mpError": "We couldn't connect your account. Try again in a while.",
+    "mpDisconnect": "Disconnect"
   },
   "booking": {
     "title": "Book a class",
@@ -890,16 +899,7 @@
     "acceptTransfer": "Bank transfer",
     "acceptTransferHint": "The client sends you the receipt on WhatsApp and you confirm it.",
     "acceptTransferNeedsWhatsapp": "Add your WhatsApp in Settings to use it.",
-    "noMethodsHint": "With both off, bookings come in confirmed with no deposit.",
-    "mpTitle": "Mercado Pago",
-    "mpPitch": "Connect your account and the deposits clients pay through Mercado Pago reach you directly, right away.",
-    "mpConnect": "Connect Mercado Pago",
-    "mpFallback": "Until you connect it, we collect online deposits and transfer them to you.",
-    "mpConnected": "Connected",
-    "mpConnectedHint": "Online deposits go straight into this account. Refunds are made from your Mercado Pago.",
-    "mpConnectedNow": "Done! Your Mercado Pago is connected.",
-    "mpError": "We couldn't connect your account. Try again in a while.",
-    "mpDisconnect": "Disconnect"
+    "noMethodsHint": "With both off, bookings come in confirmed with no deposit."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
