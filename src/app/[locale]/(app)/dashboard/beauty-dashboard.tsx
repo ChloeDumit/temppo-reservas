@@ -162,6 +162,11 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
   const done = monthDone.length;
   const avgTicket = done ? Math.round(monthDone.reduce((s, a) => s + a.priceCents, 0) / done) : 0;
 
+  // Who a block can be for: always yourself, even before you have hours —
+  // otherwise "Todo el estudio" is the only choice and closes the business.
+  const blockStaff = working.filter((s) => isAdmin || s.id === user.id).map((s) => ({ id: s.id, name: s.name }));
+  if (!blockStaff.some((s) => s.id === user.id)) blockStaff.unshift({ id: user.id, name: user.name });
+
   return (
     <>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -309,7 +314,7 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
             </SheetForm>
             <SheetForm label={t("blockTime")} title={t("blockTime")} variant="secondary" size="md" icon="clock" className="min-h-16! w-full flex-col gap-1 whitespace-normal! rounded-[var(--radius-md)]! py-3">
               <TimeOffForm
-                staff={working.filter((s) => isAdmin || s.id === user.id).map((s) => ({ id: s.id, name: s.name }))}
+                staff={blockStaff}
                 defaultStaffId={user.id}
                 canCloseStudio={isAdmin}
                 today={today}

@@ -99,12 +99,15 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                       {formatDateTime(b.startsAt, studio.timezone, locale)} → {formatDateTime(b.endsAt, studio.timezone, locale)}
                     </p>
                   </div>
+                  {/* Only an admin may reopen the whole business. */}
+                  {(isAdmin || b.staffId === user.id) && (
                   <form action={deleteTimeOffAction}>
                     <input type="hidden" name="id" value={b.id} />
                     <Button type="submit" variant="ghost" size="sm">
                       {tc("delete")}
                     </Button>
                   </form>
+                  )}
                 </li>
               ))}
             </ul>

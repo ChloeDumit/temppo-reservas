@@ -14,8 +14,17 @@ export const agendaInclude = {
   client: { include: { user: true } },
   addOns: true,
   staff: { select: { name: true } },
-  // A transfer the client announced, so staff can match the code.
-  payments: { where: { status: "PENDING" as const, method: "BANK_TRANSFER" as const }, select: { shortCode: true }, take: 1 },
+  // A transfer the client announced, so staff can match the code, and what
+  // has been paid so far, so the sheet knows what is left to charge.
+  payments: {
+    where: {
+      OR: [{ status: "PENDING" as const, method: "BANK_TRANSFER" as const }, { status: "APPROVED" as const }] as Array<{
+        status: "PENDING" | "APPROVED";
+        method?: "BANK_TRANSFER";
+      }>,
+    },
+    select: { shortCode: true, status: true, amountCents: true },
+  },
 } as const;
 
 type Studio = { name: string; timezone: string; locale: string; currency: string };
@@ -36,7 +45,7 @@ type Row = {
   addOns: { name: string }[];
   staff: { name: string };
   client: { allergies: string | null; user: { name: string; phone: string | null } };
-  payments?: { shortCode: string | null }[];
+  payments?: { shortCode: string | null; status?: string; amountCents?: number }[];
 };
 
 export function toAgendaView(a: Row, studio: Studio, locale: string, now: Date): AgendaAppointment {
@@ -63,13 +72,21 @@ export function toAgendaView(a: Row, studio: Studio, locale: string, now: Date):
     deposit: a.depositCents ? money(a.depositCents) : null,
     depositStatus: a.depositStatus,
     depositDue: a.depositCents > 0 && a.depositStatus === "PENDING",
-    transferCode: a.payments?.[0]?.shortCode ?? null,
+    transferCode: a.payments?.find((p) => p.status !== "APPROVED" && p.shortCode)?.shortCode ?? null,
+    ...balanceOf(a, money),
     started: a.startsAt <= now,
     // The professional's own WhatsApp, message ready. Free, and how most of
     // them already remind people — just without the typing.
     reminderLink: waLink(client.phone, reminderText(a, studio, client.name)),
     callLink: client.phone ? `tel:${client.phone.replace(/[^\d+]/g, "")}` : null,
   };
+}
+
+/** What is left to charge: the price, less every payment approved for it. */
+function balanceOf(a: Row, money: (cents: number) => string) {
+  const paidCents = (a.payments ?? []).filter((p) => p.status === "APPROVED").reduce((sum, p) => sum + (p.amountCents ?? 0), 0);
+  const balanceCents = Math.max(0, a.priceCents - paidCents);
+  return { paid: paidCents ? money(paidCents) : null, balance: money(balanceCents), balanceCents, balanceInput: (balanceCents / 100).toFixed(0) };
 }
 
 /** Everyone who takes appointments: has hours, or has had appointments. */

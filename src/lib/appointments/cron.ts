@@ -5,6 +5,7 @@ import { notifyWhatsApp } from "@/lib/notifications/whatsapp";
 import { appUrlFor } from "@/lib/brand/url";
 import { localePath } from "@/i18n/routing";
 import { rebookText, reminderText, waLink, whenText } from "./whatsapp-text";
+import { voidAnnouncedTransfers } from "./book";
 
 /*
   The appointment side of the 15-minute sweep. Each job has its own guard
@@ -40,6 +41,7 @@ export async function expireHolds(studio: CronStudio, now: Date) {
     where: { id: { in: stale.map((a) => a.id) }, status: "PENDING_PAYMENT" },
     data: { status: "EXPIRED", depositStatus: "NONE" },
   });
+  await voidAnnouncedTransfers(db, stale.map((a) => a.id), "Turno vencido");
 
   const bookingUrl = `${appUrlFor(studio)}${localePath(studio.locale, `/b/${studio.slug}`)}`;
   for (const appt of stale) {
@@ -59,6 +61,41 @@ export async function expireHolds(studio: CronStudio, now: Date) {
     });
   }
   return stale.length;
+}
+
+/** How long after an appointment ends it is taken as done if nobody marked it. */
+const AUTO_COMPLETE_AFTER_MS = 6 * 3_600_000;
+
+/**
+ * Confirmed appointments that ended hours ago and that nobody closed are
+ * taken as done. Rebook nudges, "te toca volver", the month's numbers and
+ * each client's last visit all hang on that, and a professional with clients
+ * waiting does not stop to tap "Vino". A no-show stays a manual call.
+ */
+export async function closePastAppointments(studio: CronStudio, now: Date) {
+  const done = await db.appointment.findMany({
+    where: { studioId: studio.id, status: "CONFIRMED", endsAt: { lte: new Date(now.getTime() - AUTO_COMPLETE_AFTER_MS) } },
+    select: { id: true, clientId: true, startsAt: true },
+  });
+  if (!done.length) return 0;
+
+  await db.appointment.updateMany({
+    where: { id: { in: done.map((a) => a.id) }, status: "CONFIRMED" },
+    data: { status: "COMPLETED" },
+  });
+
+  const lastByClient = new Map<string, Date>();
+  for (const a of done) {
+    const seen = lastByClient.get(a.clientId);
+    if (!seen || seen < a.startsAt) lastByClient.set(a.clientId, a.startsAt);
+  }
+  for (const [clientId, startsAt] of lastByClient) {
+    await db.studentProfile.updateMany({
+      where: { id: clientId, OR: [{ lastVisitAt: null }, { lastVisitAt: { lt: startsAt } }] },
+      data: { lastVisitAt: startsAt },
+    });
+  }
+  return done.length;
 }
 
 /**
@@ -151,7 +188,17 @@ export async function sendRebookNudges(studio: CronStudio, now: Date) {
     if (seen.has(key)) continue;
     seen.add(key);
     const [later, booked] = await Promise.all([
-      db.appointment.count({ where: { clientId: appt.clientId, serviceId: appt.serviceId, startsAt: { gt: appt.startsAt }, id: { not: appt.id } } }),
+      // A later visit that actually happened, or is still on: a cancelled or
+      // expired booking does not mean she came back.
+      db.appointment.count({
+        where: {
+          clientId: appt.clientId,
+          serviceId: appt.serviceId,
+          startsAt: { gt: appt.startsAt },
+          id: { not: appt.id },
+          status: { in: ["COMPLETED", "CONFIRMED", "PENDING_PAYMENT"] },
+        },
+      }),
       db.appointment.count({ where: { clientId: appt.clientId, startsAt: { gt: now }, status: { in: ["CONFIRMED", "PENDING_PAYMENT"] } } }),
     ]);
     if (!later && !booked) nudge.push(appt);

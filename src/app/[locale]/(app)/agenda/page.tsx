@@ -133,7 +133,13 @@ export default async function AgendaPage({
 
   const bookingUrl = `${appUrlFor(studio)}${localePath(studio.locale, `/b/${studio.slug}`)}`;
   const toView = (a: (typeof appointments)[number]) => toAgendaView(a, studio, locale, now);
-  const allStaffOptions = working.map((s) => ({ id: s.id, name: s.name }));
+  // A professional books and moves only her own appointments.
+  const allStaffOptions = working
+    .filter((s) => user.role !== "INSTRUCTOR" || s.id === user.id)
+    .map((s) => ({ id: s.id, name: s.name }));
+  if (!allStaffOptions.some((s) => s.id === user.id) && user.role === "INSTRUCTOR") {
+    allStaffOptions.push({ id: user.id, name: user.name });
+  }
   const visible = appointments.filter((a) => !HIDDEN.includes(a.status));
   const showStaffColour = visibleStaff.length > 1;
 

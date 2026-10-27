@@ -23,7 +23,9 @@ export type AppointmentErrorCode =
   /** Inside the minimum notice, outside the shift, or simply not offered. */
   | "UNAVAILABLE"
   /** Someone else took it between showing and booking. */
-  | "SLOT_TAKEN";
+  | "SLOT_TAKEN"
+  /** Staff only: the time falls on a block (vacation, closure). Can be forced. */
+  | "BLOCKED_TIME";
 
 export type BookAppointmentResult =
   | {
@@ -58,11 +60,57 @@ export function isOverlapError(error: unknown) {
 }
 
 /** Holds that ran out but the sweep has not reached yet still occupy the constraint. */
-async function releaseStaleHolds(client: Pick<typeof db, "appointment">, staffId: string, now: Date) {
-  await client.appointment.updateMany({
+async function releaseStaleHolds(client: Pick<typeof db, "appointment" | "payment">, staffId: string, now: Date) {
+  const stale = await client.appointment.findMany({
     where: { staffId, status: "PENDING_PAYMENT", holdExpiresAt: { lte: now } },
+    select: { id: true },
+  });
+  if (!stale.length) return;
+  await client.appointment.updateMany({
+    where: { id: { in: stale.map((a) => a.id) }, status: "PENDING_PAYMENT" },
     data: { status: "EXPIRED", depositStatus: "NONE" },
   });
+  await voidAnnouncedTransfers(client, stale.map((a) => a.id), "Turno vencido");
+}
+
+/**
+ * A transfer the client said she would make, for an appointment that is no
+ * longer happening, must not sit in Pagos waiting to be approved: approving
+ * it would book income for a slot that was given away.
+ */
+export async function voidAnnouncedTransfers(
+  client: Pick<typeof db, "payment">,
+  appointmentIds: string[],
+  reason: string,
+) {
+  if (!appointmentIds.length) return;
+  await client.payment.updateMany({
+    where: { appointmentId: { in: appointmentIds }, status: "PENDING", method: { not: "MERCADO_PAGO" } },
+    data: { status: "REJECTED", rejectedReason: reason },
+  });
+}
+
+/**
+ * Whether a professional is blocked — her own time off, or the whole
+ * business closed — at any point of [start, end).
+ */
+async function onTimeOff(
+  client: Pick<typeof db, "timeOff">,
+  studioId: string,
+  staffId: string,
+  start: Date,
+  end: Date,
+) {
+  const block = await client.timeOff.findFirst({
+    where: {
+      studioId,
+      OR: [{ staffId }, { staffId: null }],
+      startsAt: { lt: end },
+      endsAt: { gt: start },
+    },
+    select: { id: true },
+  });
+  return Boolean(block);
 }
 
 /**
@@ -88,6 +136,8 @@ export async function bookAppointment(opts: {
   /** Ask for the service's deposit. Online bookings always do; staff choose. */
   collectDeposit: boolean;
   clientNotes?: string | null;
+  /** Staff only: book even on a block (time off, closure). */
+  allowBlocked?: boolean;
   now?: Date;
 }): Promise<BookAppointmentResult> {
   const now = opts.now ?? new Date();
@@ -151,6 +201,10 @@ export async function bookAppointment(opts: {
       await releaseStaleHolds(tx, staffId, now);
 
       const endsAt = new Date(opts.startsAt.getTime() + pro.durationMin * MINUTE);
+      // Online booking never offers a blocked time; staff are told, and may insist.
+      if (!online && !opts.allowBlocked && (await onTimeOff(tx, studio.id, staffId, opts.startsAt, endsAt))) {
+        return { ok: false, code: "BLOCKED_TIME" } as const;
+      }
       const depositCents = opts.collectDeposit
         ? depositFor(offer.service.depositType, offer.service.depositValue, pro.priceCents)
         : 0;
@@ -207,7 +261,13 @@ export type CancelAppointmentResult =
 export async function cancelAppointment(opts: {
   studio: AppointmentStudio;
   appointmentId: string;
+  /**
+   * Who called it off. Staff recording a client's own cancellation (she
+   * wrote on WhatsApp) pass "client", so a late one keeps the deposit.
+   */
   by: "client" | "staff";
+  /** The client's cancellation, entered by staff: no "already started" check. */
+  recordedByStaff?: boolean;
   reason?: string | null;
   now?: Date;
 }): Promise<CancelAppointmentResult> {
@@ -219,7 +279,7 @@ export async function cancelAppointment(opts: {
   if (appt.status !== "CONFIRMED" && appt.status !== "PENDING_PAYMENT") {
     return { ok: false, code: "ALREADY_CANCELLED" };
   }
-  if (appt.startsAt <= now && opts.by === "client") return { ok: false, code: "IN_PAST" };
+  if (appt.startsAt <= now && opts.by === "client" && !opts.recordedByStaff) return { ok: false, code: "IN_PAST" };
 
   const cutoff = appt.startsAt.getTime() - opts.studio.cancellationCutoffHours * 60 * MINUTE;
   const late = opts.by === "client" && now.getTime() > cutoff;
@@ -241,6 +301,7 @@ export async function cancelAppointment(opts: {
       holdExpiresAt: null,
     },
   });
+  await voidAnnouncedTransfers(db, [appt.id], "Turno cancelado");
 
   return { ok: true, late, depositStatus };
 }
@@ -260,6 +321,8 @@ export async function rescheduleAppointment(opts: {
   startsAt: Date;
   staffId?: string;
   by: "client" | "staff";
+  /** Staff only: move even onto a block. */
+  allowBlocked?: boolean;
   now?: Date;
 }): Promise<RescheduleResult> {
   const now = opts.now ?? new Date();
@@ -294,6 +357,13 @@ export async function rescheduleAppointment(opts: {
 
   // Same length, same cleanup: only the position on the calendar changes.
   const shift = opts.startsAt.getTime() - appt.startsAt.getTime();
+  if (
+    !client &&
+    !opts.allowBlocked &&
+    (await onTimeOff(db, opts.studio.id, staffId, opts.startsAt, new Date(appt.endsAt.getTime() + shift)))
+  ) {
+    return { ok: false, code: "BLOCKED_TIME" };
+  }
   try {
     await releaseStaleHolds(db, staffId, now);
     await db.appointment.update({
@@ -321,12 +391,16 @@ export async function markAppointment(opts: {
   studio: AppointmentStudio;
   appointmentId: string;
   outcome: "COMPLETED" | "NO_SHOW";
+  now?: Date;
 }) {
   const appt = await db.appointment.findFirst({
     where: { id: opts.appointmentId, studioId: opts.studio.id },
     include: { client: true },
   });
   if (!appt) return { ok: false as const, code: "NOT_FOUND" as const };
+  // Only what has started, and has not been called off, can be closed.
+  const closable = ["CONFIRMED", "PENDING_PAYMENT", "COMPLETED", "NO_SHOW"].includes(appt.status);
+  if (!closable || appt.startsAt > (opts.now ?? new Date())) return { ok: false as const, code: "NOT_FOUND" as const };
 
   const wasNoShow = appt.status === "NO_SHOW";
   const isNoShow = opts.outcome === "NO_SHOW";
@@ -338,16 +412,24 @@ export async function markAppointment(opts: {
       where: { id: appt.id },
       data: {
         status: opts.outcome,
-        depositStatus: isNoShow && appt.depositStatus === "PAID" ? "FORFEITED" : appt.depositStatus,
+        // A no-show keeps the deposit; correcting it back gives it back.
+        depositStatus:
+          isNoShow && appt.depositStatus === "PAID"
+            ? "FORFEITED"
+            : wasNoShow && !isNoShow && appt.depositStatus === "FORFEITED"
+              ? "PAID"
+              : appt.depositStatus,
       },
     }),
     db.studentProfile.update({
       where: { id: appt.clientId },
       data: {
         noShowCount: count,
-        bookingBlocked:
-          opts.studio.noShowLimit > 0 && count >= opts.studio.noShowLimit ? true : appt.client.bookingBlocked,
-        ...(opts.outcome === "COMPLETED" ? { lastVisitAt: appt.startsAt } : {}),
+        // Recomputed both ways, so undoing a mistaken no-show unblocks her.
+        bookingBlocked: opts.studio.noShowLimit > 0 && count >= opts.studio.noShowLimit,
+        ...(opts.outcome === "COMPLETED" && (!appt.client.lastVisitAt || appt.client.lastVisitAt < appt.startsAt)
+          ? { lastVisitAt: appt.startsAt }
+          : {}),
       },
     }),
   ]);

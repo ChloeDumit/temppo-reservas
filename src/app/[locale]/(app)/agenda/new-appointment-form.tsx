@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { errorKey } from "./appointment-sheet";
 import { useSheetClose } from "@/components/app/sheet-form";
 import { createStaffAppointmentAction, type AgendaState } from "./actions";
 
@@ -154,11 +155,16 @@ export function NewAppointmentForm({
       </Field>
 
       {state?.error && (
-        <p className="text-sm text-critical">
-          {state.error === "SLOT_TAKEN" ? t("errOverlap") : state.error === "client" ? t("errClient") : t("errGeneric")}
-        </p>
+        <p className="text-sm text-critical">{state.error === "client" ? t("errClient") : t(errorKey(state.error))}</p>
       )}
-      <SubmitButton>{t("book")}</SubmitButton>
+      <div className="flex flex-wrap gap-2">
+        <SubmitButton>{t("book")}</SubmitButton>
+        {state?.error === "BLOCKED_TIME" && (
+          <SubmitButton variant="secondary" name="force" value="1">
+            {t("bookAnyway")}
+          </SubmitButton>
+        )}
+      </div>
     </form>
   );
 }

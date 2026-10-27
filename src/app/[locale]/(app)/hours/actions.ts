@@ -7,7 +7,7 @@ import { assertAdmin, assertStaff, ADMIN_ROLES } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { wallTimeToUtc } from "@/lib/dates";
 
-export type ActionState = { error?: string; ok?: boolean } | null;
+export type ActionState = { error?: string; ok?: boolean; clashes?: number } | null;
 
 const PAGE = "/[locale]/(app)/hours";
 
@@ -108,9 +108,22 @@ export async function createTimeOffAction(_prev: ActionState, formData: FormData
     data: { studioId: user.studioId, staffId, startsAt, endsAt, reason: v.reason || null },
   });
 
+  // Appointments already inside the block stay booked: say so, so nobody
+  // turns up to a closed door.
+  const clashes = await db.appointment.count({
+    where: {
+      studioId: user.studioId,
+      ...(staffId ? { staffId } : {}),
+      status: { in: ["CONFIRMED", "PENDING_PAYMENT"] },
+      startsAt: { lt: endsAt },
+      endsAt: { gt: startsAt },
+    },
+  });
+
   revalidatePath(PAGE, "page");
   revalidatePath("/[locale]/(app)/agenda", "page");
-  return { ok: true };
+  revalidatePath("/[locale]/(app)/dashboard", "page");
+  return { ok: true, clashes };
 }
 
 export async function deleteTimeOffAction(formData: FormData) {

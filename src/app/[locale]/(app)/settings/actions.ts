@@ -208,6 +208,32 @@ export async function inviteMemberAction(
     },
   });
 
+  /*
+    A professional at an appointment business is bookable only with hours and
+    the services she does. Starting her with the inviter's week and every
+    service that names who does it means she shows up in the agenda and on
+    the booking page from day one; both are adjusted afterwards in Horarios
+    and Servicios.
+  */
+  if (user.studio.vertical === "APPOINTMENTS" && parsed.data.role === "INSTRUCTOR") {
+    const week = await db.workingHours.findMany({ where: { studioId: user.studioId, staffId: user.id } });
+    if (week.length) {
+      await db.workingHours.createMany({
+        data: week.map((h) => ({ studioId: user.studioId, staffId: created.id, weekday: h.weekday, startMin: h.startMin, endMin: h.endMin })),
+      });
+    }
+    const assigned = await db.service.findMany({
+      where: { studioId: user.studioId, isActive: true, staff: { some: {} } },
+      select: { id: true },
+    });
+    if (assigned.length) {
+      await db.serviceStaff.createMany({
+        data: assigned.map((svc) => ({ serviceId: svc.id, staffId: created.id })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
   const token = generateToken();
   await db.verificationToken.create({
     data: {

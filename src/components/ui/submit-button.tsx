@@ -10,8 +10,13 @@ export function SubmitButton({
   variant = "primary",
   size = "md",
   className,
+  name,
+  value,
 }: {
   children: React.ReactNode;
+  /** Sent with the form when this button submits it — a second action on the same form. */
+  name?: string;
+  value?: string;
   pendingLabel?: string;
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md";
@@ -20,7 +25,7 @@ export function SubmitButton({
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant={variant} size={size} className={className} disabled={pending}>
+    <Button type="submit" variant={variant} size={size} className={className} disabled={pending} name={name} value={value}>
       {/*
         A spinner alongside the label, not instead of it. Swapping the text
         alone left the button looking merely disabled, which reads as broken

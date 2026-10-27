@@ -58,8 +58,7 @@ async function load(appointmentId: string) {
  * A new booking: the client gets her link to change or cancel (the only time
  * the raw token exists), the studio hears about it, and so does the
  * professional if she is not the one running the place.
- */
-/**
+ *
  * `contactEmail`: the address typed on this booking, which may not be the
  * one on her file — a public booking never writes it there (see
  * findOrCreateClient), but its confirmation still goes to whoever made it.
@@ -209,6 +208,38 @@ export async function notifyStaffBookedForYou(appointmentId: string, byUserId: s
     body: en
       ? `${appt.serviceName}, ${whenText(appt.startsAt, studio)}.`
       : `${appt.serviceName}, ${whenText(appt.startsAt, studio)}.`,
+    relatedType: "Appointment",
+    relatedId: appt.id,
+  });
+}
+
+/**
+ * The business moved or called off her appointment: she hears it from us,
+ * not by turning up. Email when we have one; staff also get a WhatsApp
+ * button in the agenda for everyone else.
+ */
+export async function notifyClientChanged(appointmentId: string, kind: "moved" | "cancelled") {
+  const appt = await load(appointmentId);
+  if (!appt?.client.user.email) return;
+  const { studio } = appt;
+  const client = appt.client.user;
+  const when = whenText(appt.startsAt, studio);
+  const en = studio.locale === "en";
+  const first = client.name.split(" ")[0];
+  const body =
+    kind === "moved"
+      ? en
+        ? `Hi ${first}, your ${appt.serviceName} at ${studio.name} was moved to ${when}, with ${appt.staff.name}. If that doesn't suit you, just reply or message us.`
+        : `Hola ${first}, tu turno de ${appt.serviceName} en ${studio.name} pasó al ${when}, con ${appt.staff.name}. Si no te queda bien, respondé este mail o escribinos.`
+      : en
+        ? `Hi ${first}, your ${appt.serviceName} at ${studio.name} on ${when} was cancelled. Message us and we'll find you another time.`
+        : `Hola ${first}, se canceló tu turno de ${appt.serviceName} en ${studio.name} del ${when}. Escribinos y te buscamos otro horario.`;
+  await notify({
+    studioId: studio.id,
+    to: client.email,
+    template: kind === "moved" ? "appointment_moved" : "appointment_cancelled_by_studio",
+    subject: `${studio.name} — ${appt.serviceName}`,
+    body,
     relatedType: "Appointment",
     relatedId: appt.id,
   });
