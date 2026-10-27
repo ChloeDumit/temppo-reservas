@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { assertAdmin, assertStaff, ADMIN_ROLES } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { wallTimeToUtc } from "@/lib/dates";
+import { disconnectMercadoPago } from "@/lib/payments/mercadopago-oauth";
 
 export type ActionState = { error?: string; ok?: boolean } | null;
 
@@ -158,4 +159,19 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
 
   revalidatePath(PAGE, "page");
   return { ok: true };
+}
+
+/** Unlinks the studio's Mercado Pago: online deposits go back to the platform's account. */
+export async function disconnectMercadoPagoAction() {
+  const user = await assertAdmin();
+  await disconnectMercadoPago(user.studioId);
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "studio.mercadopago_disconnected",
+    entityType: "Studio",
+    entityId: user.studioId,
+  });
+  revalidatePath(PAGE, "page");
 }

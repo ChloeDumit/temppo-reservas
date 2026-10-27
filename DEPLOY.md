@@ -80,6 +80,21 @@ other — intended, since an account belongs to one studio and one brand.
   *Pagos*) and put its signing secret in `MERCADOPAGO_WEBHOOK_SECRET`.
   Webhooks cannot reach localhost — tunnel with
   `npx untun@latest tunnel http://localhost:3000` to test first.
+- **Each studio's own Mercado Pago.** Studios connect their account from
+  *Horarios → Mercado Pago*, and online deposits then land with them directly
+  instead of in the platform's account. Until a studio connects, deposits keep
+  going through `MERCADOPAGO_ACCESS_TOKEN` and the *Señas* payouts.
+  1. In Mercado Pago → *Tus integraciones* → the application → *Editar*, add
+     the redirect URL `https://reservas.temppo.uy/api/mercadopago/callback`
+     (exactly, it must match `{APP_URL}/api/mercadopago/callback`).
+  2. Copy *Client ID* and *Client Secret* from its production credentials
+     into `MERCADOPAGO_CLIENT_ID` and `MERCADOPAGO_CLIENT_SECRET`. The card in
+     Horarios only appears once both are set.
+  3. Set `SECRETS_KEY` (`openssl rand -base64 32`) before the first studio
+     connects, and never change it: it encrypts their tokens.
+  4. Optional: `MERCADOPAGO_MARKETPLACE_FEE_PERCENT` takes a cut of each
+     deposit into the platform's account. Unset means none.
+  Tokens last 180 days and the 15-minute cron renews them in their last month.
 - **Automatic WhatsApp (Temppo Beauty).** Every studio sends from one
   platform number through Meta's Cloud API; each message costs about US$0.011
   to Uruguay and counts against the studio's monthly quota.

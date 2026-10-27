@@ -12,6 +12,7 @@ import { notifyPreferred } from "@/lib/notifications";
 import { parsePaymentRef } from "@/lib/payments/reference";
 import { settleDeposit } from "@/lib/appointments/payments";
 import { afterDepositSettled } from "@/lib/appointments/notify";
+import { studioAccessToken } from "@/lib/payments/mercadopago-oauth";
 
 export const dynamic = "force-dynamic";
 
@@ -76,8 +77,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
+  /*
+    A deposit charged into a studio's own Mercado Pago comes back tagged with
+    the studio, and is read with that account's token — the platform's
+    cannot see it. The signature above is still required: the token belongs
+    to our application, which signs its notifications.
+  */
+  const studioId = request.nextUrl.searchParams.get("studio");
+  const studioToken = studioId ? await studioAccessToken(studioId) : null;
+  if (studioId && !studioToken) return NextResponse.json({ ok: true });
+
   const provider = paymentProvider();
-  const resolved = await provider.resolveWebhook(payload).catch((error) => {
+  const resolved = await provider.resolveWebhook(payload, studioToken ?? undefined).catch((error) => {
     console.error("[payments/webhook] resolve failed", error);
     return null;
   });
@@ -85,9 +96,15 @@ export async function POST(request: NextRequest) {
   // Always 200 on anything we can't act on, so the provider stops retrying.
   const ref = parsePaymentRef(resolved?.externalReference);
   if (!resolved || !ref) return NextResponse.json({ ok: true });
+  // A studio's own account only ever carries its own deposits.
+  if (studioId && ref.kind !== "appt") return NextResponse.json({ ok: true });
 
   // A deposit for an appointment rather than a pack.
   if (ref.kind === "appt") {
+    if (studioId) {
+      const appt = await db.appointment.findUnique({ where: { id: ref.id }, select: { studioId: true } });
+      if (appt?.studioId !== studioId) return NextResponse.json({ ok: true });
+    }
     const outcome = await settleDeposit({
       appointmentId: ref.id,
       providerPaymentId: resolved.providerPaymentId,

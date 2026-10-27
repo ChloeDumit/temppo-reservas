@@ -890,7 +890,16 @@
     "acceptTransfer": "Transferencia",
     "acceptTransferHint": "La clienta te manda el comprobante por WhatsApp y vos la confirmás.",
     "acceptTransferNeedsWhatsapp": "Cargá tu WhatsApp en Ajustes para poder usarla.",
-    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña."
+    "noMethodsHint": "Si apagás las dos, las reservas entran confirmadas sin seña.",
+    "mpTitle": "Mercado Pago",
+    "mpPitch": "Conectá tu cuenta y las señas que paguen tus clientas con Mercado Pago te llegan directo, al momento.",
+    "mpConnect": "Conectar Mercado Pago",
+    "mpFallback": "Mientras no la conectes, las señas online las cobramos nosotros y te las transferimos.",
+    "mpConnected": "Conectada",
+    "mpConnectedHint": "Las señas online entran directo a esta cuenta. Las devoluciones las hacés desde tu Mercado Pago.",
+    "mpConnectedNow": "¡Listo! Tu Mercado Pago quedó conectado.",
+    "mpError": "No pudimos conectar tu cuenta. Probá de nuevo en un rato.",
+    "mpDisconnect": "Desconectar"
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",

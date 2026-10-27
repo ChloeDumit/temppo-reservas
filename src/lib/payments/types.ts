@@ -15,6 +15,13 @@ export type CheckoutRequest = {
   successUrl: string;
   failureUrl: string;
   notificationUrl: string;
+  /**
+   * Charge into this account instead of the platform's — a studio's own
+   * Mercado Pago, connected through OAuth.
+   */
+  accessToken?: string;
+  /** The platform's cut of a payment charged into a studio's account. */
+  marketplaceFeeCents?: number;
 };
 
 export type CheckoutSession = {
@@ -37,6 +44,9 @@ export interface PaymentProvider {
   readonly name: string;
   isConfigured(): boolean;
   createCheckout(request: CheckoutRequest): Promise<CheckoutSession>;
-  /** Reads a webhook body and fetches the authoritative payment state. */
-  resolveWebhook(payload: unknown): Promise<ProviderPayment | null>;
+  /**
+   * Reads a webhook body and fetches the authoritative payment state, with
+   * the account it was charged into when that is not the platform's.
+   */
+  resolveWebhook(payload: unknown, accessToken?: string): Promise<ProviderPayment | null>;
 }
