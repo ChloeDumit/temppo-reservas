@@ -51,7 +51,7 @@ async function main() {
   check(
     "rendered as she reads it",
     renderWhatsAppTemplate("appointment_reminder", "es", ["Ana", "Uñas", "Lu", "jueves, 15:00"]),
-    "Hola Ana, te recordamos tu turno de Uñas en Lu: jueves, 15:00. ¡Te esperamos!",
+    "Hola Ana 👋 Te recordamos tu turno de Uñas en Lu:\n\n📅 jueves, 15:00\n\n¡Te esperamos! ✨",
   );
 
   const { notifyBooked, afterDepositSettled, notifyClientChanged } = await import("../src/lib/appointments/notify");
