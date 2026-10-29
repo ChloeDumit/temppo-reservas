@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Historias noviembre</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Jost:wght@400;500;600&family=Fredoka:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fbf7f8; --blush: #f4e6ea; --rose: #b5536f; --rose-deep: #973f59; --plum: #3b1622;
+    --ink: #1c1917; --ink-soft: #57534e; --muted: #8a827a; --line: #ecdfe3;
+    --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+    --serif: "Cormorant Garamond", Georgia, serif, var(--emoji); --sans: "Jost", system-ui, sans-serif, var(--emoji);
+    --wa-bg: #efeae2; --wa-link: #027eb5; --wa-green: #25d366; --wa-time: #667781;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ccc; font-family: var(--sans); color: var(--ink); font-feature-settings: "lnum" 1; }
+  #board { display: flex; flex-wrap: wrap; gap: 30px; padding: 30px; }
+
+  /* Instagram covers roughly the top and bottom 250px with its own chrome:
+     everything that matters stays between them. */
+  .story { width: 1080px; height: 1920px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 300px 96px 300px; background: var(--paper); }
+  .story.dark { background: var(--rose); color: #fff; }
+  .story.blush { background: var(--blush); }
+  .step { font-size: 30px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rose); }
+  .dark .step { color: #f6d3dd; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 118px; line-height: .98; letter-spacing: -.02em; margin-top: 30px; }
+  h1 em { font-style: italic; font-weight: 500; color: var(--rose); }
+  .dark h1 em { color: #f6d3dd; }
+  .emo { font-family: var(--emoji); font-style: normal; font-size: .8em; }
+  p.lead { font-size: 40px; line-height: 1.45; color: var(--ink-soft); margin-top: 40px; }
+  .dark p.lead { color: #fbe4ea; }
+  .brand { position: absolute; left: 96px; bottom: 300px; display: flex; align-items: center; gap: 16px; }
+  .brand img { width: 84px; height: 84px; }
+  .brand b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 50px; color: var(--rose); }
+  .brand small { font-size: 30px; color: var(--muted); }
+  .dark .brand b, .dark .brand small { color: #fff; }
+  .dark .brand img { background: #fff; border-radius: 50%; padding: 6px; }
+  .mascot-big { width: 520px; height: 520px; align-self: center; margin-top: 60px; filter: drop-shadow(0 30px 60px rgba(40,10,20,.25)); }
+  .cta { align-self: flex-start; margin-top: 50px; background: #fff; color: var(--rose-deep); border-radius: 999px; padding: 26px 46px; font-size: 38px; font-weight: 600; }
+
+  /* WhatsApp chat */
+  .phone { margin-top: 50px; height: 1080px; border-radius: 56px; overflow: hidden; display: flex; flex-direction: column;
+    border: 14px solid #fff; box-shadow: 0 40px 90px rgba(87, 30, 50, .18); background: var(--wa-bg); }
+  .wa-head { background: #f7f7f7; border-bottom: 1px solid #e2ddd6; display: flex; align-items: center; gap: 22px; padding: 30px 34px; }
+  .wa-head .back { width: 30px; height: 30px; }
+  .wa-head .av { width: 92px; height: 92px; border-radius: 50%; background: var(--blush); display: grid; place-items: center; overflow: hidden; }
+  .wa-head .av img { width: 80px; height: 80px; }
+  .wa-head .name { font-size: 40px; font-weight: 600; color: #111b21; display: flex; align-items: center; gap: 12px; }
+  .wa-body { flex: 1; padding: 50px 34px; position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+    background-color: var(--wa-bg);
+    background-image: radial-gradient(rgba(140,120,100,.10) 2.5px, transparent 3px), radial-gradient(rgba(140,120,100,.07) 2px, transparent 2.5px);
+    background-size: 64px 64px, 64px 64px; background-position: 0 0, 32px 32px; }
+  .bubble { position: relative; background: #fff; border-radius: 0 28px 28px 28px; padding: 28px 32px 22px; max-width: 840px;
+    box-shadow: 0 2px 2px rgba(11, 20, 26, .10); font-size: 38px; line-height: 1.42; color: #111b21; white-space: pre-line; }
+  .bubble::before { content: ""; position: absolute; left: -18px; top: 0; border-top: 0 solid transparent; border-right: 20px solid #fff; border-bottom: 22px solid transparent; }
+  .bubble a { color: var(--wa-link); text-decoration: none; }
+  .bubble .time { display: block; text-align: right; font-size: 26px; color: var(--wa-time); margin-top: 6px; white-space: normal; }
+
+  /* Sticker areas */
+  .q { font-family: var(--serif); font-size: 104px; line-height: 1.02; font-weight: 600; letter-spacing: -.01em; margin-top: 30px; }
+  .q em { font-style: italic; font-weight: 500; color: var(--rose); }
+  .slot { width: 700px; height: 260px; align-self: center; margin-top: 90px; border: 4px dashed #d9b3bf; border-radius: 40px;
+    background: rgba(255,255,255,.55); display: grid; place-items: center; }
+  .slot span { font-size: 26px; color: var(--muted); letter-spacing: .04em; }
+  .side-mascot { width: 360px; height: 360px; align-self: flex-end; margin-top: auto; margin-bottom: 40px; filter: drop-shadow(0 24px 50px rgba(40,10,20,.18)); }
+</style>
+</head>
+<body>
+<div id="board"></div>
+<script>
+  const M = "../../mascot/mascota-b-calendario.svg";
+  const brand = '<div class="brand"><img src="' + M + '" alt=""><span><b>temppo</b> <small>Beauty</small></span></div>';
+  const verified = '<svg width="38" height="38" viewBox="0 0 24 24"><path fill="#25d366" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path d="M7.8 12.3l2.8 2.8 5.6-5.8" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const back = '<svg class="back" viewBox="0 0 24 24" fill="none" stroke="#027eb5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l-8 8 8 8"/></svg>';
+  const chat = (text, time) => `
+    <div class="phone">
+      <div class="wa-head">${back}<div class="av"><img src="${M}" alt=""></div><div class="name">Temppo ${verified}</div></div>
+      <div class="wa-body"><div class="bubble">${text}<span class="time">${time}</span></div></div>
+    </div>`;
+  const slot = (label) => `<div class="slot"><span>${label}</span></div>`;
+
+  const stories = [
+    // ------------------------------------------- Destacada "WhatsApp"
+    { id: "historia-whatsapp-1", cls: "dark", html: `
+      <p class="step">WhatsApp automático</p>
+      <h1>Ahora tus clientas reciben todo <em>por WhatsApp</em> <span class="emo">📲</span></h1>
+      <img class="mascot-big" src="${M}" alt="">` },
+    { id: "historia-whatsapp-2", html: `
+      <p class="step">Al reservar</p>
+      ${chat("¡Hola Sofía! ✨ Tu turno de Semipermanente en Uñas de Lu quedó reservado.\n\n📅 jueves, 12 de noviembre, 15:30\n\nSi necesitás cambiarlo o cancelarlo, entrá a <a>beauty.temppo.uy/m/…</a> cuando quieras.", "23:48")}` },
+    { id: "historia-whatsapp-3", html: `
+      <p class="step">El día antes</p>
+      ${chat("Hola Sofía 👋 Te recordamos tu turno de Semipermanente en Uñas de Lu:\n\n📅 jueves, 12 de noviembre, 15:30\n\n¡Te esperamos! ✨", "10:00")}` },
+    { id: "historia-whatsapp-4", cls: "dark", html: `
+      <p class="step">WhatsApp automático</p>
+      <h1>Incluido en tu <em>mes gratis</em>.</h1>
+      <span class="cta">beauty.temppo.uy</span>
+      <p class="lead">Link en la bio 👆</p>
+      <img class="mascot-big" src="${M}" alt="" style="width:460px;height:460px">` },
+
+    // ------------------------------------------------- Sueltas
+    { id: "historia-encuesta", cls: "blush", html: `
+      <p class="step">Encuesta</p>
+      <p class="q">¿Cuántas veces por día te preguntan <em>“¿tenés lugar?”</em></p>
+      ${slot("Poné acá la encuesta")}
+      <img class="side-mascot" src="${M}" alt="">` },
+    { id: "historia-pregunta", html: `
+      <p class="step">Pregunta</p>
+      <p class="q">¿Qué es lo que más te cuesta de <em>dar turnos</em>?</p>
+      ${slot("Poné acá el sticker de preguntas")}
+      <img class="side-mascot" src="${M}" alt="">` },
+    { id: "historia-novedades", cls: "blush", html: `
+      <p class="step">Detrás de escena</p>
+      <p class="q" style="font-size:96px">Estamos sumando nuevas funciones. <em>¿Qué te gustaría que haga tu agenda?</em></p>
+      ${slot("Poné acá el sticker de preguntas")}
+      <img class="side-mascot" src="${M}" alt="" style="width:300px;height:300px">` },
+  ];
+
+  const board = document.getElementById("board");
+  for (const s of stories) {
+    const el = document.createElement("section");
+    el.className = "story " + (s.cls ?? "");
+    el.id = s.id;
+    el.innerHTML = s.html + brand;
+    board.appendChild(el);
+  }
+  window.STORY_IDS = stories.map((s) => s.id);
+</script>
+</body>
+</html>
