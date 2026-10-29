@@ -2,13 +2,13 @@
  * Two finished reels about what the app does on its own, built from the
  * recordings record.mjs made (marketing/video/raw) plus drawn screens.
  *
- *   node marketing/video/compose-reels.mjs [whatsapp|mientras-dormis]
+ *   node marketing/video/compose-reels.mjs [whatsapp|mientras-dormis|tenes-lugar|un-dia|sena]
  *   RAW=/path/to/raw node marketing/video/compose-reels.mjs
  *
  * Output: marketing/video/out/temppo-beauty-<name>.mp4, 1080×1920 at 30 fps.
  */
 import path from "node:path";
-import { HERE, MSG, OUT, WHEN, pages, probe, createStudio } from "./lib.mjs";
+import { HERE, MSG, NIGHT_CHATS, OUT, WHEN, pages, probe, createStudio } from "./lib.mjs";
 
 const { work: WORK, png, screenPng, still, recording, join, onPhone, close } = await createStudio(path.join(HERE, "work", "reels"));
 const only = process.argv[2];
@@ -73,6 +73,90 @@ if (!only || only === "mientras-dormis") {
   const out = path.join(OUT, "temppo-beauty-mientras-dormis.mp4");
   join([intro, phone, outro], out, 0.45);
   console.log(`${path.basename(out)}  ${probe(out).toFixed(1)} s`);
+}
+
+/** Drawn screens shown one after another, as one screen clip. */
+async function sequence(name, steps) {
+  const clips = [];
+  for (const [i, st] of steps.entries()) {
+    const img = await screenPng(st.html, `${name}-${i}`);
+    const clip = path.join(WORK, `${name}-${i}.mp4`);
+    still(img, st.s, clip);
+    clips.push(clip);
+  }
+  if (clips.length === 1) return clips[0];
+  const out = path.join(WORK, `${name}-screen.mp4`);
+  join(clips, out, 0.25);
+  return out;
+}
+
+/** A reel from screen clips, each with its caption, closed by the call to action. */
+async function scripted(name, kicker, parts, outroTitle) {
+  const screen = path.join(WORK, `${name}-screen.mp4`);
+  const starts = join(parts.map((p) => p.clip), screen, 0.3);
+  const phone = await onPhone(name, screen, kicker, parts.map((p, i) => ({ t: starts[i], text: p.text })));
+  const outro = path.join(WORK, `${name}-outro.mp4`);
+  still(await png(pages.outro(outroTitle), path.join(WORK, `${name}-outro.png`), { transparent: false }), 3.4, outro);
+  const out = path.join(OUT, `temppo-beauty-${name}.mp4`);
+  join([phone, outro], out, 0.45);
+  console.log(`${path.basename(out)}  ${probe(out).toFixed(1)} s`);
+}
+
+const LOCK_MORNING = [
+  { ago: "23:47", title: "Nueva reserva — Semipermanente", body: `Carolina reservó Semipermanente con Lucía: ${WHEN}. Seña: 450 UYU.` },
+  { ago: "22:15", title: "Nueva reserva — Kapping", body: "Martina reservó Kapping con Lucía: martes, 27 de octubre, 15:30." },
+];
+
+/* ----------------------------------------- guion 1: ¿tenés lugar? (no intro: the hook is the chats) */
+if (!only || only === "tenes-lugar") {
+  const chats = await sequence(
+    "tl-chats",
+    NIGHT_CHATS.map((_, i, all) => ({ html: pages.chatList(all.slice(all.length - 1 - i)), s: i === all.length - 1 ? 2.2 : 0.6 })),
+  );
+  const booking = recording("reserva", 6.2, 14.6, 1.5, path.join(WORK, "tl-booking.mp4"));
+  const wa = await sequence("tl-wa", [
+    { html: pages.whatsapp([{ day: "Hoy" }, MSG.held]), s: 2.2 },
+    { html: pages.whatsapp([{ day: "Hoy" }, MSG.held, MSG.confirmed, { day: "Domingo" }, MSG.reminder]), s: 3.2 },
+  ]);
+  const lock = await sequence("tl-lock", [{ html: pages.lockscreen(LOCK_MORNING), s: 3 }]);
+  await scripted("tenes-lugar", "¿Te pasa?", [
+    { clip: chats, text: "23:47 y siguen llegando “¿tenés lugar?”" },
+    { clip: booking, text: "Ahora tienen mi link y reservan solas" },
+    { clip: wa, text: "Y les llega todo por WhatsApp" },
+    { clip: lock, text: "Yo me entero cuando ya está todo hecho" },
+  ], "Dejá de responder <em>“¿tenés lugar?”</em>");
+}
+
+/* ------------------------------------------------------ guion 2: un día con mi agenda */
+if (!only || only === "un-dia") {
+  await scripted("un-dia", "Un día con mi agenda", [
+    { clip: recording("agenda", 0.3, 6.5, 1.15, path.join(WORK, "ud-inicio.mp4")), text: "8:30 · abro la agenda" },
+    { clip: recording("agenda", 8.2, 12.0, 1.0, path.join(WORK, "ud-dia.mp4")), text: "Ya sé quién viene hoy" },
+    { clip: await sequence("ud-lock", [{ html: pages.lockscreen(LOCK_MORNING), s: 3 }]), text: "Entraron reservas. Con seña." },
+    { clip: recording("agenda", 16.1, 18.4, 0.9, path.join(WORK, "ud-mes.mp4")), text: "Y el mes se va llenando solo" },
+  ], "Tu agenda, <em>abierta las 24 horas</em>");
+}
+
+/* ------------------------------------------------------ guion 3: no me pagaron la seña */
+if (!only || only === "sena") {
+  const expired = await sequence("se-wa", [
+    { html: pages.whatsapp([{ day: "Hoy" }, MSG.held]), s: 1.4 },
+    { html: pages.whatsapp([{ day: "Hoy" }, MSG.held, MSG.expired]), s: 3.4 },
+  ]);
+  const taken = await sequence("se-lock", [
+    {
+      html: pages.lockscreen([
+        { ago: "00:20", title: "Nueva reserva — Semipermanente", body: `Martina reservó Semipermanente con Lucía: ${WHEN}. Seña: 450 UYU.` },
+      ]),
+      s: 3,
+    },
+  ]);
+  await scripted("sena", "La seña", [
+    { clip: recording("reserva", 19.1, 24.5, 1.0, path.join(WORK, "se-pending.mp4")), text: "Reservó… y no pagó la seña 🙄" },
+    { clip: expired, text: "Si no llega a tiempo, el horario se libera solo" },
+    { clip: taken, text: "…y lo toma otra clienta" },
+    { clip: recording("senas", 5.0, 12.4, 1.2, path.join(WORK, "se-config.mp4")), text: "Vos decidís cuánto se cobra de seña" },
+  ], "Señas <em>sin perseguir a nadie</em>");
 }
 
 await close();
