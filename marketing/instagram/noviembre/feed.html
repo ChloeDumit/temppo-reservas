@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Feed noviembre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&family=Fredoka:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fbf7f8;
+    --blush: #f4e6ea;
+    --rose: #b5536f;
+    --rose-deep: #973f59;
+    --plum: #3b1622;
+    --ink: #1c1917;
+    --ink-soft: #57534e;
+    --muted: #8a827a;
+    --line: #ecdfe3;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --sans: "Jost", system-ui, sans-serif;
+    --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+    --wa-bg: #efeae2;
+    --wa-green: #25d366;
+    --wa-link: #027eb5;
+    --wa-time: #667781;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ddd; font-family: var(--sans); color: var(--ink); font-feature-settings: "lnum" 1; }
+  .board { display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; }
+
+  .post { width: 1080px; height: 1350px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 96px 96px 84px; }
+  .eyebrow { font-size: 26px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
+  .headline { font-family: var(--serif); font-weight: 600; font-size: 112px; line-height: 0.98; letter-spacing: -0.02em; }
+  .headline em { font-style: italic; font-weight: 500; }
+  .body { font-size: 34px; line-height: 1.45; }
+  .footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-size: 26px; position: relative; z-index: 3; }
+  .brand { display: inline-flex; align-items: center; gap: 14px; }
+  .brand b, .corner b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 46px; letter-spacing: -.01em; }
+  .brand small, .corner small { font-family: var(--sans); font-size: 28px; margin-left: 8px; opacity: .8; }
+  .brand img, .corner img { width: 72px; height: 72px; }
+  .pill { border-radius: 999px; padding: 18px 34px; font-weight: 500; font-size: 28px; }
+  .light-bg .brand b { color: var(--rose); }
+  .light-bg .footer { color: var(--muted); }
+  .light-bg .eyebrow { color: var(--rose); }
+  .light-bg .headline em { color: var(--rose); }
+
+  /* carousel indicator */
+  .dots { display: inline-flex; gap: 12px; align-items: center; }
+  .dots i { width: 14px; height: 14px; border-radius: 50%; background: currentColor; opacity: .3; }
+  .dots i.on { opacity: 1; width: 40px; border-radius: 999px; }
+  .light-bg .dots { color: var(--rose); }
+  .swipe { font-size: 28px; font-weight: 500; letter-spacing: .04em; }
+
+  /* dark cover (plum) */
+  .cover { background: var(--plum); color: #fff; }
+  .cover .eyebrow { color: #e7a9bb; }
+  .cover .headline { margin-top: auto; font-size: 118px; position: relative; z-index: 2; }
+  .cover .headline em { color: #e7a9bb; }
+  .cover .footer { margin-top: 64px; color: rgba(255,255,255,.75); }
+  .cover .brand b { color: #f3b8c8; }
+  .cover .swipe { color: #f3b8c8; }
+  .cover .glow { position: absolute; right: -180px; top: -160px; width: 760px; height: 760px; border-radius: 50%; background: radial-gradient(circle, rgba(181,83,111,.55), rgba(181,83,111,0) 68%); }
+  .cover .mascot { position: absolute; right: 70px; top: 170px; width: 380px; height: 380px; transform: rotate(8deg); filter: drop-shadow(0 30px 50px rgba(0,0,0,.35)); }
+
+  /* WhatsApp chat card */
+  .wacard { background: var(--wa-bg); border-radius: 44px; overflow: hidden; box-shadow: 0 30px 80px rgba(87, 30, 50, .14); border: 1px solid rgba(87,30,50,.06); }
+  .wacard .wahead { background: #fff; display: flex; align-items: center; gap: 20px; padding: 26px 34px; border-bottom: 1px solid #e9e3dc; }
+  .wacard .back { width: 22px; height: 36px; flex-shrink: 0; }
+  .wacard .avatar { width: 76px; height: 76px; border-radius: 50%; background: var(--blush); display: grid; place-items: center; flex-shrink: 0; overflow: hidden; }
+  .wacard .avatar img { width: 66px; height: 66px; }
+  .wacard .who b { font-size: 32px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; color: #111b21; }
+  .wacard .who span { display: block; font-size: 22px; color: var(--wa-time); margin-top: 2px; }
+  .wacard .verified { width: 30px; height: 30px; border-radius: 50%; background: var(--wa-green); display: inline-grid; place-items: center; }
+  .wacard .wabody { padding: 40px 34px 48px; position: relative;
+    background-color: var(--wa-bg);
+    background-image:
+      radial-gradient(circle at 30px 34px, rgba(120,100,80,.08) 3px, transparent 3.5px),
+      radial-gradient(circle at 12px 20px, rgba(120,100,80,.06) 5px, transparent 5.5px),
+      radial-gradient(circle at 40px 10px, rgba(120,100,80,.07) 2px, transparent 2.5px);
+    background-size: 92px 92px, 134px 118px, 61px 73px;
+    background-position: 13px 7px, 51px 29px, 3px 41px; }
+  .wacard .day { display: table; margin: 0 auto 28px; background: #fff; color: var(--wa-time); font-size: 20px; padding: 8px 20px; border-radius: 12px; box-shadow: 0 1px 1px rgba(0,0,0,.06); text-transform: uppercase; letter-spacing: .04em; }
+  .wabubble { position: relative; background: #fff; color: #111b21; border-radius: 0 22px 22px 22px; padding: 22px 28px 14px; max-width: 92%; font-family: var(--sans), var(--emoji); font-size: 33px; line-height: 1.42; box-shadow: 0 1px 1.5px rgba(11,20,26,.13); font-feature-settings: "lnum" 1; }
+  .wabubble::before { content: ""; position: absolute; left: -16px; top: 0; border-top: 0 solid transparent; border-right: 16px solid #fff; border-bottom: 20px solid transparent; }
+  .wabubble .e { font-family: var(--emoji); }
+  .wabubble a { color: var(--wa-link); text-decoration: none; }
+  .wabubble time { display: block; text-align: right; font-size: 21px; color: var(--wa-time); margin-top: 4px; }
+  .wabubble.sm { font-size: 27px; padding: 18px 24px 12px; }
+  .wabubble.sm time { font-size: 18px; }
+
+  /* recibe 2–4: same layout */
+  .msg { background: var(--blush); }
+  .msg .wacard { margin-top: 64px; }
+  .msg .wabubble, .rec .wabubble { font-size: 36px; }
+  .msg .wabody { padding: 48px 38px 56px; }
+  .msg .caption { margin-top: 72px; font-family: var(--serif); font-weight: 600; font-size: 80px; line-height: 1.02; letter-spacing: -0.015em; color: var(--ink); }
+
+  /* rose close */
+  .close { background: var(--rose); color: #fff; }
+  .close .corner { color: #fff; display: inline-flex; align-items: center; gap: 16px; }
+  .close .corner img { background: #fff; border-radius: 50%; padding: 6px; width: 80px; height: 80px; }
+  .close .headline { margin-top: 110px; font-size: 120px; }
+  .close .headline em { color: #f6d3dd; }
+  .close .cta { margin-top: 64px; display: flex; flex-direction: column; gap: 26px; align-items: flex-start; }
+  .close .pill.light { background: #fff; color: var(--rose-deep); font-size: 40px; padding: 24px 48px; font-weight: 600; letter-spacing: .01em; }
+  .close .note { font-size: 30px; color: #f6d3dd; padding-left: 8px; }
+  .close .foot { margin-top: auto; max-width: 520px; font-size: 26px; line-height: 1.45; color: #f6d3dd; position: relative; z-index: 3; }
+  .close .footer { margin-top: 36px; color: #f6d3dd; }
+  .close .dots { color: #fff; }
+  .close .peek { position: absolute; right: 40px; bottom: 60px; width: 420px; height: 420px; transform: rotate(-8deg); z-index: 2; filter: drop-shadow(0 20px 40px rgba(40,10,20,.35)); }
+
+  /* single post */
+  .rec { background: var(--blush); }
+  .rec .headline { margin-top: 40px; }
+  .rec .wacard { margin-top: 72px; }
+
+  /* 3 cosas: numbered slides */
+  .thing { background: var(--paper); }
+  .thing .top { display: flex; gap: 40px; align-items: flex-start; }
+  .thing .num { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 260px; line-height: .78; color: var(--rose); width: 150px; flex-shrink: 0; }
+  .thing h2 { font-family: var(--serif); font-weight: 600; font-size: 104px; line-height: .98; letter-spacing: -0.02em; margin-top: 10px; }
+  .thing .text { margin-top: 44px; font-size: 38px; line-height: 1.42; color: var(--ink-soft); max-width: 860px; }
+  .thing .illo { margin-top: auto; margin-bottom: 56px; display: flex; justify-content: center; }
+  .thing .footer .closing { color: var(--ink-soft); font-size: 28px; font-weight: 500; }
+
+  .miniphone { width: 600px; background: #fff; border-radius: 56px; border: 12px solid #2a1018; box-shadow: 0 30px 80px rgba(40, 10, 20, .18); padding: 44px 34px 40px; color: var(--ink); }
+  .miniphone .studio { text-align: center; font-family: var(--serif); font-size: 42px; font-weight: 600; }
+  .miniphone .sub { text-align: center; font-size: 21px; color: var(--muted); margin-top: 2px; }
+  .miniphone .svc { margin-top: 24px; border: 1px solid var(--line); border-radius: 20px; padding: 16px 22px; display: flex; justify-content: space-between; font-size: 23px; }
+  .miniphone .svc b { font-weight: 600; }
+  .miniphone .days { margin-top: 20px; display: flex; gap: 10px; }
+  .miniphone .d { flex: 1; border: 1px solid var(--line); border-radius: 16px; text-align: center; padding: 8px 0; font-size: 18px; color: var(--muted); }
+  .miniphone .d b { display: block; font-size: 28px; color: var(--ink); font-weight: 600; }
+  .miniphone .d.on { background: var(--rose); border-color: var(--rose); color: #f6d3dd; }
+  .miniphone .d.on b { color: #fff; }
+  .miniphone .slots { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .miniphone .slot { border: 1px solid var(--line); border-radius: 14px; text-align: center; padding: 12px 0; font-size: 23px; font-weight: 500; }
+  .miniphone .slot.on { background: var(--rose); color: #fff; border-color: var(--rose); }
+
+  .receipt { width: 720px; background: #fff; border: 1px solid var(--line); border-radius: 40px; padding: 44px 48px; box-shadow: 0 30px 80px rgba(87, 30, 50, .10); }
+  .receipt .row { display: flex; align-items: center; justify-content: space-between; }
+  .check { width: 64px; height: 64px; border-radius: 50%; background: #e6efe9; display: grid; place-items: center; }
+  .receipt .title { font-size: 30px; color: var(--muted); }
+  .receipt .amount { font-family: var(--serif); font-size: 92px; font-weight: 600; margin-top: 10px; }
+  .receipt .meta { margin-top: 26px; padding-top: 26px; border-top: 1px dashed var(--line); font-size: 30px; color: var(--ink-soft); line-height: 1.5; }
+  .badge { display: inline-block; background: #e6efe9; color: #4a7c62; border-radius: 999px; padding: 8px 22px; font-size: 24px; font-weight: 600; }
+
+  .thing .wacard { width: 780px; }
+  .thing .wacard .wahead { padding: 20px 28px; }
+  .thing .wacard .avatar { width: 64px; height: 64px; }
+  .thing .wacard .avatar img { width: 56px; height: 56px; }
+  .thing .wacard .who b { font-size: 28px; }
+  .thing .wacard .who span { font-size: 20px; }
+  .thing .wacard .wabody { padding: 30px 30px 36px; }
+</style>
+</head>
+<body>
+<div class="board">
+
+<!-- ============ Carrusel: Lo que recibe tu clienta ============ -->
+
+  <section class="post cover" id="carrusel-recibe-1">
+    <div class="glow"></div>
+    <img class="mascot" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <p class="eyebrow">WhatsApp automático</p>
+    <h1 class="headline">Esto le llega a tu clienta. <em>Sin que vos mandes nada.</em></h1>
+    <div class="footer"><span class="swipe">Deslizá →</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post msg light-bg" id="carrusel-recibe-2">
+    <p class="eyebrow">Al reservar</p>
+    <div class="wacard" data-wa>
+      <div class="wabody">
+        <div class="wabubble">¡Hola Sofía! <span class="e">✨</span> Tu turno de Semipermanente en Uñas de Lu quedó reservado.<br><br><span class="e">📅</span> jueves, 12 de noviembre, 15:30<br><br>Si necesitás cambiarlo o cancelarlo, entrá a <a>beauty.temppo.uy/m/…</a> cuando quieras.<time>23:48</time></div>
+      </div>
+    </div>
+    <p class="caption">Con el link para cambiar o cancelar sola.</p>
+    <div class="footer"><span class="dots" data-dots="2/5"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post msg light-bg" id="carrusel-recibe-3">
+    <p class="eyebrow">Cuando paga la seña</p>
+    <div class="wacard" data-wa>
+      <div class="wabody">
+        <div class="wabubble">¡Hola Sofía! <span class="e">💖</span> Recibimos tu seña de $ 360.<br><br><span class="e">✅</span> Tu Semipermanente en Uñas de Lu quedó confirmado para el jueves, 12 de noviembre, 15:30.<br><br>¡Te esperamos!<time>23:52</time></div>
+      </div>
+    </div>
+    <p class="caption">Mercado Pago o transferencia.</p>
+    <div class="footer"><span class="dots" data-dots="3/5"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post msg light-bg" id="carrusel-recibe-4">
+    <p class="eyebrow">El día antes</p>
+    <div class="wacard" data-wa>
+      <div class="wabody">
+        <div class="wabubble">Hola Sofía <span class="e">👋</span> Te recordamos tu turno de Semipermanente en Uñas de Lu:<br><br><span class="e">📅</span> jueves, 12 de noviembre, 15:30<br><br>¡Te esperamos! <span class="e">✨</span><time>10:00</time></div>
+      </div>
+    </div>
+    <p class="caption">Menos olvidos, menos sillas vacías.</p>
+    <div class="footer"><span class="dots" data-dots="4/5"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post close" id="carrusel-recibe-5">
+    <span class="corner" data-brand></span>
+    <img class="peek" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <h1 class="headline">Incluido en tu <em>prueba gratis</em> de un mes.</h1>
+    <div class="cta"><span class="pill light">beauty.temppo.uy</span><span class="note">Sin tarjeta · link en la bio</span></div>
+    <p class="foot">Sale desde el número de Temppo, con el nombre de tu negocio.</p>
+    <div class="footer"><span class="dots" data-dots="5/5"></span><span></span></div>
+  </section>
+
+<!-- ============ Post: El recordatorio sale solo ============ -->
+
+  <section class="post rec light-bg" id="post-recordatorio">
+    <p class="eyebrow">Recordatorio automático</p>
+    <h1 class="headline">El recordatorio <em>sale solo.</em></h1>
+    <div class="wacard" data-wa>
+      <div class="wabody">
+        <div class="wabubble">Hola Sofía <span class="e">👋</span> Te recordamos tu turno de Semipermanente en Uñas de Lu:<br><br><span class="e">📅</span> jueves, 12 de noviembre, 15:30<br><br>¡Te esperamos! <span class="e">✨</span><time>10:00</time></div>
+      </div>
+    </div>
+    <div class="footer"><span>Por WhatsApp, con el nombre de tu negocio.</span><span class="brand" data-brand></span></div>
+  </section>
+
+<!-- ============ Carrusel: 3 cosas que tu agenda hace sola ============ -->
+
+  <section class="post cover" id="carrusel-sola-1">
+    <div class="glow"></div>
+    <img class="mascot" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <h1 class="headline">3 cosas que tu agenda <em>hace sola</em> mientras atendés.</h1>
+    <div class="footer"><span class="swipe">Deslizá →</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post thing light-bg" id="carrusel-sola-2">
+    <div class="top"><span class="num">1</span><h2>Toma reservas</h2></div>
+    <p class="text">Tus clientas eligen servicio, día y hora desde tu link. Sin mensajes de ida y vuelta.</p>
+    <div class="illo">
+      <div class="miniphone">
+        <div class="studio">Uñas de Lu</div>
+        <div class="sub">Reservá tu turno online</div>
+        <div class="svc"><b>Semipermanente</b><span>1 h · $ 1.200</span></div>
+        <div class="days">
+          <div class="d">mar<b>10</b></div><div class="d">mié<b>11</b></div><div class="d on">jue<b>12</b></div><div class="d">vie<b>13</b></div><div class="d">sáb<b>14</b></div>
+        </div>
+        <div class="slots">
+          <div class="slot">10:00</div><div class="slot">11:30</div><div class="slot">14:00</div>
+          <div class="slot on">15:30</div><div class="slot">17:00</div><div class="slot">18:30</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="dots" data-dots="2/4"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post thing light-bg" id="carrusel-sola-3">
+    <div class="top"><span class="num">2</span><h2>Cobra la seña</h2></div>
+    <p class="text">Mercado Pago o transferencia. Si no llega a tiempo, el horario se libera solo.</p>
+    <div class="illo">
+      <div class="receipt">
+        <div class="row">
+          <span class="title">Seña recibida</span>
+          <span class="check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#4a7c62" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></span>
+        </div>
+        <div class="amount">$ 400</div>
+        <div class="meta">
+          Martina P. · Semipermanente<br>
+          Sábado 10:00 &nbsp;<span class="badge">Confirmado</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="dots" data-dots="3/4"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post thing light-bg" id="carrusel-sola-4">
+    <div class="top"><span class="num">3</span><h2>Avisa por WhatsApp</h2></div>
+    <p class="text">Confirmación, recordatorio y cambios, con el nombre de tu negocio.</p>
+    <div class="illo">
+      <div class="wacard" data-wa>
+        <div class="wabody">
+          <div class="wabubble sm">Hola Sofía <span class="e">👋</span> Te recordamos tu turno de Semipermanente en Uñas de Lu:<br><br><span class="e">📅</span> jueves, 12 de noviembre, 15:30<br><br>¡Te esperamos! <span class="e">✨</span><time>10:00</time></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="closing">Probala gratis un mes · beauty.temppo.uy</span><span class="brand" data-brand></span></div>
+  </section>
+
+</div>
+<script>
+  const MASCOT = "../../mascot/mascota-b-calendario.svg";
+  const BRAND = new URLSearchParams(location.search).get("brand") || "Temppo Beauty";
+  document.querySelectorAll("[data-brand]").forEach((el) => {
+    const [, family, product] = /^(temppo)\s+(.+)$/i.exec(BRAND) ?? [null, BRAND, ""];
+    el.innerHTML = `<img src="${MASCOT}" alt=""><span><b></b><small></small></span>`;
+    el.querySelector("b").textContent = product ? family.toLowerCase() : family;
+    el.querySelector("small").textContent = product;
+  });
+
+  // WhatsApp header: business chat with Temppo, verified.
+  document.querySelectorAll("[data-wa]").forEach((card) => {
+    const head = document.createElement("div");
+    head.className = "wahead";
+    head.innerHTML = `
+      <svg class="back" viewBox="0 0 12 20" fill="none" stroke="#54656f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>
+      <span class="avatar"><img src="${MASCOT}" alt=""></span>
+      <span class="who"><b>Temppo <span class="verified"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></b><span>Cuenta de empresa</span></span>`;
+    card.prepend(head);
+  });
+
+  // Carousel position: "n/total" → dots.
+  document.querySelectorAll("[data-dots]").forEach((el) => {
+    const [n, total] = el.dataset.dots.split("/").map(Number);
+    el.innerHTML = Array.from({ length: total }, (_, i) => `<i class="${i + 1 === n ? "on" : ""}"></i>`).join("");
+  });
+</script>
+</body>
+</html>
