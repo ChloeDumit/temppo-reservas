@@ -34,6 +34,7 @@ const EXAMPLES: Record<string, string> = {
   "booking link": "https://beauty.temppo.uy/b/lu-nails-studio",
   deposit: "$ 300",
   professional: "Lucía",
+  "studio contact": "wa.me/59899123456",
 };
 
 function graph(path: string, init?: RequestInit) {

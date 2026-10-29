@@ -415,7 +415,9 @@
     "waNotInPlan": "No incluido en tu plan",
     "waSoon": "Próximamente",
     "waPitch": "La confirmación, el recordatorio y los cambios de turno, por WhatsApp y sin que tengas que mandarlos vos.",
-    "waManualHint": "Mientras tanto, en cada turno de la agenda tenés el botón de WhatsApp para escribirle a tu clienta desde tu celular."
+    "waManualHint": "Mientras tanto, en cada turno de la agenda tenés el botón de WhatsApp para escribirle a tu clienta desde tu celular.",
+    "waNeedsNumber": "Cargá el WhatsApp de tu negocio: cuando movés o cancelás un turno, le pedimos a tu clienta que te escriba ahí. Sin él, la mandamos a tu página de reservas.",
+    "waNeedsNumberCta": "Cargarlo"
   },
   "booking": {
     "title": "Reservar clase",

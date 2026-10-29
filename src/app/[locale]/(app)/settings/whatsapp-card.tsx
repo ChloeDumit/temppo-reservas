@@ -9,6 +9,7 @@ import { setWhatsAppAutoAction } from "./actions";
 
 type WaStudio = {
   locale: string;
+  whatsappNumber: string | null;
   timezone: string;
   waMode: string;
   waMonthlyQuota: number;
@@ -82,6 +83,14 @@ export async function WhatsAppCard({ studio }: { studio: WaStudio }) {
                 ))}
               </ul>
               <p className="mt-2 text-xs text-muted">{t("waStopHint")}</p>
+              {!studio.whatsappNumber && (
+                <p className="mt-2 rounded-[var(--radius-md)] bg-accent-soft px-3 py-2 text-xs text-ink">
+                  {t("waNeedsNumber")}{" "}
+                  <a href="#studio" className="font-medium text-accent underline-offset-4 hover:underline">
+                    {t("waNeedsNumberCta")}
+                  </a>
+                </p>
+              )}
             </div>
           </>
         )}

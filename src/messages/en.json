@@ -415,7 +415,9 @@
     "waNotInPlan": "Not in your plan",
     "waSoon": "Coming soon",
     "waPitch": "Confirmation, reminder and changes to the appointment, on WhatsApp, without you having to send them.",
-    "waManualHint": "Meanwhile, every appointment in the agenda has a WhatsApp button to message your client from your phone."
+    "waManualHint": "Meanwhile, every appointment in the agenda has a WhatsApp button to message your client from your phone.",
+    "waNeedsNumber": "Add your business's WhatsApp: when you move or cancel an appointment, we ask your client to message you there. Without it, we send her to your booking page.",
+    "waNeedsNumberCta": "Add it"
   },
   "booking": {
     "title": "Book a class",

@@ -74,19 +74,24 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
     },
   },
   appointment_moved: {
-    params: ["first name", "service", "studio", "day and time", "professional"],
+    // v1 said "escribinos", and a reply lands on the platform's number, which
+    // nobody reads. v2 gives her the studio's own WhatsApp instead.
+    metaName: "appointment_moved_v2",
+    params: ["first name", "service", "studio", "day and time", "professional", "studio contact"],
     label: { es: "Si el negocio mueve el turno", en: "If the business moves it" },
     body: {
-      es: "Hola {{1}}, tu turno de {{2}} en {{3}} cambió de horario 🔄\n\n📅 {{4}}, con {{5}}.\n\nSi no te queda bien, escribinos.",
-      en: "Hi {{1}}, your {{2}} at {{3}} has a new time 🔄\n\n📅 {{4}}, with {{5}}.\n\nIf that doesn't suit you, message us.",
+      es: "Hola {{1}}, tu turno de {{2}} en {{3}} cambió de horario 🔄\n\n📅 {{4}}, con {{5}}.\n\nSi no te queda bien, escribile al negocio en {{6}} y lo coordinan. Este número solo envía avisos.",
+      en: "Hi {{1}}, your {{2}} at {{3}} has a new time 🔄\n\n📅 {{4}}, with {{5}}.\n\nIf that doesn't suit you, message the business at {{6}} to sort it out. This number only sends notices.",
     },
   },
   appointment_cancelled: {
-    params: ["first name", "service", "studio", "day and time"],
+    // v1 said "escribinos": see appointment_moved.
+    metaName: "appointment_cancelled_v2",
+    params: ["first name", "service", "studio", "day and time", "studio contact"],
     label: { es: "Si el negocio lo cancela", en: "If the business cancels it" },
     body: {
-      es: "Hola {{1}}, se canceló tu turno de {{2}} en {{3}} del {{4}} 😔\n\nEscribinos y te buscamos otro horario 💬",
-      en: "Hi {{1}}, your {{2}} at {{3}} on {{4}} was cancelled 😔\n\nMessage us and we'll find you another time 💬",
+      es: "Hola {{1}}, se canceló tu turno de {{2}} en {{3}} del {{4}} 😔\n\nPara coordinar otro horario, escribile al negocio en {{5}} 💬 Este número solo envía avisos.",
+      en: "Hi {{1}}, your {{2}} at {{3}} on {{4}} was cancelled 😔\n\nTo arrange another time, message the business at {{5}} 💬 This number only sends notices.",
     },
   },
   appointment_expired: {

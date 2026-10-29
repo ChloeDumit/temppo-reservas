@@ -7,6 +7,7 @@ import { localePath } from "@/i18n/routing";
 import { appUrlFor } from "@/lib/brand/url";
 import { confirmationText, whenText } from "./whatsapp-text";
 import { whatsappToClient } from "./whatsapp-send";
+import { toWhatsAppNumber } from "@/lib/phone";
 import type { SettleOutcome } from "./payments";
 
 async function announcedTransfer(appointmentId: string) {
@@ -42,6 +43,16 @@ export async function notifyTransferAnnounced(appointmentId: string) {
     relatedType: "Appointment",
     relatedId: appt.id,
   });
+}
+
+/**
+ * Where a client reaches the studio itself. Automatic WhatsApp comes from the
+ * platform's number, which nobody answers, so a message that invites a reply
+ * points here: the studio's own WhatsApp, or its booking page if it has none.
+ */
+export function studioContactFor(studio: { brand: string; locale: string; slug: string; whatsappNumber: string | null }) {
+  const wa = toWhatsAppNumber(studio.whatsappNumber);
+  return wa ? `wa.me/${wa}` : `${appUrlFor(studio)}${localePath(studio.locale, `/b/${studio.slug}`)}`;
 }
 
 export function manageUrlFor(studio: { brand: string; locale: string }, token: string) {
@@ -299,14 +310,14 @@ export async function notifyClientChanged(appointmentId: string, kind: "moved" |
           phone: client.phone,
           appointmentId: appt.id,
           template: "appointment_moved",
-          params: [first, appt.serviceName, studio.name, when, appt.staff.name],
+          params: [first, appt.serviceName, studio.name, when, appt.staff.name, studioContactFor(studio)],
         }
       : {
           studio,
           phone: client.phone,
           appointmentId: appt.id,
           template: "appointment_cancelled",
-          params: [first, appt.serviceName, studio.name, when],
+          params: [first, appt.serviceName, studio.name, when, studioContactFor(studio)],
         },
   );
 }

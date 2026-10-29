@@ -142,9 +142,17 @@ async function main() {
     check("deposit too late: told", last()?.template, "appointment_deposit_late");
 
     await notifyClientChanged(a1.id, "moved");
-    check("moved by the studio, with who", [last()?.template, last()?.params[4]], ["appointment_moved", "Lucía"]);
+    check("moved by the studio, with who, and her page when the studio has no WhatsApp", [last()?.template, last()?.params[4], last()?.params[5].endsWith("/b/verify-wa-notices")], [
+      "appointment_moved_v2",
+      "Lucía",
+      true,
+    ]);
+    await db.studio.update({ where: { id: studio.id }, data: { whatsappNumber: "099 555 444" } });
     await notifyClientChanged(a1.id, "cancelled");
-    check("cancelled by the studio", last()?.template, "appointment_cancelled");
+    check("cancelled by the studio, pointing at the studio's own WhatsApp", [last()?.template, last()?.params[4]], [
+      "appointment_cancelled_v2",
+      "wa.me/59899555444",
+    ]);
 
     const a3 = await appt({ status: "PENDING_PAYMENT", depositCents: 30000, depositStatus: "PENDING", holdExpiresAt: new Date(Date.now() - 60_000) });
     await expireHolds({ ...studio, waMode: "CLOUD", reminderHoursBefore: 24 }, new Date());
