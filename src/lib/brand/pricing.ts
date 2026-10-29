@@ -35,10 +35,12 @@ export const LAUNCH_SPOTS = 50;
 export const LAUNCH_LOCK_MONTHS = 12;
 
 /**
- * Whether automatic WhatsApp actually sends yet. Until it does, the landing
- * marks it "coming soon" and leaves it out of what the trial promises.
+ * Whether automatic WhatsApp actually sends. On since the templates were
+ * approved in Meta (October 2026): the landing sells it, and a new Beauty
+ * trial starts with it on and BEAUTY_TRIAL_WA_QUOTA messages. Set it back to
+ * false to stop offering it; studios already on it keep sending.
  */
-export const WA_AUTO_LIVE = false;
+export const WA_AUTO_LIVE = true;
 
 /** An extra block of automatic WhatsApp messages, on any plan that has them. */
 export const WA_PACK = { messages: 200, priceUyu: 190 };
