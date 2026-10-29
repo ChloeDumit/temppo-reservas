@@ -16,6 +16,9 @@ export type Rules = {
   noShowLimit: number;
   depositRefundable: boolean;
   acceptMercadoPago: boolean;
+  mpFeePassedOn: boolean;
+  /** The studio's Mercado Pago rate, as typed: "7.31". Empty when unset. */
+  mpFeePercent: string;
   acceptTransfer: boolean;
   transferInstructions: string;
   hasWhatsapp: boolean;
@@ -73,6 +76,24 @@ export function RulesForm({ rules }: { rules: Rules }) {
             <span className="block text-xs text-muted">{t("acceptMpHint")}</span>
           </span>
         </label>
+        <div className="ml-6.5 space-y-2.5">
+          <label className="flex items-start gap-2.5 text-sm text-ink">
+            <input type="checkbox" name="mpFeePassedOn" defaultChecked={rules.mpFeePassedOn} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
+            <span>
+              {t("mpFeePassedOn")}
+              <span className="block text-xs text-muted">{t("mpFeePassedOnHint")}</span>
+            </span>
+          </label>
+          <Field label={t("mpFeePercent")} hint={t("mpFeePercentHint")}>
+            <Input
+              name="mpFeePercent"
+              inputMode="decimal"
+              placeholder="7,31"
+              defaultValue={rules.mpFeePercent}
+              className="max-w-28"
+            />
+          </Field>
+        </div>
         <label className="flex items-start gap-2.5 text-sm text-ink">
           <input type="checkbox" name="acceptTransfer" defaultChecked={rules.acceptTransfer} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
           <span>
@@ -103,7 +124,7 @@ export function RulesForm({ rules }: { rules: Rules }) {
           <span className="block text-xs text-muted">{t("refundableHint")}</span>
         </span>
       </label>
-      {state?.error && <p className="text-sm text-critical">{te("generic")}</p>}
+      {state?.error && <p className="text-sm text-critical">{state.error === "mpFee" ? t("mpFeeInvalid") : te("generic")}</p>}
       {state?.ok && <p className="text-sm text-positive">{t("saved")}</p>}
       <SubmitButton pendingLabel={tc("saving")}>{tc("save")}</SubmitButton>
     </form>

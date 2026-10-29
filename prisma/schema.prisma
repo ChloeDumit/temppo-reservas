@@ -89,6 +89,11 @@ model Studio {
   /// straight away and no deposit is asked.
   acceptMercadoPago Boolean @default(true)
   acceptTransfer    Boolean @default(true)
+  /// When on, a client paying by Mercado Pago also pays its fee, so the studio
+  /// receives the whole deposit. mpFeeBps is the studio's own rate (IVA
+  /// included) in hundredths of a percent: 731 is 7.31%.
+  mpFeePassedOn Boolean @default(false)
+  mpFeeBps      Int     @default(0)
   /// Where a deposit by transfer goes — bank, account, holder, alias — shown
   /// to the client next to her payment code.
   transferInstructions String?
@@ -590,6 +595,9 @@ model Payment {
   collectedByStudio Boolean @default(false)
 
   amountCents Int
+  /// Mercado Pago's fee, paid by the client on top of amountCents when the
+  /// studio passes it on. Never part of what the studio earns or is owed.
+  surchargeCents Int @default(0)
   currency    String        @default("UYU")
   method      PaymentMethod
   status      PaymentStatus @default(PENDING)
