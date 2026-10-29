@@ -142,6 +142,8 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                   noShowLimit: studio.noShowLimit,
                   depositRefundable: studio.depositRefundable,
                   acceptMercadoPago: studio.acceptMercadoPago,
+                  mpFeePassedOn: studio.mpFeePassedOn,
+                  mpFeePercent: studio.mpFeeBps ? (studio.mpFeeBps / 100).toLocaleString(locale, { maximumFractionDigits: 2 }) : "",
                   acceptTransfer: studio.acceptTransfer,
                   transferInstructions: studio.transferInstructions ?? "",
                   hasWhatsapp: Boolean(studio.whatsappNumber),

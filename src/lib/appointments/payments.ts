@@ -6,6 +6,7 @@ import { studioAccessToken } from "@/lib/payments/mercadopago-oauth";
 import type { ProviderPaymentStatus } from "@/lib/payments/types";
 import { generatePaymentCode } from "@/lib/payment-code";
 import { isOverlapError } from "./book";
+import { onlineSurchargeFor } from "./deposit";
 
 /**
  * Deposits (señas). A studio that connected its own Mercado Pago is paid
@@ -42,12 +43,14 @@ export async function startDepositCheckout(opts: {
   const studioToken = await studioAccessToken(appt.studioId);
   if (!studioToken && !provider.isConfigured()) return null;
 
+  const surchargeCents = onlineSurchargeFor(appt.depositCents, appt.studio);
   const payment = await db.payment.create({
     data: {
       studioId: appt.studioId,
       studentId: appt.clientId,
       appointmentId: appt.id,
       amountCents: appt.depositCents,
+      surchargeCents,
       currency: appt.studio.currency,
       method: "MERCADO_PAGO",
       status: "PENDING",
@@ -65,6 +68,7 @@ export async function startDepositCheckout(opts: {
     externalReference: paymentRef("appt", appt.id),
     title: `${appt.studio.name} — seña ${appt.serviceName}`,
     amountCents: appt.depositCents,
+    ...(surchargeCents ? { surcharge: { title: "Cargo por pago online", amountCents: surchargeCents } } : {}),
     currency: appt.studio.currency,
     payerEmail: opts.payerEmail,
     successUrl: opts.successUrl,
@@ -116,9 +120,11 @@ export async function settleDeposit(opts: {
     appt.payments.find((p) => p.status === "PENDING");
   if (!payment) return "ignored";
 
-  if (opts.amountCents !== payment.amountCents) {
+  // She pays the deposit plus any fee passed on; only the deposit is income.
+  const chargedCents = payment.amountCents + payment.surchargeCents;
+  if (opts.amountCents !== chargedCents) {
     console.error(
-      `[deposits] amount mismatch for ${payment.id}: provider ${opts.amountCents}, expected ${payment.amountCents}`,
+      `[deposits] amount mismatch for ${payment.id}: provider ${opts.amountCents}, expected ${chargedCents}`,
     );
     return "ignored";
   }

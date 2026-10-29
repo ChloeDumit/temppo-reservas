@@ -6,6 +6,7 @@ import { accentVars } from "@/lib/color";
 import { dateKeyInZone, formatTime } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { depositMethods } from "@/lib/appointments/methods";
+import { onlineSurchargeFor } from "@/lib/appointments/deposit";
 import { findByManageToken } from "@/lib/appointments/book";
 import { whenText, waLink } from "@/lib/appointments/whatsapp-text";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,8 @@ export default async function ManagePage({
   const cutoff = new Date(appt.startsAt.getTime() - studio.cancellationCutoffHours * 3_600_000);
   const late = now > cutoff;
   const money = (cents: number) => formatMoney(cents, studio.currency, locale);
+  const methods = depositMethods(studio);
+  const mpSurcharge = methods.mp ? onlineSurchargeFor(appt.depositCents, studio) : 0;
   const total = appt.priceCents;
 
   const statusBadge = {
@@ -168,8 +171,13 @@ export default async function ManagePage({
                 <PayForm
                   token={token}
                   hasEmail={Boolean(appt.client.user.email)}
-                  methods={depositMethods(studio)}
+                  methods={methods}
                 />
+                {mpSurcharge > 0 && (
+                  <p className="text-xs text-muted">
+                    {t("mpSurcharge", { fee: money(mpSurcharge), total: money(appt.depositCents + mpSurcharge) })}
+                  </p>
+                )}
               </div>
             )}
             {appt.holdExpiresAt && (

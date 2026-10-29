@@ -1015,7 +1015,12 @@
     "transferInstructionsHint": "Se los mostramos a la clienta junto a su código de pago.",
     "transferInstructionsPlaceholder": "BROU caja de ahorro 001234567-00001, a nombre de Lucía Pérez",
     "noShowLimit": "Faltas sin avisar",
-    "noShowLimitHint": "Después de tantas, ya no puede reservar online hasta que la desbloquees desde su ficha. 0 = nunca se bloquea."
+    "noShowLimitHint": "Después de tantas, ya no puede reservar online hasta que la desbloquees desde su ficha. 0 = nunca se bloquea.",
+    "mpFeePassedOn": "Que la clienta pague la comisión",
+    "mpFeePassedOnHint": "Al pagar con Mercado Pago se le suma la comisión, así te llega la seña entera. Por transferencia no se suma nada.",
+    "mpFeePercent": "Tu comisión de Mercado Pago (%)",
+    "mpFeePercentHint": "Con IVA incluido. Mirala en Mercado Pago → Tu negocio → Costos.",
+    "mpFeeInvalid": "Revisá la comisión: un número entre 0 y 20, por ejemplo 7,31."
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",
@@ -1062,7 +1067,8 @@
     "errTooManyHolds": "Ya tenés reservas esperando la seña. Pagá esas primero o escribinos.",
     "errGeneric": "No pudimos reservar. Probá de nuevo.",
     "depositExplainCredit": "Para confirmar el turno se paga una seña de {amount}, que se descuenta del total. Si cancelás con más de {hours} horas de anticipación, te queda como crédito para tu próximo turno.",
-    "phoneHintWhatsApp": "Te mandamos la confirmación y el recordatorio por WhatsApp. Respondé BAJA si no los querés."
+    "phoneHintWhatsApp": "Te mandamos la confirmación y el recordatorio por WhatsApp. Respondé BAJA si no los querés.",
+    "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}."
   },
   "manage": {
     "title": "Tu turno",
@@ -1116,7 +1122,8 @@
     "copied": "¡Copiado!",
     "sendToMyWhatsapp": "Mandármelo por WhatsApp",
     "selfMessage": "Mi turno de {service}: {url}",
-    "confirmMove": "Pasar a {time}"
+    "confirmMove": "Pasar a {time}",
+    "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}."
   },
   "agenda": {
     "title": "Agenda",

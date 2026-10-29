@@ -35,7 +35,8 @@ async function main() {
   const { seal, open, signPayload, verifyPayload } = await import("../src/lib/crypto/secret-box");
   const { connectMercadoPago, studioAccessToken, renewExpiringMercadoPagoTokens, disconnectMercadoPago, authorizationUrl } =
     await import("../src/lib/payments/mercadopago-oauth");
-  const { startDepositCheckout, owedToStudio } = await import("../src/lib/appointments/payments");
+  const { startDepositCheckout, owedToStudio, settleDeposit } = await import("../src/lib/appointments/payments");
+  const { onlineSurchargeFor } = await import("../src/lib/appointments/deposit");
   const { depositMethods } = await import("../src/lib/appointments/methods");
   const { bookAppointment } = await import("../src/lib/appointments/book");
   const { wallTimeToUtc } = await import("../src/lib/dates");
@@ -138,6 +139,43 @@ async function main() {
   await startDepositCheckout({ appointmentId: second.appointmentId, ...urls });
   check("5% of a $300 deposit is $15", calls.filter((c) => c.url.endsWith("/checkout/preferences")).at(-1)?.body?.marketplace_fee, 15);
   delete process.env.MERCADOPAGO_MARKETPLACE_FEE_PERCENT;
+
+  console.log("\nPassing the fee on");
+  const off = { mpFeePassedOn: false, mpFeeBps: 731 };
+  const on = { mpFeePassedOn: true, mpFeeBps: 731 };
+  check("off: nothing added", onlineSurchargeFor(30000, off), 0);
+  check("on, with no rate: nothing added", onlineSurchargeFor(30000, { mpFeePassedOn: true, mpFeeBps: 0 }), 0);
+  // 30000 / (1 − 0.0731) = 32365.95…, rounded up so the studio is never short.
+  check("7.31% on $300 adds $23.66", onlineSurchargeFor(30000, on), 2366);
+  const total = 30000 + onlineSurchargeFor(30000, on);
+  check("and after the fee the studio keeps the whole deposit", total - Math.round((total * 731) / 10000) >= 30000, true);
+  check("a silly rate is capped", onlineSurchargeFor(30000, { mpFeePassedOn: true, mpFeeBps: 9000 }), 7500);
+
+  await db.studio.update({ where: { id: studio.id }, data: on });
+  process.env.MERCADOPAGO_MARKETPLACE_FEE_PERCENT = "5";
+  const third = await book("14:00");
+  if (!third.ok) throw new Error("booking failed");
+  await startDepositCheckout({ appointmentId: third.appointmentId, ...urls });
+  delete process.env.MERCADOPAGO_MARKETPLACE_FEE_PERCENT;
+  const feePref = calls.filter((c) => c.url.endsWith("/checkout/preferences")).at(-1)!.body!;
+  const items = feePref.items as { unit_price: number; title: string }[];
+  check("the checkout shows the deposit and the fee apart", items.map((i) => i.unit_price), [300, 23.66]);
+  check("the platform's cut is still on the deposit only", feePref.marketplace_fee, 15);
+  const withFee = await db.payment.findFirstOrThrow({ where: { appointmentId: third.appointmentId } });
+  check("the payment keeps them apart", [withFee.amountCents, withFee.surchargeCents], [30000, 2366]);
+  check(
+    "paying only the deposit does not confirm it",
+    await settleDeposit({ appointmentId: third.appointmentId, providerPaymentId: "mp-fee", status: "APPROVED", amountCents: 30000, now }),
+    "ignored",
+  );
+  check(
+    "paying deposit and fee does",
+    await settleDeposit({ appointmentId: third.appointmentId, providerPaymentId: "mp-fee", status: "APPROVED", amountCents: 32366, now }),
+    "confirmed",
+  );
+  const income = await db.transaction.findFirstOrThrow({ where: { paymentId: withFee.id } });
+  check("and only the deposit counts as her income", income.amountCents, 30000);
+  await db.studio.update({ where: { id: studio.id }, data: { mpFeePassedOn: false } });
 
   console.log("\nRenewal");
   const lateNow = new Date(account.expiresAt.getTime() - 10 * 86_400_000);

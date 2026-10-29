@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/money";
-import { depositFor } from "@/lib/appointments/deposit";
+import { depositFor, onlineSurchargeFor } from "@/lib/appointments/deposit";
 import { shiftDateKey } from "@/lib/appointments/slots";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -50,6 +50,7 @@ export function BookingFlow({
   depositRefundable,
   methods,
   whatsappAuto = false,
+  mpFee,
 }: {
   slug: string;
   services: FlowService[];
@@ -63,6 +64,8 @@ export function BookingFlow({
   methods: { mp: boolean; transfer: boolean };
   /** The studio sends automatic WhatsApp: she is told before she gives her number. */
   whatsappAuto?: boolean;
+  /** Whether a Mercado Pago payer also pays its fee, and at what rate. */
+  mpFee: { mpFeePassedOn: boolean; mpFeeBps: number };
 }) {
   const t = useTranslations("bookPublic");
   const locale = useLocale();
@@ -85,6 +88,7 @@ export function BookingFlow({
   const total = (service?.priceCents ?? 0) + chosenAddOns.reduce((s, a) => s + a.priceCents, 0);
   const length = (service?.durationMin ?? 0) + chosenAddOns.reduce((s, a) => s + a.durationMin, 0);
   const deposit = service && (methods.mp || methods.transfer) ? depositFor(service.depositType, service.depositValue, total) : 0;
+  const surcharge = pay === "mp" ? onlineSurchargeFor(deposit, mpFee) : 0;
   const offeredStaff = service ? staff.filter((s) => service.staffIds.includes(s.id)) : [];
 
   const timeFmt = useMemo(
@@ -451,13 +455,16 @@ export function BookingFlow({
                 </div>
               )}
               {!(methods.mp && methods.transfer) && <input type="hidden" name="pay" value={pay} />}
+              {surcharge > 0 && (
+                <p className="text-xs text-muted">{t("mpSurcharge", { fee: money(surcharge), total: money(deposit + surcharge) })}</p>
+              )}
             </div>
           )}
 
           {detailsError && <p className="text-sm text-critical">{detailsError}</p>}
 
           <SubmitButton pendingLabel={t("booking")} className="w-full">
-            {deposit > 0 ? (pay === "mp" ? t("bookAndPay", { amount: money(deposit) }) : t("bookTransfer")) : t("book")}
+            {deposit > 0 ? (pay === "mp" ? t("bookAndPay", { amount: money(deposit + surcharge) }) : t("bookTransfer")) : t("book")}
           </SubmitButton>
           <p className="px-1 text-center text-xs text-muted">
             {staffId ? t("withPro", { name: staffName(staffId) ?? "" }) : chosenSlot.staffIds.length > 1 ? t("withAnyone") : t("withPro", { name: staffName(chosenSlot.staffIds[0]) ?? "" })}

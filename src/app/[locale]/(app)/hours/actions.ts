@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { assertAdmin, assertStaff, ADMIN_ROLES } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { wallTimeToUtc } from "@/lib/dates";
+import { MAX_MP_FEE_BPS } from "@/lib/appointments/deposit";
 
 export type ActionState = { error?: string; ok?: boolean; clashes?: number } | null;
 
@@ -151,12 +152,21 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
   const parsed = rulesSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "generic" };
 
+  // Typed as a percent, either decimal mark: "7,31" or "7.31".
+  const feeText = String(formData.get("mpFeePercent") ?? "").trim().replace(",", ".");
+  const feePercent = feeText ? Number(feeText) : 0;
+  const mpFeePassedOn = formData.get("mpFeePassedOn") === "on";
+  if (!Number.isFinite(feePercent) || feePercent < 0 || feePercent * 100 > MAX_MP_FEE_BPS) return { error: "mpFee" };
+  if (mpFeePassedOn && feePercent === 0) return { error: "mpFee" };
+
   await db.studio.update({
     where: { id: user.studioId },
     data: {
       ...parsed.data,
       depositRefundable: formData.get("depositRefundable") === "on",
       acceptMercadoPago: formData.get("acceptMercadoPago") === "on",
+      mpFeePassedOn,
+      mpFeeBps: Math.round(feePercent * 100),
       acceptTransfer: formData.get("acceptTransfer") === "on",
       transferInstructions: String(formData.get("transferInstructions") ?? "").trim().slice(0, 500) || null,
     },
@@ -169,7 +179,7 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
     action: "studio.booking_rules",
     entityType: "Studio",
     entityId: user.studioId,
-    metadata: parsed.data,
+    metadata: { ...parsed.data, mpFeePassedOn, mpFeeBps: Math.round(feePercent * 100) },
   });
 
   revalidatePath(PAGE, "page");

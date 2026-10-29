@@ -23,6 +23,11 @@ export type CheckoutRequest = {
   /** The platform's cut of a payment charged into a studio's account. */
   marketplaceFeeCents?: number;
   /**
+   * Charged on top of amountCents as its own line, so the payer sees it:
+   * the provider's fee when the studio passes it on.
+   */
+  surcharge?: { title: string; amountCents: number };
+  /**
    * After this the checkout no longer takes payment — a deposit is held for
    * minutes, and money arriving for a slot already released helps nobody.
    * Also limits payment to methods that settle at once (no cash vouchers).

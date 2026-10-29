@@ -92,6 +92,16 @@ export const mercadoPago: PaymentProvider = {
             currency_id: request.currency,
             unit_price: request.amountCents / 100,
           },
+          ...(request.surcharge?.amountCents
+            ? [
+                {
+                  title: request.surcharge.title,
+                  quantity: 1,
+                  currency_id: request.currency,
+                  unit_price: request.surcharge.amountCents / 100,
+                },
+              ]
+            : []),
         ],
         payer: { email: request.payerEmail },
         // Our own id comes back on the webhook, which is how we match it up.

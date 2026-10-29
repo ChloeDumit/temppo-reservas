@@ -1015,7 +1015,12 @@
     "transferInstructionsHint": "Shown to the client next to her payment code.",
     "transferInstructionsPlaceholder": "Bank, account number, account holder",
     "noShowLimit": "No-shows allowed",
-    "noShowLimitHint": "After this many, she can't book online until you unblock her from her file. 0 = never blocked."
+    "noShowLimitHint": "After this many, she can't book online until you unblock her from her file. 0 = never blocked.",
+    "mpFeePassedOn": "Client pays the fee",
+    "mpFeePassedOnHint": "Paying by Mercado Pago adds its fee, so you get the whole deposit. Nothing is added to transfers.",
+    "mpFeePercent": "Your Mercado Pago fee (%)",
+    "mpFeePercentHint": "Tax included. Find it in Mercado Pago → Your business → Costs.",
+    "mpFeeInvalid": "Check the fee: a number from 0 to 20, e.g. 7.31."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
@@ -1062,7 +1067,8 @@
     "errTooManyHolds": "You already have bookings waiting for a deposit. Pay those first or message us.",
     "errGeneric": "We couldn't book that. Try again.",
     "depositExplainCredit": "To confirm, you pay a {amount} deposit, taken off the total. Cancel more than {hours} hours ahead and it stays as credit for your next appointment.",
-    "phoneHintWhatsApp": "We'll send your confirmation and reminder on WhatsApp. Reply STOP if you don't want them."
+    "phoneHintWhatsApp": "We'll send your confirmation and reminder on WhatsApp. Reply STOP if you don't want them.",
+    "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}."
   },
   "manage": {
     "title": "Your appointment",
@@ -1116,7 +1122,8 @@
     "copied": "Copied!",
     "sendToMyWhatsapp": "Send it to my WhatsApp",
     "selfMessage": "My {service} appointment: {url}",
-    "confirmMove": "Move to {time}"
+    "confirmMove": "Move to {time}",
+    "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}."
   },
   "agenda": {
     "title": "Agenda",
