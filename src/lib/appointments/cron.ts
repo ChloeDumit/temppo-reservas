@@ -51,7 +51,7 @@ export async function expireHolds(studio: CronStudio, now: Date) {
       phone: client.phone,
       appointmentId: appt.id,
       template: "appointment_expired",
-      params: [client.name.split(" ")[0], appt.serviceName, studio.name, whenText(appt.startsAt, studio), bookingUrl],
+      params: [client.name.split(" ")[0], appt.serviceName, studio.name, whenText(appt.startsAt, studio)],
       now,
     });
     if (!client.email) continue;

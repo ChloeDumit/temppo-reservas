@@ -29,7 +29,7 @@ function check(label: string, actual: unknown, expected: unknown) {
 }
 
 async function main() {
-  const { WHATSAPP_TEMPLATES, WHATSAPP_TEMPLATE_KEYS, renderWhatsAppTemplate } = await import(
+  const { WHATSAPP_TEMPLATES, WHATSAPP_TEMPLATE_KEYS, PROMOTIONAL_WORDS, renderWhatsAppTemplate } = await import(
     "../src/lib/notifications/whatsapp-templates"
   );
 
@@ -46,6 +46,8 @@ async function main() {
         !/\}\}\s*[.!?]?\s*$/.test(body) &&
         body.length <= 1024;
       check(`${key} [${lang}] is one Meta accepts`, ok, true);
+      const promo = PROMOTIONAL_WORDS.filter((w) => body.toLowerCase().includes(w));
+      check(`${key} [${lang}] reads as Utility, not promotion`, promo, []);
     }
   }
   check(
@@ -130,7 +132,7 @@ async function main() {
 
     const a2 = await appt({ status: "PENDING_PAYMENT", depositCents: 30000, depositStatus: "PENDING", holdExpiresAt: new Date(Date.now() + 600_000) });
     await notifyBooked(a2.id, "tok2");
-    check("booked with deposit pending: held", last()?.template, "appointment_held");
+    check("booked with deposit pending: held, under its v2 name", last()?.template, "appointment_held_v2");
 
     await db.appointment.update({ where: { id: a2.id }, data: { status: "CONFIRMED", depositStatus: "PAID" } });
     await afterDepositSettled(a2.id, "confirmed", "test");
@@ -146,10 +148,7 @@ async function main() {
 
     const a3 = await appt({ status: "PENDING_PAYMENT", depositCents: 30000, depositStatus: "PENDING", holdExpiresAt: new Date(Date.now() - 60_000) });
     await expireHolds({ ...studio, waMode: "CLOUD", reminderHoursBefore: 24 }, new Date());
-    check("hold ran out: told, with where to book again", [last()?.template, last()?.params[4].endsWith("/b/verify-wa-notices")], [
-      "appointment_expired",
-      true,
-    ]);
+    check("hold ran out: told, under its v2 name", [last()?.template, last()?.params.length], ["appointment_expired_v2", 4]);
     check("it really expired", (await db.appointment.findUniqueOrThrow({ where: { id: a3.id } })).status, "EXPIRED");
 
     console.log("\nCupo y errores");

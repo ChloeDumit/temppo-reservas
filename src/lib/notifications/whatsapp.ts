@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { addMonths } from "@/lib/dates";
 import { toWhatsAppNumber } from "@/lib/phone";
-import { WHATSAPP_TEMPLATES, type WhatsAppTemplateKey } from "./whatsapp-templates";
+import { metaTemplateName, WHATSAPP_TEMPLATES, type WhatsAppTemplateKey } from "./whatsapp-templates";
 
 /*
   Automatic WhatsApp through Meta's Cloud API — the paid add-on for appointment
@@ -117,7 +117,7 @@ export async function notifyWhatsApp(payload: WhatsAppPayload): Promise<boolean>
   if (await db.whatsAppOptOut.findUnique({ where: { phone: to } })) return false;
   if (!(await claimWhatsAppMessage(payload.studioId, payload.now ?? new Date()))) return false;
 
-  const result = await sendTemplate(to, payload.template, payload.language, payload.params);
+  const result = await sendTemplate(to, metaTemplateName(payload.template), payload.language, payload.params);
   if (!result.ok) await releaseWhatsAppMessage(payload.studioId);
 
   await db.notificationLog

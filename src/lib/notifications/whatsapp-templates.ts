@@ -25,6 +25,11 @@ export type WhatsAppTemplateKey =
   | "appointment_deposit_late";
 
 export type WhatsAppTemplate = {
+  /**
+   * Its name in Meta when that is not the key. A template Meta recategorised
+   * as Marketing cannot be moved back, so it is replaced by a new name.
+   */
+  metaName?: string;
   /** What each {{n}} holds, in order. */
   params: string[];
   /** Shown to the studio in Ajustes: when it goes out. */
@@ -42,11 +47,14 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
     },
   },
   appointment_held: {
-    params: ["first name", "day and time", "service", "studio", "manage link"],
+    // v1 read as an offer ("we're holding your slot, pay here") and Meta
+    // moved it to Marketing. This one only states where the booking stands.
+    metaName: "appointment_held_v2",
+    params: ["first name", "service", "studio", "day and time", "manage link"],
     label: { es: "Al reservar con seña pendiente", en: "When she books and the deposit is pending" },
     body: {
-      es: "Hola {{1}} 👋 Te guardamos el {{2}} para tu {{3}} en {{4}} ⏳\n\nQueda confirmado cuando llegue la seña: la podés pagar en {{5}} y te avisamos.",
-      en: "Hi {{1}} 👋 We're holding {{2}} for your {{3}} at {{4}} ⏳\n\nIt is confirmed once the deposit arrives: you can pay it at {{5}} and we'll let you know.",
+      es: "Hola {{1}}, tu turno de {{2}} en {{3}} para el {{4}} está pendiente de seña ⏳\n\nSe confirma cuando recibamos la seña. En {{5}} tenés el detalle de tu reserva y los datos para pagarla.",
+      en: "Hi {{1}}, your {{2}} at {{3}} on {{4}} is pending its deposit ⏳\n\nIt is confirmed once the deposit is received. At {{5}} you'll find your booking details and how to pay it.",
     },
   },
   appointment_confirmed: {
@@ -82,11 +90,14 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
     },
   },
   appointment_expired: {
-    params: ["first name", "service", "studio", "day and time", "booking link"],
+    // v1 invited her to book again, which Meta counts as Marketing. This one
+    // only reports what happened to the booking she made.
+    metaName: "appointment_expired_v2",
+    params: ["first name", "service", "studio", "day and time"],
     label: { es: "Si la seña no llega a tiempo", en: "If the deposit doesn't arrive in time" },
     body: {
-      es: "Hola {{1}}, no nos llegó la seña de {{2}} en {{3}} del {{4}} a tiempo, así que se liberó el horario ⌛\n\nSi querés, reservá de nuevo en {{5}} cuando quieras 💅",
-      en: "Hi {{1}}, the deposit for {{2}} at {{3}} on {{4}} didn't arrive in time, so the slot was released ⌛\n\nYou can book again at {{5}} whenever you like 💅",
+      es: "Hola {{1}}, tu reserva de {{2}} en {{3}} para el {{4}} se canceló porque la seña no llegó a tiempo ⌛\n\nEl horario quedó liberado y no se hizo ningún cobro.",
+      en: "Hi {{1}}, your booking for {{2}} at {{3}} on {{4}} was cancelled because the deposit didn't arrive in time ⌛\n\nThe slot has been released and nothing was charged.",
     },
   },
   appointment_deposit_late: {
@@ -100,6 +111,20 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
 };
 
 export const WHATSAPP_TEMPLATE_KEYS = Object.keys(WHATSAPP_TEMPLATES) as WhatsAppTemplateKey[];
+
+/** The name to send and to look up in Meta. */
+export function metaTemplateName(key: WhatsAppTemplateKey) {
+  return WHATSAPP_TEMPLATES[key].metaName ?? key;
+}
+
+/**
+ * Words that make Meta read a template as promotion and bill it as
+ * Marketing. Checked by scripts/verify-whatsapp-notices.ts.
+ */
+export const PROMOTIONAL_WORDS = [
+  "oferta", "descuento", "promo", "gratis", "regalo", "aprovech", "reservá de nuevo", "volvé", "no te pierdas", "%",
+  "offer", "discount", "free", "gift", "book again", "don't miss", "come back",
+];
 
 /** The template's wording with its variables filled in, as she will read it. */
 export function renderWhatsAppTemplate(key: WhatsAppTemplateKey, language: string, params: string[]) {

@@ -16,6 +16,7 @@ import "dotenv/config";
 import {
   WHATSAPP_TEMPLATE_KEYS,
   WHATSAPP_TEMPLATES,
+  metaTemplateName,
   type WhatsAppTemplateKey,
 } from "../src/lib/notifications/whatsapp-templates";
 
@@ -53,6 +54,7 @@ type Existing = {
   name: string;
   language: string;
   status: string;
+  category?: string;
   rejected_reason?: string;
   components?: { type: string; text?: string }[];
 };
@@ -64,7 +66,7 @@ function components(key: WhatsAppTemplateKey, lang: "es" | "en") {
 }
 
 async function existing(): Promise<Existing[]> {
-  const res = await graph("/message_templates?fields=id,name,language,status,rejected_reason,components&limit=200");
+  const res = await graph("/message_templates?fields=id,name,language,status,category,rejected_reason,components&limit=200");
   if (!res.ok) {
     console.error("Meta respondió:", JSON.stringify(res.body));
     process.exit(1);
@@ -88,14 +90,15 @@ async function create() {
   for (const key of WHATSAPP_TEMPLATE_KEYS) {
     const tpl = WHATSAPP_TEMPLATES[key];
     for (const lang of languages) {
-      if (have.some((t) => t.name === key && t.language === lang)) {
+      const name = metaTemplateName(key);
+      if (have.some((t) => t.name === name && t.language === lang)) {
         console.log(`= ${key} [${lang}] ya existe`);
         continue;
       }
       const res = await graph("/message_templates", {
         method: "POST",
         body: JSON.stringify({
-          name: key,
+          name,
           language: lang,
           category: "UTILITY",
           components: components(key, lang),
@@ -116,7 +119,7 @@ async function sync() {
   const have = await existing();
   for (const key of WHATSAPP_TEMPLATE_KEYS) {
     for (const lang of languages) {
-      const t = have.find((x) => x.name === key && x.language === lang);
+      const t = have.find((x) => x.name === metaTemplateName(key) && x.language === lang);
       if (!t) {
         console.log(`· ${key} [${lang}] no existe: usá --create`);
         continue;
@@ -125,6 +128,10 @@ async function sync() {
       const extra = t.components?.some((c) => c.type !== "BODY");
       if (body === WHATSAPP_TEMPLATES[key].body[lang] && !extra) {
         console.log(`= ${key} [${lang}] ya está al día`);
+        continue;
+      }
+      if (t.category && t.category !== "UTILITY") {
+        console.log(`✗ ${key} [${lang}] Meta la pasó a ${t.category}: no se edita, hay que darle un nombre nuevo (metaName)`);
         continue;
       }
       if (!["APPROVED", "REJECTED", "PAUSED"].includes(t.status)) {
@@ -145,9 +152,11 @@ async function status() {
   const have = await existing();
   for (const key of WHATSAPP_TEMPLATE_KEYS) {
     for (const lang of languages) {
-      const t = have.find((x) => x.name === key && x.language === lang);
+      const t = have.find((x) => x.name === metaTemplateName(key) && x.language === lang);
       const reason = t?.rejected_reason && t.rejected_reason !== "NONE" ? ` (${t.rejected_reason})` : "";
-      console.log(`${(t?.status ?? "NO CREADA").padEnd(10)} ${key} [${lang}]${reason}`);
+      const category = t?.category ?? "";
+      const warn = t && category !== "UTILITY" ? "  ⚠ no es UTILITY: se cobra como marketing" : "";
+      console.log(`${(t?.status ?? "NO CREADA").padEnd(10)} ${category.padEnd(10)} ${metaTemplateName(key)} [${lang}]${reason}${warn}`);
     }
   }
 }

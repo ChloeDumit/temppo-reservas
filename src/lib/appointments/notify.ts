@@ -97,7 +97,7 @@ export async function notifyBooked(appointmentId: string, manageToken: string, c
           phone: client.phone,
           appointmentId: appt.id,
           template: "appointment_held",
-          params: [first, when, appt.serviceName, studio.name, manageUrl],
+          params: [first, appt.serviceName, studio.name, when, manageUrl],
         }
       : {
           studio,
