@@ -57,7 +57,7 @@ export const pages = {
   caption: (kicker, text) => `<style>${BASE_CSS}
     .c{position:absolute;left:80px;right:80px;top:150px;height:280px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:16px}
     .k{font-size:28px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#b5536f}
-    .t{font-family:"Cormorant Garamond",serif;font-weight:600;font-size:76px;line-height:1.02;letter-spacing:-.01em;text-wrap:balance}</style>
+    .t{font-family:"Cormorant Garamond",${EMOJI},serif;font-weight:600;font-size:76px;line-height:1.02;letter-spacing:-.01em;text-wrap:balance}</style>
     <div class="c"><div class="k">${esc(kicker)}</div><div class="t">${esc(text)}</div></div>`,
   intro: (title, kicker, { night = false } = {}) => `<style>${BASE_CSS}
     body{background:${night ? "radial-gradient(110% 70% at 50% 20%,#4a1d2c 0%,#2a1018 70%)" : "#b5536f"};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:34px;padding:0 90px}

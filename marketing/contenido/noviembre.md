@@ -17,12 +17,14 @@ Reglas para todo el contenido:
 |---|---|---|---|
 | Lun 2/11 | Reel (app) | Le llega solo por WhatsApp | `video/out/temppo-beauty-whatsapp.mp4` |
 | Mié 4/11 | Carrusel (5) | Lo que recibe tu clienta | `instagram/noviembre/carrusel-recibe-*.png` |
-| Vie 6/11 | Reel (lo grabás vos) | Cuántas veces por día respondés lo mismo | Guion 1 |
+| Vie 6/11 | Reel (sin cara) | ¿Tenés lugar? | `video/out/temppo-beauty-tenes-lugar.mp4` (o grabalo vos: Guion 1) |
 | Lun 9/11 | Reel (app) | Mientras dormís | `video/out/temppo-beauty-mientras-dormis.mp4` |
 | Mié 11/11 | Post | El recordatorio sale solo | `instagram/noviembre/post-recordatorio.png` |
-| Vie 13/11 | Reel (lo grabás vos) | Un día con mi agenda | Guion 2 |
+| Vie 13/11 | Reel (sin cara) | Un día con mi agenda | `video/out/temppo-beauty-un-dia.mp4` (o grabalo vos: Guion 2) |
 | De reserva | Carrusel (4) | 3 cosas que tu agenda hace sola | `instagram/noviembre/carrusel-sola-*.png` |
-| De reserva | Reel (lo grabás vos) | "No me pagaron la seña" | Guion 3 |
+| De reserva | Reel (sin cara) | La seña | `video/out/temppo-beauty-sena.mp4` (o grabalo vos: Guion 3) |
+
+Los tres reels "sin cara" ya están terminados, sin voz y sin audio: al publicar solo les agregás un audio en tendencia. Si preferís grabarte, los guiones de abajo siguen sirviendo, y el kit para editarlos en CapCut o TikTok está en `kit-reels/`.
 
 Historias: ver la sección **Historias** al final. Las de "WhatsApp automático" van a una destacada nueva.
 
