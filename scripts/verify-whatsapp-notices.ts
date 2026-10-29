@@ -159,6 +159,44 @@ async function main() {
     for (const m of sent) {
       check(`${m.template} filled every variable`, m.params.every((p) => p.trim().length > 0), true);
     }
+
+    console.log("\nRegistro y estados de entrega");
+    const { readWhatsAppPayload } = await import("../src/lib/notifications/whatsapp-log");
+    const { POST: webhook } = await import("../src/app/api/whatsapp/webhook/route");
+    const { NextRequest } = await import("next/server");
+    const reminderLog = await db.notificationLog.findFirstOrThrow({
+      where: { studioId: studio.id, channel: "WHATSAPP", template: "appointment_booked" },
+      orderBy: { createdAt: "asc" },
+    });
+    const logged = readWhatsAppPayload(reminderLog.payload);
+    check("the text she read is kept", logged?.text.startsWith("¡Hola Sofía!") && logged.text.includes("Kapping"), true);
+    check("and starts as sent", logged?.delivery, "sent");
+
+    const secret = process.env.WHATSAPP_APP_SECRET;
+    delete process.env.WHATSAPP_APP_SECRET;
+    const receipt = (status: string, ts: number, extra: Record<string, unknown> = {}) =>
+      webhook(
+        new NextRequest("http://local/api/whatsapp/webhook", {
+          method: "POST",
+          body: JSON.stringify({
+            entry: [{ changes: [{ value: { statuses: [{ id: reminderLog.providerMessageId, status, timestamp: String(ts), ...extra }] } }] }],
+          }),
+        }),
+      );
+    const delivery = async () =>
+      readWhatsAppPayload((await db.notificationLog.findUniqueOrThrow({ where: { id: reminderLog.id } })).payload);
+    const t0 = Math.floor(Date.now() / 1000);
+    await receipt("delivered", t0);
+    check("a delivery receipt marks it delivered", (await delivery())?.delivery, "delivered");
+    await receipt("read", t0 + 60);
+    const read = await delivery();
+    check("then read, with when", [read?.delivery, Boolean(read?.readAt)], ["read", true]);
+    await receipt("delivered", t0 + 30);
+    check("a late receipt never takes it back", (await delivery())?.delivery, "read");
+    await receipt("failed", t0 + 90, { errors: [{ code: 131049, title: "Not delivered" }] });
+    const row = await db.notificationLog.findUniqueOrThrow({ where: { id: reminderLog.id } });
+    check("a failure is recorded, with Meta's code", [row.status, row.error?.startsWith("131049")], ["FAILED", true]);
+    if (secret !== undefined) process.env.WHATSAPP_APP_SECRET = secret;
   } finally {
     globalThis.fetch = realFetch;
     delete process.env.WHATSAPP_TOKEN;

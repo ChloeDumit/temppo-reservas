@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { toWhatsAppNumber } from "@/lib/phone";
+import { advanceDelivery, isDelivery, readWhatsAppPayload } from "@/lib/notifications/whatsapp-log";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,13 @@ function signatureValid(raw: string, header: string | null) {
 
 type Change = {
   value?: {
-    statuses?: { id: string; status: string; errors?: { title?: string; message?: string }[] }[];
+    statuses?: {
+      id: string;
+      status: string;
+      timestamp?: string;
+      recipient_id?: string;
+      errors?: { code?: number; title?: string; message?: string }[];
+    }[];
     messages?: { from: string; type: string; text?: { body?: string }; button?: { text?: string } }[];
   };
 };
@@ -39,9 +46,10 @@ const STOP = /^\s*(baja|stop|parar|no quiero)\s*[.!]?\s*$/i;
 const START = /^\s*(alta|start)\s*[.!]?\s*$/i;
 
 /**
- * Delivery receipts for what we sent, and the replies clients send back. A
- * failed delivery marks its log row; BAJA stops every automatic message to
- * that number, ALTA turns them back on. Anything else is left for now.
+ * Delivery receipts for what we sent, and the replies clients send back.
+ * Each receipt moves its log row along — delivered, read or failed — so the
+ * platform console shows how far a message got. BAJA stops every automatic
+ * message to that number, ALTA turns them back on. Anything else is left.
  */
 export async function POST(request: NextRequest) {
   const raw = await request.text();
@@ -59,11 +67,29 @@ export async function POST(request: NextRequest) {
   for (const entry of payload.entry ?? []) {
     for (const change of entry.changes ?? []) {
       for (const status of change.value?.statuses ?? []) {
-        if (status.status !== "failed") continue;
-        const error = status.errors?.map((e) => e.message || e.title).join("; ") || "failed";
-        await db.notificationLog.updateMany({
+        if (!isDelivery(status.status)) continue;
+        const failed = status.status === "failed";
+        const error = failed
+          ? (status.errors?.map((e) => [e.code, e.message || e.title].filter(Boolean).join(" ")).join("; ") || "failed").slice(0, 500)
+          : null;
+        const row = await db.notificationLog.findUnique({
           where: { providerMessageId: status.id },
-          data: { status: "FAILED", error: error.slice(0, 500) },
+          select: { id: true, payload: true },
+        });
+        if (!row) {
+          // Not one the app sent (a test from Meta's console, say). Logged so
+          // a failure still leaves a reason in the function logs.
+          if (failed) console.warn(`[whatsapp] ${status.id} to ${status.recipient_id ?? "?"} failed: ${error}`);
+          continue;
+        }
+        const at = status.timestamp ? new Date(Number(status.timestamp) * 1000) : new Date();
+        const current = readWhatsAppPayload(row.payload);
+        await db.notificationLog.update({
+          where: { id: row.id },
+          data: {
+            ...(current ? { payload: advanceDelivery(current, status.status, at) } : {}),
+            ...(failed ? { status: "FAILED", error } : {}),
+          },
         });
       }
 

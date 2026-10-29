@@ -2,7 +2,13 @@ import "server-only";
 import { db } from "@/lib/db";
 import { addMonths } from "@/lib/dates";
 import { toWhatsAppNumber } from "@/lib/phone";
-import { metaTemplateName, WHATSAPP_TEMPLATES, type WhatsAppTemplateKey } from "./whatsapp-templates";
+import {
+  metaTemplateName,
+  renderWhatsAppTemplate,
+  WHATSAPP_TEMPLATES,
+  type WhatsAppTemplateKey,
+} from "./whatsapp-templates";
+import type { WhatsAppLogPayload } from "./whatsapp-log";
 
 /*
   Automatic WhatsApp through Meta's Cloud API — the paid add-on for appointment
@@ -117,8 +123,19 @@ export async function notifyWhatsApp(payload: WhatsAppPayload): Promise<boolean>
   if (await db.whatsAppOptOut.findUnique({ where: { phone: to } })) return false;
   if (!(await claimWhatsAppMessage(payload.studioId, payload.now ?? new Date()))) return false;
 
-  const result = await sendTemplate(to, metaTemplateName(payload.template), payload.language, payload.params);
+  const metaName = metaTemplateName(payload.template);
+  const result = await sendTemplate(to, metaName, payload.language, payload.params);
   if (!result.ok) await releaseWhatsAppMessage(payload.studioId);
+
+  // Kept so the platform console can show what she actually read.
+  const logged: WhatsAppLogPayload = {
+    text: renderWhatsAppTemplate(payload.template, payload.language, payload.params),
+    metaName,
+    language: payload.language,
+    params: payload.params,
+    delivery: result.ok ? "sent" : "failed",
+    ...(result.ok ? {} : { failedAt: new Date().toISOString() }),
+  };
 
   await db.notificationLog
     .create({
@@ -131,6 +148,7 @@ export async function notifyWhatsApp(payload: WhatsAppPayload): Promise<boolean>
         error: result.ok ? null : result.error,
         providerMessageId: result.ok ? result.id : null,
         sentAt: result.ok ? new Date() : null,
+        payload: logged,
         relatedType: payload.relatedType ?? null,
         relatedId: payload.relatedId ?? null,
       },
