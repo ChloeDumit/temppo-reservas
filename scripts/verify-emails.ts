@@ -109,6 +109,41 @@ async function main() {
   check("but the text survives", nasty.includes("&lt;script&gt;"), true);
   check("ampersands escaped", nasty.includes("&amp; co"), true);
 
+  console.log("\nWhat actually goes out");
+  // A fake key and a stubbed network: whatever this decides, nothing leaves.
+  const { emailTransport, isDeliverableAddress } = await import("../src/lib/notifications/email");
+  const saved = { key: process.env.RESEND_API_KEY, dev: process.env.EMAIL_SEND_IN_DEV };
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
+    if (String(url).includes("api.resend.com")) {
+      calls++;
+      return new Response(JSON.stringify({ id: "stub" }), { status: 200 });
+    }
+    return realFetch(url, init);
+  }) as typeof fetch;
+  const info = console.info;
+  console.info = () => {};
+  try {
+    process.env.RESEND_API_KEY = "re_test_not_a_key";
+    delete process.env.EMAIL_SEND_IN_DEV;
+    const mail = (to: string) => emailTransport.send({ studioId: "none", to, template: "welcome", subject: "x", body: "x" });
+    await mail("someone@gmail.com");
+    check("outside production nothing is sent, even with a key", calls, 0);
+    process.env.EMAIL_SEND_IN_DEV = "1";
+    await mail("owner@c.test");
+    await mail("ana@demo.example");
+    check("test addresses are never sent to", calls, 0);
+    check("reserved domains are recognised", [isDeliverableAddress("a@b.test"), isDeliverableAddress("a@gmail.com"), isDeliverableAddress(null)], [false, true, false]);
+  } finally {
+    globalThis.fetch = realFetch;
+    console.info = info;
+    if (saved.key === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = saved.key;
+    if (saved.dev === undefined) delete process.env.EMAIL_SEND_IN_DEV;
+    else process.env.EMAIL_SEND_IN_DEV = saved.dev;
+  }
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exitCode = 1;
 }

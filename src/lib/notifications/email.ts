@@ -55,23 +55,34 @@ async function brandingFor(studioId: string): Promise<Sender> {
   }
 }
 
+/** Domains reserved for tests and examples (RFC 2606): nobody can receive mail there. */
+const RESERVED_DOMAIN = /\.(test|example|invalid|localhost)$/i;
+
+/** Whether this address would ever reach a real inbox. */
+export function isDeliverableAddress(to: string | null | undefined) {
+  const domain = to?.split("@")[1]?.trim();
+  return domain ? !RESERVED_DOMAIN.test(domain) : false;
+}
+
 /**
- * Resend in production; in development the message is printed so magic links
- * are usable without any API key configured.
+ * Resend in production. Anywhere else the message is only printed: the
+ * checks and the dev server create bookings by the dozen, and with a real key
+ * in .env each one used to go out and spend Resend's daily quota. Set
+ * EMAIL_SEND_IN_DEV=1 to send for real from a development machine.
  */
 export const emailTransport: NotificationTransport = {
   channel: "EMAIL",
   async send(payload: NotificationPayload) {
     const apiKey = process.env.RESEND_API_KEY;
+    const live = process.env.NODE_ENV === "production" || process.env.EMAIL_SEND_IN_DEV === "1";
+    const deliverable = isDeliverableAddress(payload.to);
 
-    // In development always echo the message to the console, even when a real
-    // key is configured: a magic link is far easier to follow from the terminal
-    // than from an inbox, and demo addresses never receive anything anyway.
-    if (!apiKey || process.env.NODE_ENV !== "production") {
+    if (!apiKey || !live || !deliverable) {
+      const why = !apiKey ? "no key" : !live ? "dev" : "test address";
       console.info(
-        `\n──── EMAIL${apiKey ? "" : " (dev, not sent)"} ────\nTo: ${payload.to}\nSubject: ${payload.subject ?? ""}\n\n${payload.body}\n───────────────────────────────\n`,
+        `\n──── EMAIL (not sent: ${why}) ────\nTo: ${payload.to}\nSubject: ${payload.subject ?? ""}\n\n${payload.body}\n───────────────────────────────\n`,
       );
-      if (!apiKey) return { ok: true };
+      return { ok: true };
     }
 
     const branding = await brandingFor(payload.studioId);
