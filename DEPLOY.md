@@ -146,6 +146,12 @@ other — intended, since an account belongs to one studio and one brand.
   The console says whether it is connected and as which account. Instagram's
   API cannot add music from its library: a reel that needs a trending audio
   goes on the *A mano* channel and is posted from the app.
+- **Content API (pushing plans from a laptop).** `scripts/content-push.ts`
+  creates or updates a plan's posts in production, uploads their files and
+  schedules them, through `/api/content/v1`. It is closed unless
+  `CONTENT_API_TOKEN` is set, to a random value of at least 32 characters
+  (`openssl rand -hex 32`), in Netlify and in the local `.env`. The key only
+  reaches the platform's content calendar. Remove the variable to close it.
 - **Entry point from the marketing site.** A plain redirect, never a proxy:
 
   ```toml
