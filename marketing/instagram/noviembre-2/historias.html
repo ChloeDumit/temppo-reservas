@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Historias noviembre 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Jost:wght@400;500;600&family=Fredoka:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fbf7f8; --blush: #f4e6ea; --rose: #b5536f; --rose-deep: #973f59; --plum: #3b1622;
+    --ink: #1c1917; --ink-soft: #57534e; --muted: #8a827a; --line: #ecdfe3;
+    --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+    --serif: "Cormorant Garamond", Georgia, serif, var(--emoji); --sans: "Jost", system-ui, sans-serif, var(--emoji);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ccc; font-family: var(--sans); color: var(--ink); font-feature-settings: "lnum" 1; }
+  #board { display: flex; flex-wrap: wrap; gap: 30px; padding: 30px; }
+
+  /* Instagram covers roughly the top and bottom 250px with its own chrome:
+     everything that matters stays between them. */
+  .story { width: 1080px; height: 1920px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 300px 96px 300px; background: var(--paper); }
+  .story.blush { background: var(--blush); }
+  .story.dark { background: var(--plum); color: #fff; }
+  .step { font-size: 30px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rose); }
+  .dark .step { color: #e7a9bb; }
+  .emo { font-family: var(--emoji); font-style: normal; font-weight: 400; font-size: .8em; }
+  .brand { position: absolute; left: 96px; bottom: 300px; display: flex; align-items: center; gap: 16px; }
+  .brand img { width: 84px; height: 84px; }
+  .brand b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 50px; color: var(--rose); }
+  .brand small { font-size: 30px; color: var(--muted); }
+  .dark .brand b { color: #f3b8c8; }
+  .dark .brand small { color: rgba(255,255,255,.75); }
+
+  .q { font-family: var(--serif); font-size: 104px; line-height: 1.02; font-weight: 600; letter-spacing: -.01em; margin-top: 30px; }
+  .q em { font-style: italic; font-weight: 500; color: var(--rose); }
+  .dark .q em { color: #e7a9bb; }
+  .slot { width: 700px; height: 260px; align-self: center; margin-top: 90px; border: 4px dashed #d9b3bf; border-radius: 40px;
+    background: rgba(255,255,255,.55); display: grid; place-items: center; }
+  .slot.tall { height: 420px; }
+  .slot span { font-size: 26px; color: var(--muted); letter-spacing: .04em; }
+  .dark .slot { border-color: rgba(243,184,200,.5); background: rgba(255,255,255,.06); }
+  .dark .slot span { color: rgba(255,255,255,.7); }
+  .side-mascot { width: 360px; height: 360px; align-self: flex-end; margin-top: auto; margin-bottom: 40px; filter: drop-shadow(0 24px 50px rgba(40,10,20,.18)); }
+  .dark .side-mascot { filter: drop-shadow(0 24px 50px rgba(0,0,0,.4)); }
+  .dark .glow { position: absolute; right: -200px; top: 120px; width: 820px; height: 820px; border-radius: 50%; background: radial-gradient(circle, rgba(181,83,111,.5), rgba(181,83,111,0) 68%); }
+  .dark > :not(.brand):not(.glow) { position: relative; }
+
+  /* mito / realidad */
+  .cards { margin-top: 70px; display: flex; flex-direction: column; gap: 0; align-items: stretch; }
+  .card { border-radius: 44px; padding: 52px 56px 60px; }
+  .card .lbl { display: inline-block; font-size: 28px; font-weight: 600; letter-spacing: .22em; border-radius: 999px; padding: 10px 26px; }
+  .card p { margin-top: 30px; font-family: var(--serif); font-weight: 600; font-size: 80px; line-height: 1.04; letter-spacing: -.01em; }
+  .card.myth { background: #fff; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(87,30,50,.08); }
+  .card.myth .lbl { background: var(--blush); color: var(--rose-deep); }
+  .card.myth p { font-style: italic; font-weight: 500; color: var(--ink-soft); text-decoration: line-through; text-decoration-color: rgba(181,83,111,.55); text-decoration-thickness: 5px; }
+  .card.fact { background: var(--rose); color: #fff; box-shadow: 0 30px 70px rgba(151,63,89,.3); }
+  .card.fact .lbl { background: #fff; color: var(--rose-deep); }
+  .card.fact p { font-size: 70px; }
+  .arrow { align-self: center; margin: 26px 0; }
+</style>
+</head>
+<body>
+<div id="board"></div>
+<script>
+  const M = "../../mascot/mascota-b-calendario.svg";
+  const brand = '<div class="brand"><img src="' + M + '" alt=""><span><b>temppo</b> <small>Beauty</small></span></div>';
+  const slot = (label, cls = "") => `<div class="slot ${cls}"><span>${label}</span></div>`;
+  const arrow = '<svg class="arrow" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#b5536f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"/></svg>';
+
+  const stories = [
+    { id: "historia-encuesta-sena", cls: "blush", html: `
+      <p class="step">Encuesta</p>
+      <p class="q">¿Le pedís seña a <em>tus clientas</em>?</p>
+      ${slot("Poné acá la encuesta")}
+      <img class="side-mascot" src="${M}" alt="">` },
+    { id: "historia-quiz", html: `
+      <p class="step">Quiz</p>
+      <p class="q">¿Cuánto tarda en armarse tu agenda en <em>Temppo Beauty</em>?</p>
+      ${slot("Poné acá el quiz", "tall")}
+      <img class="side-mascot" src="${M}" alt="" style="width:300px;height:300px">` },
+    { id: "historia-mito", cls: "blush", html: `
+      <p class="step">Mito / realidad</p>
+      <div class="cards">
+        <div class="card myth"><span class="lbl">MITO</span><p>«Si pido seña, mis clientas se van.»</p></div>
+        ${arrow}
+        <div class="card fact"><span class="lbl">REALIDAD</span><p>Es un paso más al reservar, y la que reserva con seña aparece.</p></div>
+      </div>` },
+    { id: "historia-cuenta-regresiva", cls: "dark", html: `
+      <div class="glow"></div>
+      <p class="step">Cuenta regresiva</p>
+      <p class="q">¿Tu agenda está lista para <em>diciembre</em>? <span class="emo">🎄</span></p>
+      ${slot("Poné acá la cuenta regresiva")}
+      <img class="side-mascot" src="${M}" alt="">` },
+  ];
+
+  const board = document.getElementById("board");
+  for (const s of stories) {
+    const el = document.createElement("section");
+    el.className = "story " + (s.cls ?? "");
+    el.id = s.id;
+    el.innerHTML = s.html + brand;
+    board.appendChild(el);
+  }
+  window.STORY_IDS = stories.map((s) => s.id);
+</script>
+</body>
+</html>

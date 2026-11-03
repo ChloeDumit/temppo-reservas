@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Feed noviembre 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&family=Fredoka:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fbf7f8;
+    --blush: #f4e6ea;
+    --rose: #b5536f;
+    --rose-deep: #973f59;
+    --plum: #3b1622;
+    --ink: #1c1917;
+    --ink-soft: #57534e;
+    --muted: #8a827a;
+    --line: #ecdfe3;
+    --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+    --serif: "Cormorant Garamond", Georgia, serif, var(--emoji);
+    --sans: "Jost", system-ui, sans-serif, var(--emoji);
+    --wa-bg: #efeae2;
+    --wa-out: #d9fdd3;
+    --wa-green: #25d366;
+    --wa-check: #53bdeb;
+    --wa-link: #027eb5;
+    --wa-time: #667781;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ddd; font-family: var(--sans); color: var(--ink); font-feature-settings: "lnum" 1; }
+  .board { display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; }
+
+  .post { width: 1080px; height: 1350px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 96px 96px 84px; }
+  .eyebrow { font-size: 26px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
+  .headline { font-family: var(--serif); font-weight: 600; font-size: 112px; line-height: 0.98; letter-spacing: -0.02em; }
+  .headline em { font-style: italic; font-weight: 500; }
+  .e { font-family: var(--emoji); font-style: normal; font-weight: 400; }
+  .footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-size: 26px; position: relative; z-index: 3; }
+  .brand { display: inline-flex; align-items: center; gap: 14px; }
+  .brand b, .corner b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 46px; letter-spacing: -.01em; }
+  .brand small, .corner small { font-family: var(--sans); font-size: 28px; margin-left: 8px; opacity: .8; }
+  .brand img, .corner img { width: 72px; height: 72px; }
+  .pill { border-radius: 999px; padding: 18px 34px; font-weight: 500; font-size: 28px; }
+  .light-bg .brand b { color: var(--rose); }
+  .light-bg .footer { color: var(--muted); }
+  .light-bg .eyebrow { color: var(--rose); }
+  .light-bg .headline em { color: var(--rose); }
+
+  .dots { display: inline-flex; gap: 12px; align-items: center; }
+  .dots i { width: 14px; height: 14px; border-radius: 50%; background: currentColor; opacity: .3; }
+  .dots i.on { opacity: 1; width: 40px; border-radius: 999px; }
+  .light-bg .dots { color: var(--rose); }
+  .swipe { font-size: 28px; font-weight: 500; letter-spacing: .04em; }
+
+  /* dark cover (plum) */
+  .cover { background: var(--plum); color: #fff; }
+  .cover .eyebrow { color: #e7a9bb; }
+  .cover .headline { margin-top: auto; font-size: 118px; position: relative; z-index: 2; }
+  .cover .headline em { color: #e7a9bb; }
+  .cover .footer { margin-top: 64px; color: rgba(255,255,255,.75); }
+  .cover .brand b { color: #f3b8c8; }
+  .cover .swipe { color: #f3b8c8; }
+  .cover .glow { position: absolute; right: -180px; top: -160px; width: 760px; height: 760px; border-radius: 50%; background: radial-gradient(circle, rgba(181,83,111,.55), rgba(181,83,111,0) 68%); }
+  .cover .mascot { position: absolute; right: 70px; top: 170px; width: 380px; height: 380px; transform: rotate(8deg); filter: drop-shadow(0 30px 50px rgba(0,0,0,.35)); }
+  .save { align-self: flex-start; margin-top: 48px; display: inline-flex; align-items: center; gap: 12px; border: 2px solid rgba(243,184,200,.55); color: #f3b8c8; border-radius: 999px; padding: 14px 30px; font-size: 30px; font-weight: 500; letter-spacing: .02em; position: relative; z-index: 2; }
+
+  /* WhatsApp chat card */
+  .wacard { background: var(--wa-bg); border-radius: 44px; overflow: hidden; box-shadow: 0 30px 80px rgba(87, 30, 50, .14); border: 1px solid rgba(87,30,50,.06); position: relative; }
+  .wacard .wahead { background: #fff; display: flex; align-items: center; gap: 20px; padding: 24px 34px; border-bottom: 1px solid #e9e3dc; }
+  .wacard .back { width: 22px; height: 36px; flex-shrink: 0; }
+  .wacard .avatar { width: 72px; height: 72px; border-radius: 50%; background: #dfe5e7; display: grid; place-items: center; flex-shrink: 0; overflow: hidden; }
+  .wacard .who { flex: 1; }
+  .wacard .who b { font-size: 31px; font-weight: 600; color: #111b21; }
+  .wacard .who span { display: block; font-size: 22px; color: var(--wa-time); margin-top: 2px; }
+  .wacard .wabody { padding: 44px 36px 50px; position: relative; display: flex; flex-direction: column;
+    background-color: var(--wa-bg);
+    background-image:
+      radial-gradient(circle at 30px 34px, rgba(120,100,80,.08) 3px, transparent 3.5px),
+      radial-gradient(circle at 12px 20px, rgba(120,100,80,.06) 5px, transparent 5.5px),
+      radial-gradient(circle at 40px 10px, rgba(120,100,80,.07) 2px, transparent 2.5px);
+    background-size: 92px 92px, 134px 118px, 61px 73px;
+    background-position: 13px 7px, 51px 29px, 3px 41px; }
+  .wabubble { position: relative; background: #fff; color: #111b21; border-radius: 0 22px 22px 22px; padding: 22px 28px 14px; max-width: 92%; font-family: var(--sans); font-size: 36px; line-height: 1.42; box-shadow: 0 1px 1.5px rgba(11,20,26,.13); align-self: flex-start; }
+  .wabubble::before { content: ""; position: absolute; left: -16px; top: 0; border-right: 16px solid #fff; border-bottom: 20px solid transparent; }
+  .wabubble time { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 21px; color: var(--wa-time); margin-top: 4px; }
+  .wabubble.out { background: var(--wa-out); border-radius: 22px 0 22px 22px; align-self: flex-end; }
+  .wabubble.out::before { left: auto; right: -16px; border-right: 0; border-left: 16px solid var(--wa-out); }
+  .ticks { width: 30px; height: 20px; }
+  mark { background: rgba(181,83,111,.16); color: var(--rose-deep); font-weight: 600; border-radius: 8px; padding: 0 6px; letter-spacing: .06em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+  /* message slides */
+  .tpl { background: var(--paper); }
+  .tpl .top { display: flex; gap: 40px; align-items: flex-start; }
+  .tpl .num { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 260px; line-height: .78; color: var(--rose); width: 150px; flex-shrink: 0; }
+  .tpl h2 { font-family: var(--serif); font-weight: 600; font-size: 100px; line-height: .98; letter-spacing: -0.02em; margin-top: 10px; }
+  .tpl .wacard { margin-top: auto; }
+  .tpl .wabubble { font-size: 40px; }
+  .tpl .wabubble mark { background: #fff; box-shadow: 0 0 0 1px rgba(181,83,111,.25); }
+  .tpl .hint { margin-top: 44px; margin-bottom: auto; font-size: 30px; color: var(--ink-soft); text-align: center; }
+  .tpl .hint mark { font-size: 28px; }
+
+  /* rose close */
+  .close { background: var(--rose); color: #fff; }
+  .close .corner { color: #fff; display: inline-flex; align-items: center; gap: 16px; }
+  .close .corner img { background: #fff; border-radius: 50%; padding: 6px; width: 80px; height: 80px; }
+  .close .headline { margin-top: 110px; font-size: 120px; }
+  .close .headline em { color: #f6d3dd; }
+  .close .text { margin-top: 44px; font-size: 38px; line-height: 1.42; color: #fbe4ea; max-width: 820px; }
+  .close .cta { margin-top: 56px; display: flex; flex-direction: column; gap: 26px; align-items: flex-start; }
+  .close .pill.light { background: #fff; color: var(--rose-deep); font-size: 40px; padding: 24px 48px; font-weight: 600; letter-spacing: .01em; }
+  .close .note { font-size: 30px; color: #f6d3dd; padding-left: 8px; }
+  .close .foot { margin-top: auto; max-width: 520px; font-size: 26px; line-height: 1.45; color: #f6d3dd; position: relative; z-index: 3; }
+  .close .footer { margin-top: auto; color: #f6d3dd; }
+  .close .foot + .footer { margin-top: 36px; }
+  .close .dots { color: #fff; }
+  .close .peek { position: absolute; right: 40px; bottom: 60px; width: 420px; height: 420px; transform: rotate(-8deg); z-index: 2; filter: drop-shadow(0 20px 40px rgba(40,10,20,.35)); }
+  .close.short .peek { width: 360px; height: 360px; bottom: 50px; }
+
+  /* cuenta: text slides */
+  .plain { background: var(--paper); }
+  .plain.blush { background: var(--blush); }
+  .plain h2 { font-family: var(--serif); font-weight: 600; font-size: 108px; line-height: .98; letter-spacing: -0.02em; margin-top: 28px; }
+  .plain h2 em { font-style: italic; font-weight: 500; color: var(--rose); }
+  .plain .text { margin-top: 40px; font-size: 38px; line-height: 1.42; color: var(--ink-soft); max-width: 860px; }
+  .plain .illo { margin: auto 0; }
+
+  /* formula */
+  .formula { margin-top: auto; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 18px; }
+  .fbox { background: #fff; border: 1px solid var(--line); border-radius: 32px; height: 290px; padding: 30px 26px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 36px; line-height: 1.28; font-weight: 500; color: var(--ink); box-shadow: 0 20px 50px rgba(87,30,50,.08); }
+  .fbox.result { background: var(--rose); border-color: var(--rose); color: #fff; }
+  .op { font-family: var(--serif); font-size: 96px; font-weight: 500; color: var(--rose); line-height: 1; }
+  .example { margin-top: 64px; margin-bottom: auto; background: #fff; border: 2px dashed #d9b3bf; border-radius: 36px; padding: 40px 48px; }
+  .example .lbl { font-size: 24px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--rose); }
+  .example .calc { margin-top: 14px; font-family: var(--serif); font-size: 72px; font-weight: 600; line-height: 1.1; letter-spacing: -.01em; }
+  .example .calc b { color: var(--rose-deep); font-weight: 600; white-space: nowrap; }
+
+  /* agenda with an empty slot */
+  .day { background: #fff; border: 1px solid var(--line); border-radius: 40px; padding: 36px 40px; box-shadow: 0 30px 80px rgba(87,30,50,.10); }
+  .day .row { display: flex; align-items: center; gap: 28px; }
+  .day .row + .row { margin-top: 18px; }
+  .day .h { width: 110px; font-size: 30px; font-weight: 500; color: var(--muted); }
+  .day .blk { flex: 1; height: 92px; border-radius: 22px; background: var(--blush); border-left: 10px solid var(--rose); }
+  .day .blk.empty { background: repeating-linear-gradient(-45deg, #fbf7f8 0 14px, #f6eef1 14px 28px); border: 3px dashed #d9b3bf; display: grid; place-items: center; }
+  .day .blk.empty svg { opacity: .7; }
+
+  /* two-point cards */
+  .points { margin: auto 0; display: flex; flex-direction: column; gap: 28px; }
+  .point { background: #fff; border: 1px solid var(--line); border-radius: 36px; padding: 40px 44px; display: flex; gap: 32px; align-items: center; box-shadow: 0 20px 50px rgba(87,30,50,.08); }
+  .point .ic { width: 92px; height: 92px; border-radius: 50%; background: var(--blush); display: grid; place-items: center; flex-shrink: 0; }
+  .point p { font-size: 37px; line-height: 1.38; color: var(--ink); }
+
+  /* diciembre */
+  .dic { background: var(--plum); color: #fff; }
+  .dic .glow { position: absolute; left: -220px; bottom: -260px; width: 900px; height: 900px; border-radius: 50%; background: radial-gradient(circle, rgba(181,83,111,.45), rgba(181,83,111,0) 66%); }
+  .dic .headline { font-size: 104px; position: relative; z-index: 2; }
+  .dic .headline em { color: #e7a9bb; }
+  .dic .stage { position: relative; margin-top: auto; margin-bottom: 64px; z-index: 2; }
+  .dic .wacard { box-shadow: 0 40px 90px rgba(0,0,0,.35); border: 0; }
+  .dic .wacard .avatar { background: #dfe5e7; }
+  .dic .unread { min-width: 64px; height: 64px; padding: 0 18px; border-radius: 999px; background: var(--wa-green); color: #fff; font-size: 30px; font-weight: 600; display: grid; place-items: center; }
+  .dic .ghost { height: 58px; border-radius: 0 22px 22px 22px; background: rgba(255,255,255,.65); align-self: flex-start; position: relative; }
+  .dic .ghost + .ghost, .dic .ghost + .wabubble { margin-top: 14px; }
+  .dic .wabubble { font-size: 40px; }
+  .dic .wabubble::before, .dic .ghost.first::before { content: ""; position: absolute; left: -16px; top: 0; border-right: 16px solid #fff; border-bottom: 20px solid transparent; }
+  .dic .ghost.first::before { border-right-color: rgba(255,255,255,.65); }
+  .dic .wabubble::before { display: none; }
+  .dic .footer { color: #f3b8c8; }
+  .dic .footer .tag { white-space: nowrap; font-size: 31px; font-weight: 500; color: #fff; }
+  .dic .footer .brand b { color: #f3b8c8; }
+  .dic .footer .brand small { color: rgba(255,255,255,.75); }
+  .dic .mascot { position: absolute; right: 110px; top: -135px; width: 220px; height: 220px; transform: rotate(-10deg); z-index: 3; filter: drop-shadow(0 20px 30px rgba(0,0,0,.35)); }
+</style>
+</head>
+<body>
+<div class="board">
+
+<!-- ============ Carrusel: 4 mensajes para copiar y pegar ============ -->
+
+  <section class="post cover" id="carrusel-mensajes-1">
+    <div class="glow"></div>
+    <img class="mascot" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <h1 class="headline">4 mensajes para <em>copiar y pegar</em> con tus clientas.</h1>
+    <span class="save">Guardalo <span class="e">📌</span></span>
+    <div class="footer"><span class="swipe">Deslizá →</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post tpl light-bg" id="carrusel-mensajes-2">
+    <div class="top"><span class="num">1</span><h2>Para pedir la seña</h2></div>
+    <div class="wacard" data-wa><div class="wabody">
+      <div class="wabubble out">¡Hola! Para confirmar tu turno te pido una seña de $<mark>___</mark> que se descuenta del total. Te paso los datos <span class="e">😊</span><time>10:12 <svg class="ticks" data-ticks></svg></time></div>
+    </div></div>
+    <p class="hint" data-hint></p>
+    <div class="footer"><span class="dots" data-dots="2/6"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post tpl light-bg" id="carrusel-mensajes-3">
+    <div class="top"><span class="num">2</span><h2>Para confirmar el día antes</h2></div>
+    <div class="wacard" data-wa><div class="wabody">
+      <div class="wabubble out">¡Hola! Te recuerdo tu turno de mañana a las <mark>___</mark>. ¿Me confirmás? <span class="e">💅</span><time>18:30 <svg class="ticks" data-ticks></svg></time></div>
+    </div></div>
+    <p class="hint" data-hint></p>
+    <div class="footer"><span class="dots" data-dots="3/6"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post tpl light-bg" id="carrusel-mensajes-4">
+    <div class="top"><span class="num">3</span><h2>Para reprogramar sin drama</h2></div>
+    <div class="wacard" data-wa><div class="wabody">
+      <div class="wabubble out">¡No pasa nada! ¿Te sirve el <mark>___</mark> a las <mark>___</mark>? Si no, decime qué día te queda mejor.<time>11:05 <svg class="ticks" data-ticks></svg></time></div>
+    </div></div>
+    <p class="hint" data-hint></p>
+    <div class="footer"><span class="dots" data-dots="4/6"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post tpl light-bg" id="carrusel-mensajes-5">
+    <div class="top"><span class="num">4</span><h2>Para invitar a volver</h2></div>
+    <div class="wacard" data-wa><div class="wabody">
+      <div class="wabubble out">¡Hola! Ya van <mark>___</mark> semanas de tu último <mark>___</mark>. ¿Te reservo para la semana que viene? <span class="e">✨</span><time>16:40 <svg class="ticks" data-ticks></svg></time></div>
+    </div></div>
+    <p class="hint" data-hint></p>
+    <div class="footer"><span class="dots" data-dots="5/6"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post close" id="carrusel-mensajes-6">
+    <span class="corner" data-brand></span>
+    <img class="peek" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <h1 class="headline">O que salgan <em>solos.</em></h1>
+    <p class="text">Temppo Beauty manda la confirmación, el recordatorio y los cambios por WhatsApp.</p>
+    <div class="cta"><span class="pill light">beauty.temppo.uy</span><span class="note">Primer mes gratis · sin tarjeta</span></div>
+    <div class="footer"><span class="dots" data-dots="6/6"></span><span></span></div>
+  </section>
+
+<!-- ============ Carrusel: ¿Cuánto te cuesta una clienta que no viene? ============ -->
+
+  <section class="post cover" id="carrusel-cuenta-1">
+    <div class="glow"></div>
+    <img class="mascot" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <h1 class="headline">¿Cuánto te cuesta una clienta <em>que no viene?</em></h1>
+    <div class="footer"><span class="swipe">Hacé la cuenta con tus números <span class="e">👉</span></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post plain light-bg" id="carrusel-cuenta-2">
+    <p class="eyebrow">La cuenta</p>
+    <div class="formula">
+      <div class="fbox">Lo que sale tu servicio</div>
+      <span class="op">×</span>
+      <div class="fbox">Clientas que faltan por mes</div>
+      <span class="op">=</span>
+      <div class="fbox result">Lo que dejás de cobrar</div>
+    </div>
+    <div class="example">
+      <p class="lbl">Ejemplo</p>
+      <p class="calc">$1.200 × 3 faltas = <b>$3.600 al mes</b></p>
+    </div>
+    <div class="footer"><span class="dots" data-dots="2/5"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post plain blush light-bg" id="carrusel-cuenta-3">
+    <h2>Y no es solo <em>la plata.</em></h2>
+    <p class="text">Es el horario que podría haber tomado otra clienta, el material preparado y el tiempo esperando.</p>
+    <div class="illo">
+      <div class="day">
+        <div class="row"><span class="h">10:00</span><span class="blk"></span></div>
+        <div class="row"><span class="h">11:30</span><span class="blk empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#b5536f" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span></div>
+        <div class="row"><span class="h">14:00</span><span class="blk"></span></div>
+      </div>
+    </div>
+    <div class="footer"><span class="dots" data-dots="3/5"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post plain light-bg" id="carrusel-cuenta-4">
+    <h2>Con seña, <em>cambia.</em></h2>
+    <div class="points">
+      <div class="point">
+        <span class="ic"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#b5536f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.9-1.6-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2.1 0 2.9 5.6 1.4 5.6 4.2 0 1.3-1.2 2.1-2.8 2.1-1.3 0-2.4-.6-2.9-1.5M12 6.2v1.6M12 16.2v1.6"/></svg></span>
+        <p>Si cancela fuera de término, la seña queda.</p>
+      </div>
+      <div class="point">
+        <span class="ic"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#b5536f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9.5 15l2 2 3.5-3.5"/></svg></span>
+        <p>Si la seña no llega a tiempo, el horario se libera solo para otra.</p>
+      </div>
+    </div>
+    <div class="footer"><span class="dots" data-dots="4/5"></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post close short" id="carrusel-cuenta-5">
+    <span class="corner" data-brand></span>
+    <img class="peek" src="../../mascot/mascota-b-calendario.svg" alt="">
+    <h1 class="headline">Probalo <em>gratis</em> un mes.</h1>
+    <div class="cta"><span class="pill light">beauty.temppo.uy</span><span class="note">Sin tarjeta · link en la bio</span></div>
+    <p class="foot">El ejemplo es ilustrativo: hacé la cuenta con tus precios.</p>
+    <div class="footer"><span class="dots" data-dots="5/5"></span><span></span></div>
+  </section>
+
+<!-- ============ Post: Diciembre se acerca ============ -->
+
+  <section class="post dic" id="post-diciembre">
+    <div class="glow"></div>
+    <h1 class="headline">Diciembre se acerca y vos todavía <em>das turnos por WhatsApp.</em></h1>
+    <div class="stage">
+      <img class="mascot" src="../../mascot/mascota-b-calendario.svg" alt="">
+      <div class="wacard" data-wa="client" data-unread="+38"><div class="wabody">
+        <span class="ghost first" style="width:46%"></span>
+        <span class="ghost" style="width:62%"></span>
+        <span class="ghost" style="width:34%"></span>
+        <div class="wabubble">¿tenés lugar antes de las fiestas? <span class="e">🎄</span><time>23:41</time></div>
+      </div></div>
+    </div>
+    <div class="footer"><span class="tag">Armá tu agenda antes de que explote.</span><span class="brand" data-brand></span></div>
+  </section>
+
+</div>
+<script>
+  const MASCOT = "../../mascot/mascota-b-calendario.svg";
+  const BRAND = new URLSearchParams(location.search).get("brand") || "Temppo Beauty";
+  document.querySelectorAll("[data-brand]").forEach((el) => {
+    const [, family, product] = /^(temppo)\s+(.+)$/i.exec(BRAND) ?? [null, BRAND, ""];
+    el.innerHTML = `<img src="${MASCOT}" alt=""><span><b></b><small></small></span>`;
+    el.querySelector("b").textContent = product ? family.toLowerCase() : family;
+    el.querySelector("small").textContent = product;
+  });
+
+  // WhatsApp header: a chat with a client (no name, generic avatar).
+  const person = `<svg width="48" height="48" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="9" r="4.2"/><path d="M3.5 21c.9-4.2 4.3-6.5 8.5-6.5s7.6 2.3 8.5 6.5z"/></svg>`;
+  document.querySelectorAll("[data-wa]").forEach((card) => {
+    const head = document.createElement("div");
+    head.className = "wahead";
+    const unread = card.dataset.unread ? `<span class="unread">${card.dataset.unread}</span>` : "";
+    head.innerHTML = `
+      <svg class="back" viewBox="0 0 12 20" fill="none" stroke="#54656f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>
+      <span class="avatar">${person}</span>
+      <span class="who"><b>Clienta</b><span>en línea</span></span>${unread}`;
+    card.prepend(head);
+  });
+
+  // Double blue check.
+  document.querySelectorAll("[data-ticks]").forEach((svg) => {
+    svg.setAttribute("viewBox", "0 0 18 12");
+    svg.innerHTML = `<path d="M1.5 6.5l3 3 6-7M7.5 9.5l1 0.2 6-7.2" fill="none" stroke="#53bdeb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`;
+  });
+
+  document.querySelectorAll("[data-hint]").forEach((el) => {
+    el.innerHTML = "Copialo y cambiá lo que está en <mark>___</mark>";
+  });
+
+  document.querySelectorAll("[data-dots]").forEach((el) => {
+    const [n, total] = el.dataset.dots.split("/").map(Number);
+    el.innerHTML = Array.from({ length: total }, (_, i) => `<i class="${i + 1 === n ? "on" : ""}"></i>`).join("");
+  });
+</script>
+</body>
+</html>

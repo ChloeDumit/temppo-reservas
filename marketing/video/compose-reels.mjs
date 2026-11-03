@@ -2,7 +2,7 @@
  * Two finished reels about what the app does on its own, built from the
  * recordings record.mjs made (marketing/video/raw) plus drawn screens.
  *
- *   node marketing/video/compose-reels.mjs [whatsapp|mientras-dormis|tenes-lugar|un-dia|sena|demo]
+ *   node marketing/video/compose-reels.mjs [whatsapp|mientras-dormis|tenes-lugar|un-dia|sena|demo|pov-cancela|antes-despues|sena-15]
  *   RAW=/path/to/raw node marketing/video/compose-reels.mjs
  *
  * Output: marketing/video/out/temppo-beauty-<name>.mp4, 1080×1920 at 30 fps.
@@ -240,6 +240,69 @@ if (!only || only === "demo") {
   const out = path.join(OUT, "temppo-beauty-demo.mp4");
   join(parts, out, 0.4);
   console.log(`${path.basename(out)}  ${probe(out).toFixed(1)} s`);
+}
+
+/* ------------------------------------------------- late November: three more */
+
+/** A stretch of a recording at the phone's size, with no captions of its own. */
+const clipOf = (name, from, to, speed = 1) => recording(name, from, to, speed, path.join(WORK, `n2-${name}-${from}-${to}.mp4`));
+
+if (!only || only === "pov-cancela") {
+  const VALE = { name: "Vale", color: "#c97b93", status: "en línea" };
+  const yesterday = { out: true, time: "18:02", html: "¡Te espero mañana a las 10! 💅" };
+  const chat = await sequence("pov-chat", [
+    { html: pages.whatsapp([{ day: "Ayer" }, yesterday], VALE, "9:50"), s: 1.3 },
+    { html: pages.whatsapp([{ day: "Ayer" }, yesterday, { day: "Hoy" }, { time: "9:50", html: "holaa perdón no llego 😅" }], VALE, "9:50"), s: 1.5 },
+    {
+      html: pages.whatsapp([{ day: "Ayer" }, yesterday, { day: "Hoy" }, { time: "9:50", html: "holaa perdón no llego 😅" }, { time: "9:50", html: "lo pasamos?" }], VALE, "9:50"),
+      s: 2.4,
+    },
+  ]);
+  await scripted("pov-cancela", "POV", [
+    { clip: chat, text: "Son las 9:50 y tenías turno a las 10:00" },
+    { clip: clipOf("mercadopago", 12.3, 17.8, 1.0), text: "Con seña, esto deja de doler" },
+    { clip: clipOf("agenda", 8.2, 12.0, 1.0), text: "Y el horario lo puede tomar otra" },
+  ], "Con seña, <em>sin sustos</em>");
+}
+
+if (!only || only === "antes-despues") {
+  const chats = await sequence(
+    "ad-chats",
+    NIGHT_CHATS.map((_, i, all) => ({ html: pages.chatList(all.slice(all.length - 1 - i)), s: i === all.length - 1 ? 1.8 : 0.45 })),
+  );
+  const lock = await sequence("ad-lock", [
+    {
+      html: pages.lockscreen(
+        [
+          { ago: "23:47", title: "Nueva reserva — Semipermanente", body: "Carolina reservó Semipermanente con Lucía: lunes, 23 de noviembre, 10:00. Seña: 360 UYU." },
+          { ago: "22:15", title: "Nueva reserva — Kapping", body: "Martina reservó Kapping con Lucía: martes, 24 de noviembre, 15:30." },
+        ],
+        "domingo 22 de noviembre",
+      ),
+      s: 2.6,
+    },
+  ]);
+  await scripted("antes-despues", "Antes / después", [
+    { clip: chats, text: "Antes: 23:47 y 6 chats sin responder" },
+    { clip: clipOf("agenda", 8.2, 12.0, 1.0), text: "Después: la agenda se llena sola" },
+    { clip: lock, text: "Y te avisa de cada reserva" },
+  ], "Tu agenda, <em>abierta las 24 horas</em>");
+}
+
+if (!only || only === "sena-15") {
+  // The messages match the booking the Mercado Pago take ends on.
+  const DATE = "lunes, 9 de noviembre, 10:00";
+  const paid = { ...MSG.confirmed, html: MSG.confirmed.html.replaceAll(WHEN, DATE).replaceAll("450 UYU", "360 UYU") };
+  const wa = await sequence("s15-wa", [
+    { html: pages.whatsapp([{ day: "Hoy" }]), s: 0.6 },
+    { html: pages.whatsapp([{ day: "Hoy" }, paid]), s: 2.8 },
+  ]);
+  await scripted("sena-15", "La seña", [
+    { clip: clipOf("reserva", 11.4, 14.6, 1.3), text: "¿Tus clientas van a querer pagar seña?" },
+    { clip: clipOf("mercadopago", 7.0, 11.2, 1.1), text: "Es un paso más al reservar: Mercado Pago o transferencia" },
+    { clip: clipOf("mercadopago", 12.3, 16.5, 1.0), text: "Y el turno queda confirmado" },
+    { clip: wa, text: "Con su aviso por WhatsApp" },
+  ], "Señas <em>sin perseguir a nadie</em>");
 }
 
 await close();

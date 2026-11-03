@@ -81,8 +81,12 @@ export const pages = {
     <img class="m" src="${MASCOT}"><div class="t">${title}</div>
     <div class="cta">beauty.temppo.uy</div><div class="s">Probala gratis un mes · sin tarjeta</div>${MARK}`,
 
-  /** The client's WhatsApp, at the phone screen's size. */
-  whatsapp: (bubbles) => `<style>*{margin:0;padding:0;box-sizing:border-box}
+  /**
+   * A WhatsApp chat at the phone screen's size: by default the client's chat
+   * with Temppo; with `contact`, the professional's chat with a client.
+   * Bubbles with `out: true` are her own, green and on the right.
+   */
+  whatsapp: (bubbles, contact = null, clock = "9:41") => `<style>*{margin:0;padding:0;box-sizing:border-box}
     html,body{width:${SW}px;height:${SH}px;overflow:hidden}
     body{font-family:-apple-system,"Helvetica Neue",${EMOJI},sans-serif;background:#efeae2;display:flex;flex-direction:column}
     .status .icons{display:flex;gap:6px;align-items:center}.status{height:44px;background:#f6f6f6;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:16px;font-weight:600;color:#111}
@@ -96,13 +100,19 @@ export const pages = {
     .day{align-self:center;background:#fff;color:#555;font-size:13px;padding:5px 12px;border-radius:8px;box-shadow:0 1px .5px rgba(0,0,0,.12)}
     .b{align-self:flex-start;max-width:86%;background:#fff;border-radius:0 14px 14px 14px;padding:9px 12px 6px;font-size:17px;line-height:1.38;color:#111;box-shadow:0 1px .5px rgba(0,0,0,.13);white-space:pre-line}
     .b a{color:#027eb5}.b time{display:block;text-align:right;font-size:12px;color:#8a8a8a;margin-top:2px}
+    .b.out{align-self:flex-end;background:#d9fdd3;border-radius:14px 0 14px 14px}.b.out time::after{content:" ✓✓";color:#53bdeb;letter-spacing:-2px}
+    .initial{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:20px;font-weight:600}
     .input{height:64px;background:#f6f6f6;display:flex;align-items:center;gap:10px;padding:0 14px}
     .input span{flex:1;height:38px;border-radius:20px;background:#fff;border:1px solid #e2e2e2}</style>
-    <div class="status"><span>9:41</span><span class="icons"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#111"/><rect x="5" y="5" width="3" height="7" rx="1" fill="#111"/><rect x="10" y="2" width="3" height="10" rx="1" fill="#111"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#111"/></svg><svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="#111" opacity=".4"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#111"/><rect x="24.5" y="4" width="2" height="5" rx="1" fill="#111" opacity=".4"/></svg></span></div>
-    <div class="bar"><span class="back">‹</span><span class="av"><img src="${MASCOT}"></span>
-      <span class="who"><b>Temppo <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span></b><small>Cuenta de empresa</small></span></div>
+    <div class="status"><span>${clock}</span><span class="icons"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#111"/><rect x="5" y="5" width="3" height="7" rx="1" fill="#111"/><rect x="10" y="2" width="3" height="10" rx="1" fill="#111"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#111"/></svg><svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="#111" opacity=".4"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#111"/><rect x="24.5" y="4" width="2" height="5" rx="1" fill="#111" opacity=".4"/></svg></span></div>
+    <div class="bar"><span class="back">‹</span>${
+      contact
+        ? `<span class="initial" style="background:${contact.color}">${esc(contact.name[0])}</span><span class="who"><b>${esc(contact.name)}</b><small>${esc(contact.status ?? "en línea")}</small></span>`
+        : `<span class="av"><img src="${MASCOT}"></span>
+      <span class="who"><b>Temppo <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span></b><small>Cuenta de empresa</small></span>`
+    }</div>
     <div class="chat">${bubbles
-      .map((b) => (b.day ? `<div class="day">${esc(b.day)}</div>` : `<div class="b">${b.html}<time>${b.time}</time></div>`))
+      .map((b) => (b.day ? `<div class="day">${esc(b.day)}</div>` : `<div class="b${b.out ? " out" : ""}">${b.html}<time>${b.time}</time></div>`))
       .join("")}</div>
     <div class="input"><span></span></div>`,
 
