@@ -60,7 +60,7 @@ Lo que sigue: dos reels con pantallas reales de la app de clases (una alumna que
 - Foto: `instagram/reservas/perfil-temppo-reservas.png`
 - Nombre: TEMPPO Reservas
 - Bio:
-  > Reservas online para estudios de pilates, yoga y fitness 🧘‍♀️
+  > Reservas online para estudios, talleres y cursos 🧘‍♀️🏺
   > Cupos, lista de espera, packs y pagos, sin WhatsApp de por medio
   > Un producto de @temppo.uy
 - Link: reservas.temppo.uy
@@ -86,13 +86,13 @@ Se suben en este orden, así en la grilla quedan de izquierda a derecha: hola, q
 
 > Hola 👋 Somos TEMPPO Reservas.
 >
-> Hacemos un sistema de reservas online para estudios de pilates, yoga y fitness, para que tus alumnas reserven solas y vos dejes de coordinar todo por WhatsApp.
+> Hacemos un sistema de reservas online para estudios, talleres y cursos (pilates, yoga, cerámica, danza y más), para que tus alumnas reserven solas y vos dejes de coordinar todo por WhatsApp.
 >
 > Lo hacemos en Uruguay 🇺🇾, de la mano de @temppo.uy.
 >
 > Seguinos para ver cómo funciona por dentro 👀
 >
-> #pilates #yoga #estudiodepilates #montevideo #uruguay #emprendedoras
+> #pilates #yoga #ceramica #talleres #cursos #montevideo #uruguay #emprendedoras
 
 ### 2 · Qué hace (`instagram/reservas/intro-que-hace.png`)
 
@@ -110,10 +110,10 @@ Se suben en este orden, así en la grilla quedan de izquierda a derecha: hola, q
 
 ### 3 · Para quién (`instagram/reservas/intro-para-quien.png`)
 
-> ¿Tenés un estudio de pilates, reformer, yoga o funcional? Esto es para vos 🧘‍♀️
+> ¿Das clases de pilates, yoga, funcional, danza o cerámica? ¿Tenés talleres o cursos con cupo? Esto es para vos 🙌
 >
 > Probá TEMPPO Reservas gratis durante 30 días, sin tarjeta. Lo configurás en una tarde y tus alumnas empiezan a reservar solas.
 >
 > 👉 reservas.temppo.uy (link en la bio)
 >
-> #pilates #pilatesuruguay #yoga #funcional #estudiodepilates #montevideo
+> #pilates #yoga #funcional #danza #ceramica #talleres #cursos #montevideo
