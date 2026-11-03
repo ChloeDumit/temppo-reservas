@@ -6,6 +6,7 @@ import { dateKeyInZone, wallTimeToUtc } from "@/lib/dates";
 import { getAdminProduct, PRODUCT_LABEL } from "@/lib/admin/product";
 import { instagramProfile } from "@/lib/content/instagram";
 import { createContentPostAction, loadPlanAction } from "./actions";
+import { CONTENT_PLANS } from "@/lib/content/plan-noviembre";
 import { KIND_LABEL, STATUS, TZ } from "./labels";
 
 /**
@@ -66,7 +67,11 @@ export default async function AdminContentPage({
   const monthName = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
   const time = (d: Date) => new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone: TZ }).format(d);
   const day = (d: Date) => new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", timeZone: TZ }).format(d);
-  const hasPlan = await db.contentPost.count({ where: { brand: "beauty", title: "Reel · Le llega solo por WhatsApp" } });
+  // A plan's button shows while any of its posts is still missing.
+  const loadedTitles = new Set(
+    (await db.contentPost.findMany({ where: { brand: "beauty", title: { in: CONTENT_PLANS.flatMap((p) => p.items.map((i) => i.title)) } }, select: { title: true } })).map((p) => p.title),
+  );
+  const pendingPlans = CONTENT_PLANS.filter((p) => p.items.some((i) => !loadedTitles.has(i.title)));
 
   return (
     <>
@@ -99,12 +104,17 @@ export default async function AdminContentPage({
         )}
       </div>
 
-      {brand === "beauty" && !hasPlan && (
-        <form action={loadPlanAction} className="mt-3">
-          <button type="submit" className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20">
-            Cargar plan de noviembre (8 publicaciones con fecha y caption)
-          </button>
-        </form>
+      {brand === "beauty" && pendingPlans.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {pendingPlans.map((plan) => (
+            <form key={plan.id} action={loadPlanAction}>
+              <input type="hidden" name="plan" value={plan.id} />
+              <button type="submit" className="rounded-[var(--radius-pill)] bg-white/10 px-4 py-2 text-sm hover:bg-white/20">
+                Cargar {plan.label.charAt(0).toLowerCase() + plan.label.slice(1)} ({plan.items.length} publicaciones con fecha y caption)
+              </button>
+            </form>
+          ))}
+        </div>
       )}
 
       {/* ── Coming up ─────────────────────────────────────── */}

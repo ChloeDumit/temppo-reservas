@@ -1,8 +1,7 @@
 /*
-  The Temppo Beauty plan for 2–15 November 2026 (marketing/contenido/
-  noviembre.md), so "Cargar plan de noviembre" in the console creates each
-  post with its date and caption. The files are attached by hand: they are in
-  marketing/ and the kit, not in the app.
+  The Temppo Beauty content plans (marketing/contenido/*.md), so the console's
+  "Cargar plan" buttons create each post with its date and caption. The files
+  are attached by hand: they are in marketing/ and the kit, not in the app.
 */
 
 export type PlanItem = {
@@ -90,4 +89,70 @@ export const PLAN_NOVIEMBRE: PlanItem[] = [
       "¿Te pasó que reservan y no pagan la seña? 🙄 Con Temppo Beauty, si la seña no llega a tiempo, el horario se libera solo y lo puede tomar otra clienta. Probala gratis un mes 👉 link en la bio",
     notes: "De reserva. Archivo: marketing/video/out/temppo-beauty-sena.mp4",
   },
+];
+
+/** 16–29 November 2026 (marketing/contenido/noviembre-2.md). */
+export const PLAN_NOVIEMBRE_2: PlanItem[] = [
+  {
+    title: "Reel · POV: te cancelan 10 minutos antes",
+    kind: "REEL",
+    date: "2026-11-16",
+    time: "19:30",
+    caption:
+      "POV: preparaste todo y te escriben 10 minutos antes 🫠\n\nCon seña al reservar, una cancelación de último momento deja de ser plata perdida: si cancela fuera de término, la seña queda para vos.\n\nProbalo gratis un mes, sin tarjeta 👉 link en la bio\n\n#manicura #uñasuruguay #pestañas #cosmetologa #seña #emprendedoras #humor",
+    notes:
+      "Archivo: temppo-beauty-pov-cancela-musica.mp4 (o la versión sin música para subirlo a mano con voz en off o audio en tendencia: en ese caso pasalo al canal «A mano»).",
+  },
+  {
+    title: "Carrusel · 4 mensajes para copiar y pegar",
+    kind: "CAROUSEL",
+    date: "2026-11-18",
+    time: "19:30",
+    caption:
+      "Guardalo para cuando lo necesites 📌\n\n4 mensajes listos para copiar y pegar: pedir la seña, confirmar, reprogramar e invitar a volver.\n\nY si te cansaste de mandarlos a mano, Temppo Beauty los manda solos por WhatsApp. Probalo gratis un mes 👉 link en la bio\n\n#manicura #uñas #pestañas #cosmetologia #emprendedoras #tipsparaemprendedoras",
+    notes: "Archivos, en este orden: carrusel-mensajes-1.png … carrusel-mensajes-6.png",
+  },
+  {
+    title: "Reel · Antes / después",
+    kind: "REEL",
+    date: "2026-11-20",
+    time: "19:30",
+    caption:
+      "Antes / después de tener tu link de reservas 📲\n\nTus clientas eligen día y hora solas, pagan la seña y les llega el recordatorio por WhatsApp. Vos solo mirás la agenda.\n\nProbala gratis un mes 👉 link en la bio\n\n#antesydespues #manicura #uñasuruguay #lashes #emprendedoras",
+    notes:
+      "Archivo: temppo-beauty-antes-despues-musica.mp4 (o la versión sin música para subirlo a mano con un audio en tendencia de «transformación»: en ese caso pasalo al canal «A mano»).",
+  },
+  {
+    title: "Carrusel · ¿Cuánto te cuesta una clienta que no viene?",
+    kind: "CAROUSEL",
+    date: "2026-11-23",
+    time: "19:30",
+    caption:
+      "Hacé la cuenta 🧮\n\nPrecio de tu servicio × clientas que faltan por mes. Ese número es lo que dejás de cobrar todos los meses.\n\nCon seña al reservar, la que cancela tarde no te deja con las manos vacías. Probalo gratis un mes 👉 link en la bio\n\n#manicura #pestañas #cosmetologa #emprendedoras #finanzas #seña",
+    notes: "Archivos, en este orden: carrusel-cuenta-1.png … carrusel-cuenta-5.png",
+  },
+  {
+    title: "Reel · La seña, explicada en 15 segundos",
+    kind: "REEL",
+    date: "2026-11-25",
+    time: "19:30",
+    caption:
+      "\"¿Y si mis clientas no quieren pagar seña?\" 🤔\n\nEs un paso más al reservar, como cuando reservás un restaurante: eligen el turno, pagan la seña con Mercado Pago o transferencia y les llega la confirmación por WhatsApp. Vos decidís cuánto cobrar en cada servicio.\n\nProbala gratis un mes 👉 link en la bio\n\n#seña #manicura #uñas #pestañas #emprendedoras #mercadopago",
+    notes: "Archivo: temppo-beauty-sena-15-musica.mp4",
+  },
+  {
+    title: "Post · Diciembre se acerca",
+    kind: "POST",
+    date: "2026-11-27",
+    time: "19:30",
+    caption:
+      "Diciembre es el mes más lindo… y el de más mensajes 🎄😅\n\nArmá tu agenda online ahora, ponela en la bio y que tus clientas reserven solas antes de las fiestas: con seña y recordatorio por WhatsApp.\n\nPrimer mes gratis, sin tarjeta 👉 link en la bio\n\n#diciembre #fiestas #manicura #uñasuruguay #pestañas #emprendedoras",
+    notes: "Archivo: post-diciembre.png",
+  },
+];
+
+/** Every plan the console can load, newest last. */
+export const CONTENT_PLANS = [
+  { id: "noviembre-1", label: "Plan del 2 al 15 de noviembre", items: PLAN_NOVIEMBRE },
+  { id: "noviembre-2", label: "Plan del 16 al 29 de noviembre", items: PLAN_NOVIEMBRE_2 },
 ];

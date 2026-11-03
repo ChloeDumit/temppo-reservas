@@ -11,7 +11,7 @@ import { wallTimeToUtc } from "@/lib/dates";
 import { getAdminProduct } from "@/lib/admin/product";
 import { deleteMedia } from "@/lib/content/storage";
 import { publishProblem, publishToInstagram } from "@/lib/content/instagram";
-import { PLAN_NOVIEMBRE } from "@/lib/content/plan-noviembre";
+import { CONTENT_PLANS } from "@/lib/content/plan-noviembre";
 
 /*
   The content calendar's actions. Like the rest of the console, each one
@@ -203,11 +203,13 @@ export async function moveMediaAction(formData: FormData) {
   return back(editorPath(media.postId));
 }
 
-/** Creates the November plan's posts, once. */
-export async function loadPlanAction() {
+/** Creates a plan's posts, once: posts already there by title are left alone. */
+export async function loadPlanAction(formData: FormData) {
   const admin = await assertPlatformAdmin();
+  const plan = CONTENT_PLANS.find((p) => p.id === formData.get("plan"));
+  if (!plan) return back("/admin/content");
   let created = 0;
-  for (const item of PLAN_NOVIEMBRE) {
+  for (const item of plan.items) {
     const exists = await db.contentPost.findFirst({ where: { brand: "beauty", title: item.title } });
     if (exists) continue;
     await db.contentPost.create({
@@ -223,5 +225,5 @@ export async function loadPlanAction() {
     });
     created++;
   }
-  return back(`/admin/content${created ? "" : "?m=" + encodeURIComponent("El plan ya estaba cargado.")}`);
+  return back(`/admin/content?m=${encodeURIComponent(created ? `${plan.label}: ${created} publicaciones cargadas. Subí los archivos de cada una y programalas.` : "Ese plan ya estaba cargado.")}`);
 }
