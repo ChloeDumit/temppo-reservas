@@ -146,6 +146,11 @@ other — intended, since an account belongs to one studio and one brand.
   The console says whether it is connected and as which account. Instagram's
   API cannot add music from its library: a reel that needs a trending audio
   goes on the *A mano* channel and is posted from the app.
+  Every post invites **@temppo.uy** as a collaborator by default, so the
+  products' posts also show on the company's profile (stories cannot take
+  collaborators). @temppo.uy has to accept each invitation from the app;
+  until it does, the post shows on the product's account only. A post can
+  drop it, or name up to three accounts, in the editor.
 - **Content API (pushing plans from a laptop).** `scripts/content-push.ts`
   creates or updates a plan's posts in production, uploads their files and
   schedules them, through `/api/content/v1`. It is closed unless

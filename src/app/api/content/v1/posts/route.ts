@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { denyWithoutContentToken } from "@/lib/content/api-auth";
+import { MAX_COLLABORATORS } from "@/lib/content/collaborators";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
       attempts: p.attempts,
       processing: Boolean(p.igContainerId),
       reminderStage: p.reminderStage,
+      collaborators: p.collaborators,
       updatedAt: p.updatedAt,
     })),
   });
@@ -42,6 +44,8 @@ const upsertSchema = z.object({
   caption: z.string().max(2200).default(""),
   notes: z.string().max(2000).optional(),
   scheduledAt: z.string().datetime({ offset: true }).nullable().optional(),
+  /** Usernames without @; left out, a new post gets @temppo.uy. */
+  collaborators: z.array(z.string().regex(/^[a-z0-9._]{1,30}$/)).max(MAX_COLLABORATORS).optional(),
 });
 
 /**

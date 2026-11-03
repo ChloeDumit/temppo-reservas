@@ -110,8 +110,29 @@ function mediaParams(m: ContentMedia, post: Post, asItem: boolean): Record<strin
   if (asItem) return m.isVideo ? { media_type: "VIDEO", video_url: url, is_carousel_item: "true" } : { image_url: url, is_carousel_item: "true" };
   if (post.kind === "STORY") return m.isVideo ? { media_type: "STORIES", video_url: url } : { media_type: "STORIES", image_url: url };
   // Instagram only takes videos in the feed as reels.
-  if (m.isVideo || post.kind === "REEL") return { media_type: "REELS", video_url: url, caption: post.caption, share_to_feed: "true" };
-  return { image_url: url, caption: post.caption };
+  if (m.isVideo || post.kind === "REEL") return { media_type: "REELS", video_url: url, caption: post.caption, share_to_feed: "true", ...collaboratorParams(post) };
+  return { image_url: url, caption: post.caption, ...collaboratorParams(post) };
+}
+
+/** Feed posts, reels and carousels take collaborators; stories do not. */
+function collaboratorParams(post: Post): Record<string, string> {
+  return post.collaborators.length ? { collaborators: JSON.stringify(post.collaborators) } : {};
+}
+
+/**
+ * The post's own container. If Instagram refuses it over a collaborator (an
+ * account that does not exist, is private, or cannot be invited), the post
+ * goes up anyway without them: they are a bonus, not the post.
+ */
+async function createPostContainer(account: string, post: Post, params: Record<string, string>) {
+  try {
+    return await createContainer(account, params);
+  } catch (error) {
+    if (!params.collaborators) throw error;
+    const { collaborators: _dropped, ...without } = params;
+    console.warn("[content] collaborators refused, publishing without them", post.id, (error as Error).message);
+    return createContainer(account, without);
+  }
 }
 
 /** What is wrong with a post before it can go to Instagram, or null. */
@@ -195,7 +216,7 @@ export async function publishToInstagram(postId: string, { now = new Date(), wai
       container = `children:${children.join(",")}`;
       await saveContainer(post.id, container);
     } else if (!container) {
-      container = await createContainer(account, mediaParams(post.media[0], post, false));
+      container = await createPostContainer(account, post, mediaParams(post.media[0], post, false));
       await saveContainer(post.id, container);
     }
 
@@ -205,7 +226,7 @@ export async function publishToInstagram(postId: string, { now = new Date(), wai
         await db.contentPost.update({ where: { id: post.id }, data: { igContainerId: container, error: null } });
         return "processing";
       }
-      container = await createContainer(account, { media_type: "CAROUSEL", children: children.join(","), caption: post.caption });
+      container = await createPostContainer(account, post, { media_type: "CAROUSEL", children: children.join(","), caption: post.caption, ...collaboratorParams(post) });
       await saveContainer(post.id, container);
     }
 

@@ -1271,6 +1271,10 @@ model ContentPost {
   scheduledAt DateTime?
   caption     String    @default("")
   notes       String?
+  /// Instagram usernames invited as collaborators, so the post shows on
+  /// their profile too. The parent brand, @temppo.uy, by default: every
+  /// product's post also lands on the company's feed once it accepts.
+  collaborators String[] @default(["temppo.uy"])
 
   /// Instagram's ids, kept so a video still processing is finished by the
   /// next sweep instead of uploaded twice.

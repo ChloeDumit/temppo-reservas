@@ -38,6 +38,7 @@ type Call = { method: string; path: string; params: Record<string, string> };
 
 async function main() {
   const { publishDueContent, publishToInstagram, publishProblem, mediaUrl, resetPost } = await import("../src/lib/content/instagram");
+  const { parseCollaborators } = await import("../src/lib/content/collaborators");
   const { remindManualContent } = await import("../src/lib/content/reminders");
   const { processUpload } = await import("../src/lib/content/media");
   const { putMedia, getMedia, deletePrefix } = await import("../src/lib/content/storage");
@@ -55,6 +56,7 @@ async function main() {
   let nextId = 1;
   const status = new Map<string, string[]>(); // container → status codes to return, in turn
   let failCreate: string | null = null;
+  let refuseCollaborators = false;
   let hangStatus = false; // a request cut off while Instagram processes
   let onInstagram: { id: string; caption: string; permalink: string; timestamp: string }[] = [];
   const realFetch = globalThis.fetch;
@@ -67,6 +69,7 @@ async function main() {
     const json = (body: unknown, code = 200) => new Response(JSON.stringify(body), { status: code });
     if (path.endsWith("/media") && init?.method === "POST") {
       if (failCreate) return json({ error: { code: 9004, message: failCreate } }, 400);
+      if (refuseCollaborators && params.collaborators) return json({ error: { code: 100, message: "Invalid collaborator" } }, 400);
       const id = `c${nextId++}`;
       status.set(id, params.video_url && !params.is_carousel_item ? ["IN_PROGRESS", "FINISHED"] : ["FINISHED"]);
       return json({ id });
@@ -132,6 +135,7 @@ async function main() {
     check("its time came: published", [r1.published, p1.status], [1, "PUBLISHED"]);
     check("from the file's public URL, with the caption", [created()[0].params.image_url.endsWith(`${photo.id}-0.jpg`), created()[0].params.caption], [true, "Hola #uñas"]);
     check("with its link kept", p1.permalink?.startsWith("https://www.instagram.com/p/"), true);
+    check("and @temppo.uy invited as collaborator, by default", created()[0].params.collaborators, '["temppo.uy"]');
     check("the one for later waits", (await reload(future.id)).status, "SCHEDULED");
     const adminCount = await db.user.count({ where: { isPlatformAdmin: true, isActive: true } });
     const upPushes = pushed.filter((p) => p.title === "Publicado en Instagram" && p.url === `/admin/content/${photo.id}`);
@@ -157,6 +161,28 @@ async function main() {
     check("one container per file, in order", items.map((c) => c.params.video_url ? "video" : "image"), ["image", "image", "video"]);
     check("then the carousel with its items and caption", [parent?.params.children.split(",").length, parent?.params.caption], [3, "Hola #uñas"]);
     check("published", (await reload(carousel.id)).status, "PUBLISHED");
+    check("collaborators on the carousel, not on its items", [parent?.params.collaborators, items.some((c) => c.params.collaborators)], ['["temppo.uy"]', false]);
+
+    console.log("\nColaboradores");
+    calls.length = 0;
+    const story = await post({ kind: "STORY", status: "SCHEDULED", scheduledAt: past });
+    await publishDueContent();
+    check("a story goes without them (Instagram does not take them there)", [(await reload(story.id)).status, created()[0].params.collaborators], ["PUBLISHED", undefined]);
+    calls.length = 0;
+    const solo = await post({ kind: "POST", status: "SCHEDULED", scheduledAt: past, collaborators: [] });
+    await publishDueContent();
+    check("none set: none sent", [(await reload(solo.id)).status, created()[0].params.collaborators], ["PUBLISHED", undefined]);
+    calls.length = 0;
+    refuseCollaborators = true;
+    const refused = await post({ kind: "POST", status: "SCHEDULED", scheduledAt: past, collaborators: ["no.existe"] });
+    await publishDueContent();
+    refuseCollaborators = false;
+    check("Instagram refuses the collaborator: the post goes up without it", [(await reload(refused.id)).status, created().map((c) => c.params.collaborators)], ["PUBLISHED", ['["no.existe"]', undefined]]);
+    check(
+      "the console reads «@Temppo.uy, otra» as two usernames",
+      [parseCollaborators("@Temppo.uy, otra  @otra"), "error" in parseCollaborators("a b c d"), "error" in parseCollaborators("con espacio!")],
+      [{ usernames: ["temppo.uy", "otra"] }, true, true],
+    );
 
     console.log("\nErrores y dobles");
     calls.length = 0;

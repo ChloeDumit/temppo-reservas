@@ -18,6 +18,7 @@ import {
 import { MediaUploader } from "../uploader";
 import { CopyText } from "../copy-text";
 import { KIND_LABEL, STATUS, TZ } from "../labels";
+import { formatCollaborators } from "@/lib/content/collaborators";
 
 const field = "mt-1 block w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white";
 const pill = "rounded-[var(--radius-pill)] px-4 py-2 text-sm";
@@ -127,6 +128,13 @@ export default async function ContentPostPage({
             <label className="block text-xs text-white/40">
               Notas (qué archivo va, ideas, audio…)
               <textarea name="notes" defaultValue={post.notes ?? ""} rows={2} className={field} />
+            </label>
+            <label className="block text-xs text-white/40">
+              Colaboradores en Instagram
+              <input name="collaborators" defaultValue={formatCollaborators(post.collaborators)} placeholder="@temppo.uy" className={field} />
+              <span className="mt-1 block text-white/30">
+                La publicación aparece también en su perfil cuando aceptan la invitación desde la app. Hasta 3; vacío para ninguno. No va en historias.
+              </span>
             </label>
           </fieldset>
 

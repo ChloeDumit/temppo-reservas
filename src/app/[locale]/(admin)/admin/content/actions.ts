@@ -12,6 +12,7 @@ import { getAdminProduct } from "@/lib/admin/product";
 import { deleteMedia } from "@/lib/content/storage";
 import { publishProblem, publishToInstagram, resetPost } from "@/lib/content/instagram";
 import { CONTENT_PLANS } from "@/lib/content/plan-noviembre";
+import { parseCollaborators } from "@/lib/content/collaborators";
 
 /*
   The content calendar's actions. Like the rest of the console, each one
@@ -73,6 +74,9 @@ export async function saveContentPostAction(formData: FormData) {
   if (!parsed.success) return back(editorPath(post.id, "Revisá los campos: el título es obligatorio y el caption tiene hasta 2.200 caracteres."));
   if (post.status === "PUBLISHED" || post.status === "PUBLISHING") return back(editorPath(post.id, "Ya se publicó o se está publicando: no se puede cambiar."));
 
+  const collaborators = parseCollaborators(String(formData.get("collaborators") ?? ""));
+  if ("error" in collaborators) return back(editorPath(post.id, `Colaboradores: ${collaborators.error}.`));
+
   const scheduledAt = parseLocal(formData.get("scheduledAt"));
   const intent = String(formData.get("intent") ?? "save");
   const data = {
@@ -81,6 +85,7 @@ export async function saveContentPostAction(formData: FormData) {
     channel: parsed.data.channel,
     caption: parsed.data.caption.replace(/\r\n/g, "\n"),
     notes: parsed.data.notes?.trim() || null,
+    collaborators: collaborators.usernames,
     scheduledAt,
     ...(scheduledAt?.getTime() !== post.scheduledAt?.getTime() ? { reminderStage: 0 } : {}),
   };
@@ -163,6 +168,7 @@ export async function duplicateContentPostAction(formData: FormData) {
       channel: post.channel,
       caption: post.caption,
       notes: post.notes,
+      collaborators: post.collaborators,
       scheduledAt: post.scheduledAt,
       createdById: admin.id,
     },
