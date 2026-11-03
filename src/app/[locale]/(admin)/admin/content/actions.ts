@@ -10,7 +10,7 @@ import { localePath } from "@/i18n/routing";
 import { wallTimeToUtc } from "@/lib/dates";
 import { getAdminProduct } from "@/lib/admin/product";
 import { deleteMedia } from "@/lib/content/storage";
-import { publishProblem, publishToInstagram } from "@/lib/content/instagram";
+import { publishProblem, publishToInstagram, resetPost } from "@/lib/content/instagram";
 import { CONTENT_PLANS } from "@/lib/content/plan-noviembre";
 
 /*
@@ -82,6 +82,7 @@ export async function saveContentPostAction(formData: FormData) {
     caption: parsed.data.caption.replace(/\r\n/g, "\n"),
     notes: parsed.data.notes?.trim() || null,
     scheduledAt,
+    ...(scheduledAt?.getTime() !== post.scheduledAt?.getTime() ? { reminderStage: 0 } : {}),
   };
   await db.contentPost.update({ where: { id: post.id }, data });
   const updated = (await loadPost(post.id))!;
@@ -106,7 +107,7 @@ export async function saveContentPostAction(formData: FormData) {
     const problem = publishProblem(updated);
     if (problem) return back(editorPath(post.id, problem));
     await db.contentPost.update({ where: { id: post.id }, data: { status: "SCHEDULED", scheduledAt: new Date(), error: null, igContainerId: null, attempts: 0 } });
-    const outcome = await publishToInstagram(post.id, { wait: 45_000 });
+    const outcome = await publishToInstagram(post.id, { wait: 15_000 });
     const message =
       outcome === "published"
         ? "¡Publicado en Instagram!"
@@ -139,8 +140,13 @@ export async function unscheduleAction(formData: FormData) {
   await assertPlatformAdmin();
   const post = await loadPost(formData.get("id"));
   if (!post) return back("/admin/content");
-  if (post.status === "SCHEDULED" || post.status === "FAILED") {
+  if (post.status === "SCHEDULED") {
     await db.contentPost.update({ where: { id: post.id }, data: { status: "READY", igContainerId: null, attempts: 0 } });
+  }
+  if (post.status === "FAILED" || post.status === "PUBLISHING") {
+    const result = await resetPost(post.id);
+    if ("error" in result) return back(editorPath(post.id, result.error));
+    if (result.status === "PUBLISHED") return back(editorPath(post.id, "Ya estaba en Instagram: quedó marcada como publicada."));
   }
   return back(editorPath(post.id, "Volvió a «Lista»: ya no se publica sola."));
 }
@@ -219,6 +225,7 @@ export async function loadPlanAction(formData: FormData) {
         kind: item.kind,
         caption: item.caption,
         notes: item.notes,
+        ...(item.channel ? { channel: item.channel } : {}),
         scheduledAt: item.date ? wallTimeToUtc(item.date, item.time, TZ) : null,
         createdById: admin.id,
       },

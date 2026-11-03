@@ -11,8 +11,10 @@ export type PlanItem = {
   date: string | null;
   time: string;
   caption: string;
-  /** Which file(s) to attach. */
+  /** Which file(s) to attach, and for one that goes up by hand, how. */
   notes: string;
+  /** "MANUAL" for one that goes up by hand (a voice-over, an in-app audio). */
+  channel?: "INSTAGRAM" | "MANUAL";
 };
 
 const TAGS_A = "#manicura #uñasuruguay #cosmetologa #pestañas #lashes #turnosonline #agendaonline #uruguay #montevideo #canelones";
@@ -24,7 +26,7 @@ export const PLAN_NOVIEMBRE: PlanItem[] = [
     date: "2026-11-02",
     time: "19:30",
     caption: `Tu clienta reserva sola desde tu link y le llega todo por WhatsApp: la confirmación al reservar y el recordatorio antes del turno. Vos no mandás nada. 📲\n\nSin apps para tus clientas, sin perseguir a nadie.\n\nProbalo gratis un mes, sin tarjeta 👉 link en la bio\n\n${TAGS_A}`,
-    notes: "Archivo: marketing/video/out/temppo-beauty-whatsapp.mp4",
+    notes: "Archivo: marketing/video/out/temppo-beauty-whatsapp-musica.mp4",
   },
   {
     title: "Carrusel · Lo que recibe tu clienta",
@@ -100,8 +102,18 @@ export const PLAN_NOVIEMBRE_2: PlanItem[] = [
     time: "19:30",
     caption:
       "POV: preparaste todo y te escriben 10 minutos antes 🫠\n\nCon seña al reservar, una cancelación de último momento deja de ser plata perdida: si cancela fuera de término, la seña queda para vos.\n\nProbalo gratis un mes, sin tarjeta 👉 link en la bio\n\n#manicura #uñasuruguay #pestañas #cosmetologa #seña #emprendedoras #humor",
-    notes:
-      "Archivo: temppo-beauty-pov-cancela-musica.mp4 (o la versión sin música para subirlo a mano con voz en off o audio en tendencia: en ese caso pasalo al canal «A mano»).",
+    channel: "MANUAL",
+    notes: [
+      "A MANO, con tu voz en off. El video de acá abajo es la versión sin música (16 s).",
+      "",
+      "GUION (tono dramático, despacio, como contándole a una amiga):",
+      "[0–5 s · aparece el chat] «Nueve y cincuenta. Todo preparado, la clienta a las diez… y me llega esto.» (pausa) «“Holaa, perdón, no llego”.»",
+      "[5–10 s · la reserva con seña] «Antes me arruinaba la mañana. Ahora pido seña al reservar: si cancela tarde, la seña queda para mí.»",
+      "[10–13 s · la agenda] «Y el horario queda libre para otra clienta.»",
+      "[13–16 s · el cierre] «Temppo Beauty. Link en la bio.»",
+      "",
+      "CÓMO: Instagram → + → Reel → elegí el video → Audio → Voz en off: grabás mientras se reproduce. Bajá el volumen del video a 0 (no tiene música, pero así queda limpio). Si preferís, un audio en tendencia de «drama» de fondo, bajito. Pegá el caption con «Copiar caption».",
+    ].join("\n"),
   },
   {
     title: "Carrusel · 4 mensajes para copiar y pegar",
@@ -119,8 +131,20 @@ export const PLAN_NOVIEMBRE_2: PlanItem[] = [
     time: "19:30",
     caption:
       "Antes / después de tener tu link de reservas 📲\n\nTus clientas eligen día y hora solas, pagan la seña y les llega el recordatorio por WhatsApp. Vos solo mirás la agenda.\n\nProbala gratis un mes 👉 link en la bio\n\n#antesydespues #manicura #uñasuruguay #lashes #emprendedoras",
-    notes:
-      "Archivo: temppo-beauty-antes-despues-musica.mp4 (o la versión sin música para subirlo a mano con un audio en tendencia de «transformación»: en ese caso pasalo al canal «A mano»).",
+    channel: "MANUAL",
+    notes: [
+      "A MANO, con un audio en tendencia de «transformación» (de los que tienen un corte marcado). El video de acá abajo es la versión sin música (12 s).",
+      "",
+      "CÓMO: Instagram → + → Reel → elegí el video → Audio → buscá un audio en tendencia y mové el inicio para que el corte caiga justo cuando aparece «Después» (a los 3–4 s). Pegá el caption con «Copiar caption».",
+      "",
+      "OPCIONAL, voz en off (si la usás, el audio en tendencia va de fondo, bajito):",
+      "[0–3 s · los chats] «Antes: once y cuarenta y siete de la noche, contestando turnos por WhatsApp.»",
+      "[3–7 s · la agenda] «Después: mis clientas reservan solas y la agenda se llena.»",
+      "[7–9 s · la notificación] «Y me avisa de cada reserva.»",
+      "[final] «Temppo Beauty. Link en la bio.»",
+      "",
+      "OPCIONAL: si tenés un video tuyo trabajando (tus manos, una uña terminada), sumalo al principio del «Después». Le da mucha calidez.",
+    ].join("\n"),
   },
   {
     title: "Carrusel · ¿Cuánto te cuesta una clienta que no viene?",

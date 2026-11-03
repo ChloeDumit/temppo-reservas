@@ -1280,6 +1280,9 @@ model ContentPost {
   publishedAt   DateTime?
   error         String?
   attempts      Int       @default(0)
+  /// Reminders sent for a post that goes up by hand: 1 the day before, 2 a
+  /// couple of hours before. Back to 0 when its date changes.
+  reminderStage Int       @default(0)
 
   /// Platform admin. Not a relation — User rows are tenant-scoped.
   createdById String?

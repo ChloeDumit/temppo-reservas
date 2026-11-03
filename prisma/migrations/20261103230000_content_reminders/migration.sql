@@ -1,0 +1,1 @@
+ALTER TABLE "ContentPost" ADD COLUMN "reminderStage" INTEGER NOT NULL DEFAULT 0;

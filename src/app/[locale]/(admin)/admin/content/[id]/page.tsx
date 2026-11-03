@@ -38,6 +38,7 @@ export default async function ContentPostPage({
   if (!post) notFound();
 
   const locked = post.status === "PUBLISHED" || post.status === "PUBLISHING";
+  const stuck = post.status === "PUBLISHING" && post.updatedAt.getTime() < Date.now() - 30 * 60_000;
   const local = post.scheduledAt ? `${dateKeyInZone(post.scheduledAt, TZ)}T${formatTime(post.scheduledAt, TZ, "en-GB")}` : "";
   const problem = post.channel === "INSTAGRAM" ? publishProblem(post) : null;
   const igReady = Boolean(instagramAccountFor(post.brand));
@@ -67,6 +68,7 @@ export default async function ContentPostPage({
       {post.status === "PUBLISHING" && (
         <p className="mt-4 rounded-[var(--radius-md)] bg-violet-500/10 px-4 py-2.5 text-sm text-violet-100">
           Instagram está procesando el archivo. Se termina de publicar sola en los próximos minutos.
+          {stuck && " Lleva más de media hora así: con «Destrabar» se revisa si llegó a Instagram y, si no, vuelve a «Lista» para programarla de nuevo."}
         </p>
       )}
       {post.status === "PUBLISHED" && (
@@ -204,10 +206,10 @@ export default async function ContentPostPage({
                 <input type="hidden" name="id" value={post.id} />
                 <button className="rounded-[var(--radius-pill)] bg-white/10 px-3 py-1.5 text-xs hover:bg-white/20">Duplicar</button>
               </form>
-              {(post.status === "SCHEDULED" || post.status === "FAILED") && (
+              {(post.status === "SCHEDULED" || post.status === "FAILED" || stuck) && (
                 <form action={unscheduleAction}>
                   <input type="hidden" name="id" value={post.id} />
-                  <button className="rounded-[var(--radius-pill)] bg-white/10 px-3 py-1.5 text-xs hover:bg-white/20">Desprogramar</button>
+                  <button className="rounded-[var(--radius-pill)] bg-white/10 px-3 py-1.5 text-xs hover:bg-white/20">{stuck ? "Destrabar" : "Desprogramar"}</button>
                 </form>
               )}
             </div>

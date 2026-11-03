@@ -37,7 +37,8 @@ function check(label: string, actual: unknown, expected: unknown) {
 type Call = { method: string; path: string; params: Record<string, string> };
 
 async function main() {
-  const { publishDueContent, publishToInstagram, publishProblem, mediaUrl } = await import("../src/lib/content/instagram");
+  const { publishDueContent, publishToInstagram, publishProblem, mediaUrl, resetPost } = await import("../src/lib/content/instagram");
+  const { remindManualContent } = await import("../src/lib/content/reminders");
   const { processUpload } = await import("../src/lib/content/media");
   const { putMedia, getMedia, deletePrefix } = await import("../src/lib/content/storage");
   const { GET: serveMedia } = await import("../src/app/api/content-media/[...key]/route");
@@ -54,6 +55,8 @@ async function main() {
   let nextId = 1;
   const status = new Map<string, string[]>(); // container → status codes to return, in turn
   let failCreate: string | null = null;
+  let hangStatus = false; // a request cut off while Instagram processes
+  let onInstagram: { id: string; caption: string; permalink: string; timestamp: string }[] = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
     const u = new URL(String(url));
@@ -69,7 +72,9 @@ async function main() {
       return json({ id });
     }
     if (path.endsWith("/media_publish")) return json({ id: `m-${params.creation_id}` });
+    if (path.endsWith("/media") && params.fields?.startsWith("id,caption")) return json({ data: onInstagram });
     if (params.fields === "status_code,status") {
+      if (hangStatus) return new Promise<Response>(() => {});
       const queue = status.get(path) ?? ["FINISHED"];
       const code = queue.length > 1 ? queue.shift()! : queue[0];
       return json({ status_code: code });
@@ -166,6 +171,56 @@ async function main() {
     const twice = await post({ kind: "POST", status: "SCHEDULED", scheduledAt: past });
     const both = await Promise.all([publishToInstagram(twice.id), publishToInstagram(twice.id)]);
     check("two at once: one publishes, the other stands back", [both.sort(), created().length], [["published", "skipped"], 1]);
+
+    console.log("\nCortado a mitad de camino");
+    calls.length = 0;
+    hangStatus = true;
+    const cut = await post({ kind: "REEL", status: "SCHEDULED", scheduledAt: past }, [{ video: true }]);
+    void publishToInstagram(cut.id);
+    await new Promise((r) => setTimeout(r, 400));
+    hangStatus = false;
+    const pc = await reload(cut.id);
+    check("the container is kept before waiting, so a cut-off request is not started over", [pc.status, Boolean(pc.igContainerId)], ["PUBLISHING", true]);
+    await publishDueContent();
+    await publishDueContent();
+    check("and the next sweeps finish it with the same container", [(await reload(cut.id)).status, created().length], ["PUBLISHED", 1]);
+
+    console.log("\nDestrabar");
+    const old = new Date(Date.now() - 3_600_000);
+    const stuck = await post({ kind: "REEL", status: "PUBLISHING", caption: "Trabada #uñas" }, [{ video: true }]);
+    await db.contentPost.update({ where: { id: stuck.id }, data: { updatedAt: old, attempts: 4 } });
+    onInstagram = [];
+    check("not on Instagram: back to ready", [await resetPost(stuck.id), (await reload(stuck.id)).attempts], [{ status: "READY" }, 0]);
+    const landed = await post({ kind: "REEL", status: "PUBLISHING", caption: "Llegó #uñas" }, [{ video: true }]);
+    await db.contentPost.update({ where: { id: landed.id }, data: { updatedAt: old } });
+    onInstagram = [{ id: "m-99", caption: "Llegó #uñas", permalink: "https://www.instagram.com/reel/x/", timestamp: new Date().toISOString() }];
+    await resetPost(landed.id);
+    const pl = await reload(landed.id);
+    check("it did reach Instagram: marked published with its link, not sent twice", [pl.status, pl.permalink], ["PUBLISHED", "https://www.instagram.com/reel/x/"]);
+    const busy = await post({ kind: "REEL", status: "PUBLISHING" }, [{ video: true }]);
+    check("one being published right now is left alone", "error" in (await resetPost(busy.id)), true);
+    onInstagram = [];
+
+    console.log("\nRecordatorios de lo que va a mano");
+    const hours = (h: number) => new Date(Date.now() + h * 3_600_000);
+    pushed.length = 0;
+    const tomorrow = await post({ channel: "MANUAL", kind: "REEL", status: "SCHEDULED", scheduledAt: hours(20), notes: "Grabá la voz en off.\nGUION: «Nueve y cincuenta…»" }, [{ video: true }]);
+    const far = await post({ channel: "MANUAL", status: "SCHEDULED", scheduledAt: hours(30) });
+    const auto = await post({ kind: "POST", status: "SCHEDULED", scheduledAt: hours(20) });
+    check("the day before: one reminder, for the manual one only", await remindManualContent(), 1);
+    const reminders = pushed.filter((p) => p.url === `/admin/content/${tomorrow.id}`);
+    check("a push to every admin, starting with «Mañana»", [reminders.length, reminders[0]?.title.startsWith("Mañana subís a mano")], [adminCount, true]);
+    const mails = await db.notificationLog.count({ where: { relatedId: tomorrow.id, template: "content-reminder" } });
+    check("and an email to each admin with an address", mails > 0, true);
+    check("not sent twice", await remindManualContent(), 0);
+    await db.contentPost.update({ where: { id: tomorrow.id }, data: { scheduledAt: hours(1.5) } });
+    check("a couple of hours before: the second one", [await remindManualContent(), (await reload(tomorrow.id)).reminderStage], [1, 2]);
+    check("and then nothing more", await remindManualContent(), 0);
+    check("nothing for one two days off or one that publishes itself", [(await reload(far.id)).reminderStage, (await reload(auto.id)).reminderStage], [0, 0]);
+    const { schedulePost } = await import("../src/lib/content/schedule");
+    await schedulePost(tomorrow.id, hours(40));
+    check("moving its date starts the reminders over", (await reload(tomorrow.id)).reminderStage, 0);
+    await db.notificationLog.deleteMany({ where: { template: "content-reminder", relatedId: tomorrow.id } });
   } finally {
     globalThis.fetch = realFetch;
     await db.contentPost.deleteMany({ where: { title: "verify-content" } });

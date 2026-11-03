@@ -26,8 +26,12 @@ import { notifyContentFailed, notifyContentPublished } from "./notify";
 const API_VERSION = process.env.INSTAGRAM_API_VERSION || "v23.0";
 const GRAPH = `https://graph.facebook.com/${API_VERSION}`;
 
-/** How long one sweep waits for Instagram to process a video. */
-const WAIT_MS = Number(process.env.INSTAGRAM_WAIT_MS ?? 40_000);
+/**
+ * How long one sweep waits for Instagram to process a video. Short on
+ * purpose: the host cuts a request off well before a minute, and a video
+ * that is not ready is finished by the next sweep from its saved container.
+ */
+const WAIT_MS = Number(process.env.INSTAGRAM_WAIT_MS ?? 8_000);
 const POLL_MS = Number(process.env.INSTAGRAM_POLL_MS ?? 5_000);
 /** Sweeps a video may stay in processing before we give up (about two hours). */
 const MAX_ATTEMPTS = 8;
@@ -125,6 +129,15 @@ export function publishProblem(post: Post): string | null {
   return null;
 }
 
+/**
+ * Kept the moment Instagram hands it over, before any waiting: if the request
+ * is cut off while the video processes, the next sweep picks up this container
+ * instead of starting over (which is how a reel once stayed «publicando»).
+ */
+async function saveContainer(postId: string, container: string) {
+  await db.contentPost.update({ where: { id: postId }, data: { igContainerId: container, error: null } });
+}
+
 async function finish(post: Post, account: string, container: string) {
   const published = await graph(`${account}/media_publish`, { creation_id: container }, "POST");
   const mediaId = String(published.id);
@@ -180,8 +193,10 @@ export async function publishToInstagram(postId: string, { now = new Date(), wai
       const children = [];
       for (const m of post.media) children.push(await createContainer(account, mediaParams(m, post, true)));
       container = `children:${children.join(",")}`;
+      await saveContainer(post.id, container);
     } else if (!container) {
       container = await createContainer(account, mediaParams(post.media[0], post, false));
+      await saveContainer(post.id, container);
     }
 
     if (container.startsWith("children:")) {
@@ -191,6 +206,7 @@ export async function publishToInstagram(postId: string, { now = new Date(), wai
         return "processing";
       }
       container = await createContainer(account, { media_type: "CAROUSEL", children: children.join(","), caption: post.caption });
+      await saveContainer(post.id, container);
     }
 
     if ((await waitFor([container], deadline)) === "pending") {
@@ -231,4 +247,45 @@ export async function publishDueContent(now = new Date(), limit = 3) {
     if (outcome === "failed") result.failed++;
   }
   return result;
+}
+
+/**
+ * The account's latest posts with this post's caption, if one went up after
+ * it was created — so a post cut off right after Instagram published it is
+ * not published twice.
+ */
+export async function findOnInstagram(post: Pick<ContentPost, "brand" | "caption" | "createdAt">) {
+  const account = instagramAccountFor(post.brand);
+  if (!account || !post.caption.trim()) return null;
+  const res = await graph(`${account}/media`, { fields: "id,caption,permalink,timestamp", limit: "15" });
+  const items = (res.data ?? []) as { id: string; caption?: string; permalink?: string; timestamp?: string }[];
+  const same = (c?: string) => (c ?? "").trim() === post.caption.trim();
+  const hit = items.find((m) => same(m.caption) && (!m.timestamp || new Date(m.timestamp) >= post.createdAt));
+  return hit ? { id: hit.id, permalink: hit.permalink ?? null, at: hit.timestamp ? new Date(hit.timestamp) : new Date() } : null;
+}
+
+/**
+ * Frees a post stuck «publicando» (or failed): if it did reach Instagram it is
+ * marked published with its link; if not, it goes back to «Lista» to be
+ * scheduled again.
+ */
+export async function resetPost(postId: string): Promise<{ status: "PUBLISHED" | "READY"; permalink?: string | null } | { error: string; httpStatus: number }> {
+  const post = await db.contentPost.findUnique({ where: { id: postId } });
+  if (!post) return { error: "post not found", httpStatus: 404 };
+  if (post.status === "PUBLISHED") return { error: "Ya se publicó", httpStatus: 409 };
+  if (post.status === "PUBLISHING" && post.updatedAt.getTime() > Date.now() - 5 * 60_000) {
+    return { error: "Se está publicando ahora mismo: esperá unos minutos", httpStatus: 409 };
+  }
+  if (post.channel === "INSTAGRAM" && (post.status === "PUBLISHING" || post.status === "FAILED")) {
+    const found = await findOnInstagram(post).catch(() => null);
+    if (found) {
+      await db.contentPost.update({
+        where: { id: post.id },
+        data: { status: "PUBLISHED", igMediaId: found.id, permalink: found.permalink, publishedAt: found.at, error: null },
+      });
+      return { status: "PUBLISHED", permalink: found.permalink };
+    }
+  }
+  await db.contentPost.update({ where: { id: post.id }, data: { status: "READY", igContainerId: null, attempts: 0, error: null } });
+  return { status: "READY" };
 }

@@ -16,7 +16,14 @@ export async function schedulePost(postId: string, at: Date, now = new Date()): 
   }
   await db.contentPost.update({
     where: { id: post.id },
-    data: { scheduledAt: at, status: "SCHEDULED", error: null, igContainerId: null, attempts: 0 },
+    data: {
+      scheduledAt: at,
+      status: "SCHEDULED",
+      error: null,
+      igContainerId: null,
+      attempts: 0,
+      ...(at.getTime() !== post.scheduledAt?.getTime() ? { reminderStage: 0 } : {}),
+    },
   });
   return { ok: true };
 }

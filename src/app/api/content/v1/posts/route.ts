@@ -26,6 +26,10 @@ export async function GET(request: NextRequest) {
       media: p._count.media,
       permalink: p.permalink,
       error: p.error,
+      attempts: p.attempts,
+      processing: Boolean(p.igContainerId),
+      reminderStage: p.reminderStage,
+      updatedAt: p.updatedAt,
     })),
   });
 }
@@ -58,7 +62,8 @@ export async function POST(request: NextRequest) {
     if (existing.status === "PUBLISHED" || existing.status === "PUBLISHING") {
       return NextResponse.json({ post: { id: existing.id, status: existing.status }, unchanged: true });
     }
-    const post = await db.contentPost.update({ where: { id: existing.id }, data });
+    const moved = data.scheduledAt?.getTime() !== existing.scheduledAt?.getTime();
+    const post = await db.contentPost.update({ where: { id: existing.id }, data: { ...data, ...(moved ? { reminderStage: 0 } : {}) } });
     return NextResponse.json({ post: { id: post.id, status: post.status }, created: false });
   }
   const post = await db.contentPost.create({ data: { brand, title, ...data, createdById: "content-api" } });
