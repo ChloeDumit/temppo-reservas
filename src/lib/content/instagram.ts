@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { ContentMedia, ContentPost } from "@/generated/prisma/client";
+import { notifyContentFailed, notifyContentPublished } from "./notify";
 
 /*
   Publishing the platform's own posts through Instagram's Content Publishing
@@ -139,6 +140,7 @@ async function finish(post: Post, account: string, container: string) {
       error: null,
     },
   });
+  await notifyContentPublished({ id: post.id, title: post.title, permalink: (link.permalink as string | null) ?? null });
   return "published" as const;
 }
 
@@ -160,6 +162,7 @@ export async function publishToInstagram(postId: string, { now = new Date(), wai
 
   const fail = async (message: string) => {
     await db.contentPost.update({ where: { id: post.id }, data: { status: "FAILED", error: message.slice(0, 500) } });
+    await notifyContentFailed(post, message);
     return "failed" as const;
   };
 

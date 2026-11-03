@@ -19,6 +19,9 @@ process.env.APP_URL = "https://beauty.example.test";
 process.env.INSTAGRAM_WAIT_MS = "0";
 process.env.INSTAGRAM_POLL_MS = "0";
 delete process.env.NETLIFY;
+// No real pushes to anyone's phone from a test, and no real email either.
+delete process.env.VAPID_PRIVATE_KEY;
+delete process.env.EMAIL_SEND_IN_DEV;
 delete process.env.NETLIFY_BLOBS_CONTEXT;
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
@@ -119,6 +122,9 @@ async function main() {
     check("from the file's public URL, with the caption", [created()[0].params.image_url.endsWith(`${photo.id}-0.jpg`), created()[0].params.caption], [true, "Hola #uñas"]);
     check("with its link kept", p1.permalink?.startsWith("https://www.instagram.com/p/"), true);
     check("the one for later waits", (await reload(future.id)).status, "SCHEDULED");
+    const told = await db.notificationLog.findMany({ where: { template: "content_published", relatedId: photo.id }, select: { recipient: true } });
+    const adminCount = await db.user.count({ where: { isPlatformAdmin: true, isActive: true } });
+    check("every platform admin is told it went up", told.length, adminCount);
 
     console.log("\nUn reel que Instagram tarda en procesar");
     calls.length = 0;
@@ -147,6 +153,7 @@ async function main() {
     await publishDueContent();
     const pb = await reload(bad.id);
     check("Instagram's refusal is kept on the post", [pb.status, pb.error?.includes("Only photo or video")], ["FAILED", true]);
+    check("and the admins are told why", await db.notificationLog.count({ where: { template: "content_failed", relatedId: bad.id } }), adminCount);
     failCreate = null;
     calls.length = 0;
     const twice = await post({ kind: "POST", status: "SCHEDULED", scheduledAt: past });
@@ -154,6 +161,8 @@ async function main() {
     check("two at once: one publishes, the other stands back", [both.sort(), created().length], [["published", "skipped"], 1]);
   } finally {
     globalThis.fetch = realFetch;
+    const gone = await db.contentPost.findMany({ where: { title: "verify-content" }, select: { id: true } });
+    await db.notificationLog.deleteMany({ where: { relatedType: "ContentPost", relatedId: { in: gone.map((p) => p.id) } } });
     await db.contentPost.deleteMany({ where: { title: "verify-content" } });
     await deletePrefix("media/verify");
     void getMedia;
