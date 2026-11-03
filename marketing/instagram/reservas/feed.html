@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Feed Instagram · TEMPPO Reservas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700&family=Karla:wght@400;500;700&family=Fredoka:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --coral: #E07A5F;
+    --coral-deep: #C85C35;
+    --peach: #F4B9A4;
+    --paper: #FAF7F4;
+    --blush: #F8EFE9;
+    --soft: #FDF1EB;
+    --ink: #1C1917;
+    --ink-soft: #57534E;
+    --muted: #8A827A;
+    --line: #ECE5DD;
+    --pos: #4A7C62;
+    --pos-bg: #E6EFE9;
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Karla", system-ui, sans-serif;
+    --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ddd; font-family: var(--sans), var(--emoji); color: var(--ink); font-feature-settings: "lnum" 1; }
+  .board { display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; }
+
+  .post { width: 1080px; height: 1350px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 96px 96px 84px; flex-shrink: 0; }
+  .sq { width: 1080px; height: 1080px; display: grid; place-items: center; flex-shrink: 0; }
+
+  .eyebrow { font-size: 26px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+  .headline { font-family: var(--serif); font-weight: 600; font-size: 96px; line-height: 1.02; letter-spacing: -0.015em; font-variation-settings: "opsz" 60; text-wrap: balance; }
+  .headline em { font-style: italic; font-weight: 600; }
+  .body { font-size: 34px; line-height: 1.45; text-wrap: pretty; }
+  .footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-size: 27px; font-weight: 500; }
+
+  /* Wordmark: mascot + "temppo" (Fredoka) + "Reservas" (Karla) */
+  .brand { display: inline-flex; align-items: center; gap: 14px; white-space: nowrap; }
+  .brand img { width: 72px; height: 72px; }
+  .brand b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 48px; letter-spacing: -.01em; color: var(--coral); }
+  .brand small { font-family: var(--sans); font-size: 28px; font-weight: 500; margin-left: 10px; color: var(--ink-soft); }
+  .brand.light b { color: var(--peach); }
+  .brand.light small { color: rgba(255,255,255,.75); }
+  .brand.white img { background: var(--soft); border-radius: 50%; padding: 6px; width: 80px; height: 80px; }
+  .brand.white b { color: #fff; }
+  .brand.white small { color: rgba(255,255,255,.85); }
+
+  .pill { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 18px 34px; font-weight: 700; font-size: 28px; }
+  .badge { display: inline-block; border-radius: 999px; padding: 8px 22px; font-size: 24px; font-weight: 700; white-space: nowrap; }
+  .badge.ok { background: var(--pos-bg); color: var(--pos); }
+  .badge.full { background: var(--soft); color: var(--coral-deep); }
+
+  /* Carousel dots */
+  .dots { display: flex; gap: 12px; align-items: center; }
+  .dots i { width: 14px; height: 14px; border-radius: 999px; background: currentColor; opacity: .25; }
+  .dots i.on { width: 44px; opacity: 1; background: var(--coral); }
+
+  /* ---------- 1 · WhatsApp ---------- */
+  .wa { background: var(--ink); color: #fff; }
+  .wa .eyebrow { color: var(--peach); }
+  .chat { margin-top: 64px; display: flex; flex-direction: column; gap: 22px; }
+  .bubble { align-self: flex-start; max-width: 76%; background: #fff; color: var(--ink); border-radius: 28px 28px 28px 8px; padding: 22px 30px 16px; font-size: 32px; line-height: 1.35; font-family: var(--sans), var(--emoji); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .bubble small { display: block; text-align: right; font-size: 20px; color: var(--muted); margin-top: 6px; }
+  .bubble.b2 { margin-left: 40px; opacity: .93; }
+  .bubble.b3 { margin-left: 80px; opacity: .86; }
+  .bubble.b4 { margin-left: 120px; opacity: .79; }
+  .wa .headline { margin-top: auto; }
+  .wa .headline em { color: var(--peach); }
+  .wa .footer { margin-top: 52px; color: rgba(255,255,255,.75); }
+
+  /* ---------- 2 · Carrusel lista de espera ---------- */
+  .c-cover { background: var(--coral); color: #fff; }
+  .c-cover .eyebrow { color: #FFE3D8; }
+  .c-cover .headline { margin-top: 40px; font-size: 118px; line-height: 1; }
+  .c-cover .headline em { color: #FFE3D8; }
+  .c-cover .swipe { margin-top: 48px; font-size: 32px; font-weight: 700; color: #fff; display: inline-flex; }
+  .c-cover .swipe span { border: 2px solid rgba(255,255,255,.6); border-radius: 999px; padding: 14px 30px; }
+  .c-cover .big { position: absolute; right: 96px; bottom: 210px; width: 480px; height: 480px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; box-shadow: 0 30px 80px rgba(120,40,20,.25); }
+  .c-cover .big img { width: 330px; height: 330px; }
+  .c-cover .footer { color: #fff; }
+
+  .c-step { background: var(--paper); }
+  .c-step.alt { background: var(--blush); }
+  .c-step .eyebrow { color: var(--coral-deep); }
+  .stage { margin-top: 56px; height: 760px; position: relative; display: flex; justify-content: center; }
+  .phone { position: relative; width: 700px; height: 760px; background: #fff; border-radius: 64px 64px 0 0; border: 12px solid var(--ink); border-bottom: 0; box-shadow: 0 30px 90px rgba(80,40,20,.16); padding: 54px 44px 0; overflow: hidden; }
+  .phone .notch { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 150px; height: 30px; border-radius: 999px; background: var(--ink); }
+  .appbar { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+  .appbar .mini { display: inline-flex; align-items: center; gap: 8px; }
+  .appbar .mini img { width: 44px; height: 44px; }
+  .appbar .mini b { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 30px; color: var(--coral); }
+  .appbar .day { font-size: 24px; font-weight: 700; color: var(--ink-soft); border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 20px; }
+  .cls { margin-top: 34px; border: 1.5px solid var(--line); border-radius: 32px; padding: 34px 34px 36px; }
+  .cls h3 { font-family: var(--sans); font-size: 34px; font-weight: 700; }
+  .spots { margin-top: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .seats { display: flex; gap: 7px; }
+  .seats i { width: 22px; height: 22px; border-radius: 50%; background: var(--coral); }
+  .seats i.free { background: transparent; border: 3px solid var(--coral); }
+  .spots span { font-size: 27px; color: var(--ink-soft); font-weight: 500; }
+  .btn { margin-top: 30px; width: 100%; padding: 24px 0; font-size: 30px; }
+  .btn.primary { background: var(--coral); color: #fff; }
+  .btn.secondary { background: #fff; color: var(--coral-deep); border: 2.5px solid var(--coral); }
+  .wait { margin-top: 26px; display: flex; align-items: center; gap: 16px; font-size: 26px; color: var(--ink-soft); }
+  .avs { display: flex; }
+  .avs i { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 20px; font-weight: 700; color: #fff; border: 3px solid #fff; }
+  .avs i + i { margin-left: -12px; }
+  .note-card { margin-top: 34px; border-radius: 32px; padding: 34px; background: var(--soft); border: 1.5px solid #F6D9CC; }
+  .note-card .top { display: flex; align-items: center; gap: 18px; font-size: 24px; color: var(--muted); font-weight: 500; }
+  .bell { width: 60px; height: 60px; border-radius: 50%; background: var(--coral); display: grid; place-items: center; }
+  .note-card h3 { font-family: var(--sans); font-size: 38px; font-weight: 700; margin-top: 24px; }
+  .note-card p { font-size: 30px; color: var(--ink-soft); margin-top: 10px; line-height: 1.4; }
+  .skel { margin-top: 24px; border: 1.5px solid var(--line); border-radius: 32px; padding: 30px 34px; opacity: .7; }
+  .skel i { display: block; height: 22px; width: 62%; border-radius: 999px; background: var(--line); }
+  .skel i + i { width: 38%; margin-top: 16px; background: #F3EEE8; }
+  .ghost { margin-top: 30px; opacity: .45; }
+  .caption { font-family: var(--serif); font-weight: 600; font-size: 58px; line-height: 1.12; letter-spacing: -.01em; margin-top: 52px; font-variation-settings: "opsz" 48; text-wrap: balance; }
+  .c-step .footer { color: var(--muted); }
+
+  .c-close { background: var(--ink); color: #fff; }
+  .c-close .headline { margin-top: 56px; font-size: 128px; line-height: 1; }
+  .c-close .headline em { color: var(--peach); }
+  .c-close .cta { margin-top: 64px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
+  .c-close .pill { background: #fff; color: var(--ink); font-size: 38px; padding: 24px 46px; }
+  .c-close .note { font-size: 30px; color: rgba(255,255,255,.7); font-weight: 500; padding-left: 8px; }
+  .c-close .big { width: 340px; height: 340px; margin-left: -20px; }
+  .c-close .footer { color: rgba(255,255,255,.75); }
+  .c-close .dots i:not(.on) { background: #fff; }
+
+  /* ---------- 3 · Recuperaciones ---------- */
+  .rec { background: var(--blush); }
+  .rec .eyebrow { color: var(--coral-deep); }
+  .rec .headline { margin-top: 40px; }
+  .rec .headline em { color: var(--coral); }
+  .card { margin-top: 72px; background: #fff; border-radius: 40px; padding: 40px 44px; box-shadow: 0 30px 80px rgba(120, 60, 30, .12); }
+  .card .head { display: flex; align-items: center; gap: 20px; font-size: 26px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+  .card .ico { width: 60px; height: 60px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; }
+  .card .from { margin-top: 30px; font-size: 30px; color: var(--muted); line-height: 1.4; }
+  .card .from b { color: var(--ink); font-weight: 700; }
+  .card .from s { text-decoration-thickness: 2px; }
+  .card .arrow { margin: 18px 0 18px 4px; }
+  .card .to { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 26px 30px; border-radius: 26px; background: var(--paper); border: 1.5px solid var(--line); }
+  .card .to > span:first-child { font-size: 34px; font-weight: 700; }
+  .rec .body { margin-top: 56px; color: var(--ink-soft); }
+  .rec .footer { color: var(--muted); }
+
+  /* ---------- Perfiles ---------- */
+  .pf1 { background: var(--soft); }
+  .pf1 img { width: 600px; height: 600px; }
+  .pf2 { background: var(--ink); }
+  .pf2 img { width: 540px; height: 540px; }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <!-- 1 · WhatsApp -->
+  <section class="post wa" id="post-whatsapp">
+    <p class="eyebrow">¿Te suena?</p>
+    <div class="chat">
+      <div class="bubble">Holaa! ¿hay lugar en la de las 19? 🙏<small>22:04</small></div>
+      <div class="bubble b2">no voy a poder ir hoy 😓 ¿la recupero?<small>22:11</small></div>
+      <div class="bubble b3">¿cuántas clases me quedan del pack?<small>22:19</small></div>
+      <div class="bubble b4">¿me anotás en la lista de espera? 🙈<small>22:26</small></div>
+    </div>
+    <h1 class="headline">Tu estudio no debería <em>funcionar por WhatsApp.</em></h1>
+    <div class="footer"><span>Tus alumnas reservan solas.</span><span class="brand light" data-brand></span></div>
+  </section>
+
+  <!-- 2 · Carrusel: lista de espera -->
+  <section class="post c-cover" id="carrusel-lista-1">
+    <p class="eyebrow">Lista de espera</p>
+    <h1 class="headline">Clase llena.<br><em>Nadie se queda afuera.</em></h1>
+    <p class="swipe"><span>Deslizá →</span></p>
+    <div class="big"><img src="mascota-temppo.svg?cover" alt=""></div>
+    <div class="footer"><span class="brand white" data-brand></span></div>
+  </section>
+
+  <section class="post c-step" id="carrusel-lista-2">
+    <p class="eyebrow">1 · Reservan su lugar</p>
+    <div class="stage"><div class="phone"><span class="notch"></span>
+      <div class="appbar"><span class="mini"><img src="mascota-temppo.svg" alt=""><b>temppo</b></span><span class="day">Jueves</span></div>
+      <div class="cls">
+        <h3>Reformer · 19:00 · con Sofía</h3>
+        <div class="spots"><span class="seats"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="free"></i></span><span>7 de 8 lugares</span></div>
+        <span class="pill btn primary">Reservar</span>
+      </div>
+      <div class="skel"><i></i><i></i></div><div class="skel"><i></i><i></i></div>
+    </div></div>
+    <p class="caption">Tus alumnas eligen la clase desde el celular.</p>
+    <div class="footer"><span class="dots"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post c-step alt" id="carrusel-lista-3">
+    <p class="eyebrow">2 · Se llena</p>
+    <div class="stage"><div class="phone"><span class="notch"></span>
+      <div class="appbar"><span class="mini"><img src="mascota-temppo.svg" alt=""><b>temppo</b></span><span class="day">Jueves</span></div>
+      <div class="cls">
+        <h3>Reformer · 19:00 · con Sofía</h3>
+        <div class="spots"><span class="seats"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="badge full">8 de 8 · Completa</span></div>
+        <span class="pill btn secondary">Anotarme en la lista de espera</span>
+        <div class="wait"><span class="avs"><i style="background:#E07A5F">V</i><i style="background:#C85C35">C</i></span>Lista de espera: Valentina, Camila</div>
+      </div>
+      <div class="skel"><i></i><i></i></div><div class="skel"><i></i><i></i></div>
+    </div></div>
+    <p class="caption">Si no hay lugar, se anotan en la lista de espera.</p>
+    <div class="footer"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post c-step" id="carrusel-lista-4">
+    <p class="eyebrow">3 · Alguien cancela</p>
+    <div class="stage"><div class="phone"><span class="notch"></span>
+      <div class="appbar"><span class="mini"><img src="mascota-temppo.svg" alt=""><b>temppo</b></span><span class="day">Jueves</span></div>
+      <div class="note-card">
+        <div class="top"><span class="bell"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg></span>temppo</div>
+        <h3>¡Se liberó un lugar!</h3>
+        <p>Reformer · jueves 19:00 — Tenés 2 horas para tomarlo.</p>
+        <span class="pill btn primary">Tomar el lugar</span>
+      </div>
+      <div class="skel"><i></i><i></i></div><div class="skel"><i></i><i></i></div>
+    </div></div>
+    <p class="caption">Le avisamos a la siguiente, y el lugar no queda vacío.</p>
+    <div class="footer"><span class="dots"><i></i><i></i><i></i><i class="on"></i><i></i></span><span class="brand" data-brand></span></div>
+  </section>
+
+  <section class="post c-close" id="carrusel-lista-5">
+    <img class="big" src="mascota-temppo.svg?close" alt="">
+    <h1 class="headline">Probala gratis<br><em>un mes.</em></h1>
+    <div class="cta"><span class="pill">reservas.temppo.uy</span><span class="note">Sin tarjeta · link en la bio</span></div>
+    <div class="footer"><span class="dots"><i></i><i></i><i></i><i></i><i class="on"></i></span><span class="brand light" data-brand></span></div>
+  </section>
+
+  <!-- 3 · Recuperaciones -->
+  <section class="post rec" id="post-recuperaciones">
+    <p class="eyebrow">Recuperaciones</p>
+    <h1 class="headline">Faltó el martes.<br><em>La recupera el jueves.</em></h1>
+    <div class="card">
+      <div class="head"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C85C35" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></span>Clase para recuperar</div>
+      <p class="from"><b>Valentina G.</b> · faltó a Reformer, <s>martes 19:00</s></p>
+      <div class="arrow"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#E07A5F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+      <div class="to"><span>Recupera: jueves 18:00</span><span class="badge ok">Confirmada</span></div>
+    </div>
+    <p class="body">Tus alumnas recuperan las clases que faltaron con las reglas que vos ponés. Sin planillas ni mensajes de ida y vuelta.</p>
+    <div class="footer"><span>Cupos fijos, packs y recuperaciones</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <!-- 4 · Perfil @temppo.reservas -->
+  <section class="sq pf1" id="perfil-temppo-reservas"><img src="mascota-temppo.svg?pf1" alt=""></section>
+
+  <!-- 5 · Perfil @temppo.uy -->
+  <section class="sq pf2" id="perfil-temppo-uy"><img src="mascota-temppo.svg?pf2" alt=""></section>
+
+</div>
+<script>
+  document.querySelectorAll("[data-brand]").forEach((el) => {
+    el.innerHTML = '<img src="mascota-temppo.svg" alt=""><span><b>temppo</b><small>Reservas</small></span>';
+  });
+</script>
+</body>
+</html>
