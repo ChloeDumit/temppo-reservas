@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
     // Local network, for testing over Wi-Fi without a tunnel.
     "192.168.*.*",
     "10.*.*.*",
+    // The loopback address, for a second dev server alongside one on localhost
+    // (separate cookies, so two sessions do not sign each other out).
+    "127.0.0.1",
   ],
   experimental: {
     // Server Actions receive uploaded proof-of-payment images.

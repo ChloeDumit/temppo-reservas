@@ -6,6 +6,7 @@ import { sweepExpiredOffers } from "@/lib/waitlist";
 import { closePastAppointments, expireHolds, sendAppointmentReminders, sendRebookNudges } from "@/lib/appointments/cron";
 import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
 import { renewExpiringMercadoPagoTokens } from "@/lib/payments/mercadopago-oauth";
+import { publishDueContent } from "@/lib/content/instagram";
 
 /**
  * Sends the pre-class reminder for every studio whose window has arrived.
@@ -111,7 +112,13 @@ export async function sendDueReminders(now = new Date()) {
     return 0;
   });
 
-  return { studios: studios.length, classes, sent, birthdays, appointments, mpRenewed };
+  // The platform's own Instagram posts whose time has come.
+  const content = await publishDueContent(now).catch((error) => {
+    console.error("[reminders] content publishing failed", error);
+    return { published: 0, processing: 0, failed: 0 };
+  });
+
+  return { studios: studios.length, classes, sent, birthdays, appointments, mpRenewed, content };
 }
 
 type BirthdayStudio = { id: string; name: string; timezone: string; locale: string };

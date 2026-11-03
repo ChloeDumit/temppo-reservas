@@ -1231,3 +1231,82 @@ model MercadoPagoAccount {
   connectedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+/// What the platform posts on its own social accounts. Not a studio's: these
+/// belong to Temppo (one row per post on @temppobeauty or TEMPPO Reservas).
+enum ContentKind {
+  POST
+  CAROUSEL
+  REEL
+  STORY
+}
+
+enum ContentChannel {
+  /// Published by the app through Instagram's Content Publishing API.
+  INSTAGRAM
+  /// Posted by hand (TikTok, or Instagram when it needs an in-app audio):
+  /// the app only reminds and keeps the files and caption ready.
+  MANUAL
+}
+
+enum ContentStatus {
+  IDEA
+  READY
+  SCHEDULED
+  /// Handed to Instagram, which is still processing the video.
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+model ContentPost {
+  id      String         @id @default(cuid())
+  /// "temppo" or "beauty": whose account it goes to.
+  brand   String         @default("beauty")
+  title   String
+  kind    ContentKind    @default(POST)
+  channel ContentChannel @default(INSTAGRAM)
+  status  ContentStatus  @default(IDEA)
+
+  scheduledAt DateTime?
+  caption     String    @default("")
+  notes       String?
+
+  /// Instagram's ids, kept so a video still processing is finished by the
+  /// next sweep instead of uploaded twice.
+  igContainerId String?
+  igMediaId     String?
+  permalink     String?
+  publishedAt   DateTime?
+  error         String?
+  attempts      Int       @default(0)
+
+  /// Platform admin. Not a relation — User rows are tenant-scoped.
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  media ContentMedia[]
+
+  @@index([status, scheduledAt])
+  @@index([brand, scheduledAt])
+}
+
+model ContentMedia {
+  id       String      @id @default(cuid())
+  postId   String
+  post     ContentPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  /// Order inside a carousel.
+  position Int         @default(0)
+  isVideo  Boolean     @default(false)
+  /// Key in the media store; served publicly at /api/content-media/<key> so
+  /// Instagram can fetch it. Unguessable, never listed.
+  key      String      @unique
+  mimeType String
+  size     Int
+  filename String
+
+  createdAt DateTime @default(now())
+
+  @@index([postId, position])
+}

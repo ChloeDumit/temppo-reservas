@@ -122,6 +122,30 @@ other — intended, since an account belongs to one studio and one brand.
      Ajustes → Avisos por WhatsApp, where she also sees how many she used. Once it sends for real, set
      `WA_AUTO_LIVE` in `src/lib/brand/pricing.ts` so the landing stops saying
      "coming soon" and new trials start with their 50 messages.
+- **Instagram (the platform's own posts).** The console's *Contenido* tab
+  publishes posts, carousels, reels and stories on the brand's Instagram at
+  their scheduled time, from the 15-minute sweep. Instagram fetches each file
+  from `{APP_URL}/api/content-media/…`, so `APP_URL` must be the public origin.
+  Files are kept in Netlify Blobs (the store `content-media`), which comes with
+  the site.
+  1. The Instagram account (@temppobeauty) is a professional account (Business
+     or Creator) linked to the brand's Facebook Page.
+  2. In the business portfolio (*Configuración del negocio → Cuentas*), add the
+     Page and the Instagram account.
+  3. In the Meta app, add the use case *Administrar mensajes y contenido en
+     Instagram* (Instagram API with Facebook Login).
+  4. Give the System User the Page and the Instagram account (full control),
+     and generate a token for the app, never expiring, with
+     `instagram_basic`, `instagram_content_publish`, `pages_show_list`,
+     `pages_read_engagement` and `business_management`. It goes in
+     `INSTAGRAM_TOKEN`.
+  5. The account's id: `GET /me/accounts?fields=instagram_business_account`
+     with that token; the `instagram_business_account.id` goes in
+     `INSTAGRAM_USER_ID_BEAUTY` (and `INSTAGRAM_USER_ID_TEMPPO` for TEMPPO
+     Reservas' account, if it posts too).
+  The console says whether it is connected and as which account. Instagram's
+  API cannot add music from its library: a reel that needs a trending audio
+  goes on the *A mano* channel and is posted from the app.
 - **Entry point from the marketing site.** A plain redirect, never a proxy:
 
   ```toml
