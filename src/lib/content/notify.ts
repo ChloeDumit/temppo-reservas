@@ -1,60 +1,43 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { localePath, routing } from "@/i18n/routing";
-import { notifyPreferred } from "@/lib/notifications";
+import { brandByKey } from "@/lib/brand/registry";
+import { pushToUser, type PushMessage } from "@/lib/notifications/push";
 
 /*
   Tells whoever runs the platform that a post went up on Instagram, or could
-  not, so they can look at it. Push to their phone when they have turned
-  notifications on, and email always.
-
-  Unlike notifyPlatformAdmins, this does push: the post is something to go
-  and look at now, and tapping the notification opens it in the console.
-  The log row is filed under the admin's own studio — the notification log is
-  tenant-scoped, and a post belongs to no studio.
+  not, so they can look at it. A push to their phone only — no email, by
+  choice: this is a "go and look now", and the console has the full story.
+  Tapping it opens the post in the console. An admin who has not turned
+  notifications on in the app hears nothing; the console still shows it.
 */
 
-type Published = { id: string; title: string; permalink: string | null };
+/** The sender, swappable so the checks can see what would be pushed. */
+export const contentPush = { send: (userId: string, message: PushMessage) => pushToUser(userId, message) };
 
-function consoleUrl(id: string) {
-  return `${(process.env.APP_URL || "").replace(/\/$/, "")}${localePath(routing.defaultLocale, `/admin/content/${id}`)}`;
+async function pushAdmins(brandKey: string, message: Omit<PushMessage, "icon" | "badge">) {
+  const brand = brandByKey(brandKey);
+  const admins = await db.user.findMany({ where: { isPlatformAdmin: true, isActive: true }, select: { id: true } });
+  for (const admin of admins) {
+    await contentPush
+      .send(admin.id, { ...message, icon: `${brand.iconBase}/icon-192.png`, badge: `${brand.iconBase}/icon-192.png` })
+      .catch((error) => console.error("[content] push failed", error));
+  }
 }
 
-async function admins() {
-  return db.user.findMany({
-    where: { isPlatformAdmin: true, isActive: true },
-    select: { id: true, email: true, studioId: true },
+export async function notifyContentPublished(post: { id: string; title: string; brand: string }) {
+  await pushAdmins(post.brand, {
+    title: "Publicado en Instagram",
+    body: post.title,
+    url: `/admin/content/${post.id}`,
+    tag: `content-${post.id}`,
   });
 }
 
-export async function notifyContentPublished(post: Published) {
-  for (const admin of await admins()) {
-    await notifyPreferred({
-      studioId: admin.studioId,
-      to: admin.email,
-      userId: admin.id,
-      url: `/admin/content/${post.id}`,
-      template: "content_published",
-      subject: `Publicado en Instagram — ${post.title}`,
-      body: `Se publicó «${post.title}» en Instagram.${post.permalink ? `\n\nMirala: ${post.permalink}` : ""}\n\nEn la consola: ${consoleUrl(post.id)}`,
-      relatedType: "ContentPost",
-      relatedId: post.id,
-    }).catch((error) => console.error("[content] notify failed", error));
-  }
-}
-
-export async function notifyContentFailed(post: { id: string; title: string }, error: string) {
-  for (const admin of await admins()) {
-    await notifyPreferred({
-      studioId: admin.studioId,
-      to: admin.email,
-      userId: admin.id,
-      url: `/admin/content/${post.id}`,
-      template: "content_failed",
-      subject: `No se pudo publicar — ${post.title}`,
-      body: `«${post.title}» no se pudo publicar en Instagram.\n\nMotivo: ${error}\n\nRevisala y volvé a programarla: ${consoleUrl(post.id)}`,
-      relatedType: "ContentPost",
-      relatedId: post.id,
-    }).catch((e) => console.error("[content] notify failed", e));
-  }
+export async function notifyContentFailed(post: { id: string; title: string; brand: string }, error: string) {
+  await pushAdmins(post.brand, {
+    title: "No se pudo publicar en Instagram",
+    body: `${post.title} — ${error}`.slice(0, 240),
+    url: `/admin/content/${post.id}`,
+    tag: `content-${post.id}`,
+  });
 }

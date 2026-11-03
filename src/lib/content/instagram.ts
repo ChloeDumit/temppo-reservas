@@ -140,7 +140,7 @@ async function finish(post: Post, account: string, container: string) {
       error: null,
     },
   });
-  await notifyContentPublished({ id: post.id, title: post.title, permalink: (link.permalink as string | null) ?? null });
+  await notifyContentPublished(post);
   return "published" as const;
 }
 
