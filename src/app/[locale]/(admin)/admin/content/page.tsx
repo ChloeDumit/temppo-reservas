@@ -116,12 +116,12 @@ export default async function AdminContentPage({
           <ul className="divide-y divide-white/10">
             {upcoming.map((p) => (
               <li key={p.id}>
-                <Link href={`/admin/content/${p.id}`} className="flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-white/5">
+                <Link href={`/admin/content/${p.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-white/5">
                   <span className="w-28 text-xs tabular-nums text-white/50">
                     {day(p.scheduledAt!)} · {time(p.scheduledAt!)}
                   </span>
                   <span className={`rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] ${STATUS[p.status].className}`}>{STATUS[p.status].label}</span>
-                  <span className="flex-1 truncate text-sm font-medium">{p.title}</span>
+                  <span className="w-full text-sm font-medium sm:w-auto sm:flex-1 sm:truncate">{p.title}</span>
                   <span className="text-xs text-white/40">
                     {KIND_LABEL[p.kind]} · {p.channel === "INSTAGRAM" ? "Instagram" : "a mano"} · {p._count.media ? `${p._count.media} archivo${p._count.media > 1 ? "s" : ""}` : "sin archivos"}
                   </span>
@@ -142,7 +142,30 @@ export default async function AdminContentPage({
             <Link href={`/admin/content?mes=${shift(1)}`} className="rounded-[var(--radius-pill)] bg-white/10 px-3 py-1 hover:bg-white/20">→</Link>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-white/10 bg-white/10 text-xs">
+        {/* On a phone, the month as an agenda: seven columns would leave nothing readable. */}
+        <ul className="space-y-2 md:hidden">
+          {cells.filter((key): key is string => Boolean(key && byDay.get(key)?.length)).map((key) => (
+            <li key={key} className={`rounded-[var(--radius-lg)] border px-4 py-3 ${key === today ? "border-[#DE8BA3]/60" : "border-white/10"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider ${key === today ? "text-[#DE8BA3]" : "text-white/40"}`}>
+                {new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${key}T12:00:00Z`))}
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {byDay.get(key)!.map((p) => (
+                  <li key={p.id}>
+                    <Link href={`/admin/content/${p.id}`} className="flex items-center gap-2 text-sm">
+                      <span className="tabular-nums text-white/50">{time(p.scheduledAt!)}</span>
+                      <span className={`shrink-0 rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] ${STATUS[p.status].className}`}>{STATUS[p.status].label}</span>
+                      <span className="truncate">{p.title}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+          {!inMonth.length && <li className="rounded-[var(--radius-lg)] border border-white/10 px-4 py-6 text-center text-sm text-white/40">Nada este mes.</li>}
+        </ul>
+
+        <div className="hidden grid-cols-7 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-white/10 bg-white/10 text-xs md:grid">
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((d) => (
             <div key={d} className="bg-ink px-2 py-1.5 text-center text-[11px] uppercase tracking-wider text-white/40">{d}</div>
           ))}

@@ -145,7 +145,44 @@ export default async function AdminStudiosPage({
 
       <h1 className="mb-3 text-lg font-semibold">{noun}</h1>
 
-      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-white/10">
+      {/* On a phone, one card per studio: the table needs more width than there is. */}
+      <ul className="space-y-2 sm:hidden">
+        {studios.map((studio) => {
+          const trialDays = daysUntil(studio.trialEndsAt);
+          const last = lastActive.get(studio.id) ?? null;
+          return (
+            <li key={studio.id}>
+              <Link href={`/admin/studios/${studio.id}`} className="block rounded-[var(--radius-lg)] border border-white/10 px-4 py-3 active:bg-white/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{studio.name}</p>
+                    <p className="truncate text-xs text-white/40">/{studio.slug}</p>
+                  </div>
+                  <div className="shrink-0 text-right text-sm">
+                    <p className="text-white/80">{planLabel(studio.brand, studio.plan)}</p>
+                    {studio.plan === "TRIAL" && trialDays !== null && (
+                      <p className={`text-xs ${trialDays < 0 ? "text-red-300" : "text-white/40"}`}>{trialDays < 0 ? "vencida" : `${trialDays} días`}</p>
+                    )}
+                  </div>
+                </div>
+                {(studio.suspendedAt || studio.subscription?.status === "PAST_DUE") && (
+                  <div className="mt-2 flex gap-2">
+                    {studio.suspendedAt && <span className="rounded-[var(--radius-pill)] bg-red-500/20 px-2 py-0.5 text-[11px] text-red-300">Suspendido</span>}
+                    {studio.subscription?.status === "PAST_DUE" && <span className="rounded-[var(--radius-pill)] bg-red-500/20 px-2 py-0.5 text-[11px] text-red-300">Pago rechazado</span>}
+                  </div>
+                )}
+                <p className="mt-2 text-xs tabular-nums text-white/50">
+                  {countFor(studio.id, STAFF_ROLES)} {beauty ? "profesionales" : "staff"} · {countFor(studio.id, ["STUDENT"])} {beauty ? "clientas" : "alumnos"} ·{" "}
+                  {beauty ? studio._count.appointments : studio._count.bookings} {beauty ? "turnos" : "reservas"}
+                  {last ? ` · ${new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(last)}` : ""}
+                </p>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-[var(--radius-lg)] border border-white/10 sm:block">
         <table className="w-full text-sm">
           <thead className="bg-white/5 text-left text-[11px] uppercase tracking-wider text-white/40">
             <tr>
