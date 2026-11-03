@@ -2,13 +2,14 @@
  * Two finished reels about what the app does on its own, built from the
  * recordings record.mjs made (marketing/video/raw) plus drawn screens.
  *
- *   node marketing/video/compose-reels.mjs [whatsapp|mientras-dormis|tenes-lugar|un-dia|sena]
+ *   node marketing/video/compose-reels.mjs [whatsapp|mientras-dormis|tenes-lugar|un-dia|sena|demo]
  *   RAW=/path/to/raw node marketing/video/compose-reels.mjs
  *
  * Output: marketing/video/out/temppo-beauty-<name>.mp4, 1080×1920 at 30 fps.
  */
 import path from "node:path";
-import { HERE, MSG, NIGHT_CHATS, OUT, WHEN, pages, probe, createStudio } from "./lib.mjs";
+import { readFileSync } from "node:fs";
+import { HERE, MSG, NIGHT_CHATS, OUT, RAW, WHEN, pages, probe, createStudio } from "./lib.mjs";
 
 const { work: WORK, png, screenPng, still, recording, join, onPhone, close } = await createStudio(path.join(HERE, "work", "reels"));
 const only = process.argv[2];
@@ -157,6 +158,88 @@ if (!only || only === "sena") {
     { clip: taken, text: "…y lo toma otra clienta" },
     { clip: recording("senas", 5.0, 12.4, 1.2, path.join(WORK, "se-config.mp4")), text: "Vos decidís cuánto se cobra de seña" },
   ], "Señas <em>sin perseguir a nadie</em>");
+}
+
+/* ------------------------------------------- the full demo, to send to a business */
+if (!only || only === "demo") {
+  /** A stretch of a recording, with its own captions moved to the clip's time. */
+  const take = (name, from, to, speed) => {
+    const { captions } = JSON.parse(readFileSync(path.join(RAW, name, "timeline.json"), "utf8"));
+    const clip = recording(name, from, to, speed, path.join(WORK, `demo-${name}-${from}.mp4`));
+    const caps = captions
+      .map((c, i) => ({ ...c, end: captions[i + 1]?.t ?? Infinity }))
+      .filter((c) => c.end > from && c.t < to)
+      .map((c) => ({ t: Math.max(0, (c.t - from) / speed), text: c.text }));
+    return { clip, caps };
+  };
+  /** Several takes back to back as one screen, captions and all. */
+  const joined = (name, takes) => {
+    if (takes.length === 1) return takes[0];
+    const screen = path.join(WORK, `demo-${name}-screen.mp4`);
+    const starts = join(takes.map((t) => t.clip), screen, 0.3);
+    return { clip: screen, caps: takes.flatMap((t, i) => t.caps.map((c) => ({ t: c.t + starts[i], text: c.text }))) };
+  };
+
+  // The messages match the booking the Mercado Pago take ends on.
+  const DEMO_WHEN = "lunes, 9 de noviembre, 10:00";
+  const say = (m) => ({ ...m, html: m.html.replaceAll(WHEN, DEMO_WHEN).replaceAll("450 UYU", "360 UYU") });
+  const wa = await sequence("demo-wa", [
+    { html: pages.whatsapp([{ day: "Hoy" }, say(MSG.held)]), s: 2.6 },
+    { html: pages.whatsapp([{ day: "Hoy" }, say(MSG.held), say(MSG.confirmed)]), s: 2.8 },
+    { html: pages.whatsapp([{ day: "Hoy" }, say(MSG.held), say(MSG.confirmed), { day: "Domingo" }, say(MSG.reminder)]), s: 3.4 },
+  ]);
+  const lock = await sequence("demo-lock", [
+    {
+      html: pages.lockscreen(
+        [
+          { ago: "23:47", title: "Nueva reserva — Semipermanente", body: `Carolina reservó Semipermanente con Lucía: ${DEMO_WHEN}. Seña: 360 UYU.` },
+          { ago: "22:15", title: "Nueva reserva — Kapping", body: "Martina reservó Kapping con Lucía: martes, 10 de noviembre, 15:30." },
+        ],
+        "domingo 8 de noviembre",
+      ),
+      s: 3.4,
+    },
+  ]);
+
+  const sections = [
+    { kicker: "1 · Reservas", title: "Así reservan <em>tus clientas</em>", ...joined("res", [take("reserva", 0, 14.6, 1.25)]) },
+    {
+      kicker: "2 · Señas",
+      title: "La seña, con <em>Mercado Pago</em>",
+      ...joined("mp", [take("mercadopago", 7.0, 11.2, 1.0), take("mercadopago", 12.3, 19.0, 1.0)]),
+    },
+    { kicker: "3 · Tu Mercado Pago", title: "La plata, <em>directo a tu cuenta</em>", ...joined("mpn", [take("mercadopago-negocio", 0, 7.6, 1.0)]) },
+    {
+      kicker: "4 · WhatsApp",
+      title: "Le llega todo <em>por WhatsApp</em>",
+      clip: wa,
+      caps: [
+        { t: 0, text: "Al reservar, con su link" },
+        { t: 2.35, text: "Cuando paga la seña" },
+        { t: 4.9, text: "Y el recordatorio, antes del turno" },
+      ],
+    },
+    { kicker: "5 · Agenda", title: "Tu día, <em>ordenado</em>", ...joined("ag", [take("agenda", 0.3, 18.4, 1.3)]) },
+    { kicker: "6 · Transferencias", title: "Señas <em>sin perseguir a nadie</em>", ...joined("se", [take("senas", 0, 18.0, 1.3)]) },
+    { kicker: "7 · Clientas", title: "Tu mejor clienta <em>es la que vuelve</em>", ...joined("vo", [take("volver", 0, 15.0, 1.2)]) },
+    { kicker: "8 · Avisos", title: "Y te enterás <em>de cada reserva</em>", clip: lock, caps: [{ t: 0, text: "Cada reserva nueva, en tu celular" }] },
+  ];
+
+  const parts = [];
+  const opening = path.join(WORK, "demo-opening.mp4");
+  still(await png(pages.intro("Tu agenda online, <em>de punta a punta</em>", "Temppo Beauty"), path.join(WORK, "demo-opening.png"), { transparent: false }), 2.8, opening);
+  parts.push(opening);
+  for (const [i, sec] of sections.entries()) {
+    const card = path.join(WORK, `demo-card-${i}.mp4`);
+    still(await png(pages.intro(sec.title, sec.kicker), path.join(WORK, `demo-card-${i}.png`), { transparent: false }), 1.7, card);
+    parts.push(card, await onPhone(`demo-s${i}`, sec.clip, sec.kicker.replace(/^\d+ · /, ""), sec.caps));
+  }
+  const outro = path.join(WORK, "demo-outro.mp4");
+  still(await png(pages.outro("Probala <em>gratis un mes</em>"), path.join(WORK, "demo-outro.png"), { transparent: false }), 4, outro);
+  parts.push(outro);
+  const out = path.join(OUT, "temppo-beauty-demo.mp4");
+  join(parts, out, 0.4);
+  console.log(`${path.basename(out)}  ${probe(out).toFixed(1)} s`);
 }
 
 await close();

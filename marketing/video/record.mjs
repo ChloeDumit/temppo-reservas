@@ -1,7 +1,7 @@
 /**
  * Records the Temppo Beauty product demos by driving the real app.
  *
- *   node marketing/video/record.mjs [reserva|agenda|senas|volver]
+ *   node marketing/video/record.mjs [reserva|agenda|senas|volver|mercadopago|mercadopago-negocio]
  *
  * Needs the production build running with the beauty brand forced:
  *   BRAND_OVERRIDE=1 DEV_BRAND=beauty npx next start -p 8899
@@ -243,6 +243,58 @@ const DEMOS = {
       await page.getByText("Cómo pueden pagar la seña").scrollIntoViewIfNeeded();
       await h.glide(200, 600);
       await h.beat(2800);
+    }),
+
+  // ------------------------------------------------ paying the deposit with Mercado Pago
+  // Stops short of the checkout itself: Mercado Pago's own page is theirs,
+  // and a real charge is never made for a demo. The paid booking it lands on
+  // afterwards is prepared beforehand (DEMO_PAID_TOKEN).
+  mercadopago: () =>
+    record("mercadopago", {}, async (h, start) => {
+      const { page } = h;
+      await page.goto(`${BASE}/es/b/${SLUG}`);
+      await page.waitForLoadState("load"); await page.waitForTimeout(700);
+      start();
+      h.caption("La seña, con Mercado Pago");
+      await h.tap(page.getByRole("button", { name: /Semipermanente/ }));
+      await h.tap(page.getByRole("button", { name: "Seguir sin extras" }));
+      await h.tap(page.getByRole("button", { name: /Lucía Pereira/ }), 1200);
+      await page.locator("div.grid button").first().waitFor();
+      const days = page.locator("div.overflow-x-auto button:not([disabled])");
+      await h.tap(days.nth(2), 900);
+      await h.tap(page.locator("div.grid button").nth(1), 900);
+      await h.type(page.locator('input[name="name"]'), "Carolina Ferreira");
+      await h.type(page.locator('input[name="phone"]'), "099 456 789");
+      h.caption("Eligen Mercado Pago: tarjeta, débito o su cuenta");
+      await h.tap(page.locator("label", { hasText: "Mercado Pago" }), 1200);
+      await h.point(page.getByRole("button", { name: /Reservar/ }), 1800);
+      await page.goto(`${BASE}/es/m/${process.env.DEMO_PAID_TOKEN}?paid=1`);
+      await page.waitForLoadState("load"); await page.waitForTimeout(500);
+      h.caption("Y vuelven a su turno, ya confirmado");
+      await h.beat(2600);
+      await h.glide(220, 900);
+      await h.beat(1800);
+    }),
+
+  "mercadopago-negocio": () =>
+    record("mercadopago-negocio", { staff: true }, async (h, start) => {
+      const { page } = h;
+      await page.goto(`${BASE}/es/settings`);
+      await page.waitForLoadState("load"); await page.waitForTimeout(700);
+      await page.locator("#mercadopago").scrollIntoViewIfNeeded();
+      await h.glide(-80, 200);
+      start();
+      h.caption("Cada negocio conecta su propio Mercado Pago");
+      await h.beat(2800);
+      h.caption("Y la seña le llega directo a su cuenta");
+      await page.goto(`${BASE}/es/payments`);
+      await page.waitForLoadState("load"); await page.waitForTimeout(600);
+      await page.evaluate(() => {
+        const title = [...document.querySelectorAll("h1,h2,h3")].find((e) => e.textContent?.trim() === "Historial");
+        title?.scrollIntoView({ block: "start" });
+        window.scrollBy(0, -70);
+      });
+      await h.beat(3400);
     }),
 
   // ------------------------------------------------ time to come back

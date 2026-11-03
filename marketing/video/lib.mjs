@@ -124,7 +124,7 @@ export const pages = {
       .join("")}`,
 
   /** The owner's phone in the morning, with the booking's notification. */
-  lockscreen: (notes) => `<style>*{margin:0;padding:0;box-sizing:border-box}
+  lockscreen: (notes, date = "domingo 25 de octubre") => `<style>*{margin:0;padding:0;box-sizing:border-box}
     html,body{width:${SW}px;height:${SH}px;overflow:hidden}
     body{font-family:-apple-system,"Helvetica Neue",Jost,${EMOJI},sans-serif;color:#fff;
       background:radial-gradient(120% 80% at 30% 10%,#e7a9bb 0%,#b5536f 40%,#5a2234 100%);display:flex;flex-direction:column;align-items:center}
@@ -135,7 +135,7 @@ export const pages = {
     .n img{width:56px;height:56px;border-radius:13px;background:#fbeff3;padding:4px}
     .n .h{display:flex;justify-content:space-between;font-size:17px;color:#555}.n b{display:block;font-size:21px;margin-top:3px}
     .n p{font-size:20px;line-height:1.35;margin-top:3px;color:#222}</style>
-    <div class="date">domingo 25 de octubre</div><div class="time">7:30</div>
+    <div class="date">${esc(date)}</div><div class="time">7:30</div>
     <div class="stack">${notes
       .map((n) => `<div class="n"><img src="${MASCOT}"><div style="flex:1"><div class="h"><span>TEMPPO BEAUTY</span><span>${n.ago}</span></div><b>${esc(n.title)}</b><p>${esc(n.body)}</p></div></div>`)
       .join("")}</div>`,
