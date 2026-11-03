@@ -145,6 +145,41 @@
   .rec .body { margin-top: 56px; color: var(--ink-soft); }
   .rec .footer { color: var(--muted); }
 
+
+  /* ---------- Presentación (primeras 3 del feed) ---------- */
+  .hi { background: var(--coral); color: #fff; }
+  .hi .eyebrow { color: #FFE3D8; }
+  .hi .headline { margin-top: 36px; font-size: 116px; line-height: 1; }
+  .hi .headline em { color: #FFE3D8; }
+  .hi .big { flex-shrink: 0; margin: 56px auto 0; width: 440px; height: 440px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; box-shadow: 0 30px 80px rgba(120,40,20,.25); }
+  .hi .big img { width: 310px; height: 310px; }
+  .hi .body { margin-top: 48px; margin-bottom: 40px; font-size: 38px; color: #fff; }
+  .hi .footer { color: #fff; }
+
+  .what { background: var(--paper); }
+  .what .eyebrow { color: var(--coral-deep); }
+  .what .headline { margin-top: 40px; font-size: 88px; }
+  .what .headline em { color: var(--coral); }
+  .feats { margin-top: 64px; display: flex; flex-direction: column; gap: 22px; }
+  .feat { display: flex; align-items: center; gap: 28px; background: #fff; border: 1.5px solid var(--line); border-radius: 30px; padding: 26px 32px; box-shadow: 0 14px 40px rgba(120,60,30,.06); }
+  .feat .n { flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%; background: var(--soft); color: var(--coral-deep); display: grid; place-items: center; font-weight: 700; font-size: 28px; font-style: normal; }
+  .feat b { display: block; font-size: 36px; font-weight: 700; }
+  .feat span { display: block; font-size: 27px; color: var(--ink-soft); margin-top: 4px; }
+  .what .footer { color: var(--muted); }
+
+  .who { background: var(--ink); color: #fff; }
+  .who .eyebrow { color: var(--peach); }
+  .who .headline { margin-top: 40px; font-size: 104px; }
+  .who .headline em { color: var(--peach); }
+  .tags { margin-top: 60px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .tags span { border: 2px solid rgba(255,255,255,.35); border-radius: 999px; padding: 16px 32px; font-size: 34px; font-weight: 500; }
+  .who .cta { margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 24px; }
+  .who .cta h2 { font-family: var(--serif); font-weight: 600; font-size: 66px; line-height: 1.08; }
+  .who .cta h2 em { color: var(--peach); }
+  .who .pill { background: #fff; color: var(--ink); font-size: 36px; padding: 22px 44px; }
+  .who .note { font-size: 28px; color: rgba(255,255,255,.7); font-weight: 500; padding-left: 6px; }
+  .who .footer { margin-top: 56px; color: rgba(255,255,255,.75); }
+
   /* ---------- Perfiles ---------- */
   .pf1 { background: var(--soft); }
   .pf1 img { width: 600px; height: 600px; }
@@ -243,6 +278,43 @@
     </div>
     <p class="body">Tus alumnas recuperan las clases que faltaron con las reglas que vos ponés. Sin planillas ni mensajes de ida y vuelta.</p>
     <div class="footer"><span>Cupos fijos, packs y recuperaciones</span><span class="brand" data-brand></span></div>
+  </section>
+
+
+  <!-- Presentación · 1 -->
+  <section class="post hi" id="intro-hola">
+    <p class="eyebrow">Hola 👋</p>
+    <h1 class="headline">Somos<br><em>TEMPPO Reservas.</em></h1>
+    <div class="big"><img src="mascota-temppo.svg?hi" alt=""></div>
+    <p class="body">Reservas online para estudios de pilates, yoga y fitness. Hecho en Uruguay 🇺🇾</p>
+    <div class="footer"><span class="brand white" data-brand></span></div>
+  </section>
+
+  <!-- Presentación · 2 -->
+  <section class="post what" id="intro-que-hace">
+    <p class="eyebrow">Qué hace</p>
+    <h1 class="headline">Tu estudio, <em>ordenado en un solo lugar.</em></h1>
+    <div class="feats">
+      <div class="feat"><i class="n">1</i><div><b>Reservas desde el celular</b><span>Tus alumnas eligen la clase, sin escribirte.</span></div></div>
+      <div class="feat"><i class="n">2</i><div><b>Cupos fijos y packs</b><span>Cada una ve sus clases y cuántas le quedan.</span></div></div>
+      <div class="feat"><i class="n">3</i><div><b>Lista de espera</b><span>Si alguien cancela, el lugar no queda vacío.</span></div></div>
+      <div class="feat"><i class="n">4</i><div><b>Recuperaciones</b><span>Con las reglas que vos ponés.</span></div></div>
+      <div class="feat"><i class="n">5</i><div><b>Cobros</b><span>Mercado Pago o transferencia, todo registrado.</span></div></div>
+    </div>
+    <div class="footer"><span>reservas.temppo.uy</span><span class="brand" data-brand></span></div>
+  </section>
+
+  <!-- Presentación · 3 -->
+  <section class="post who" id="intro-para-quien">
+    <p class="eyebrow">Para quién</p>
+    <h1 class="headline">Para estudios <em>que trabajan con clases.</em></h1>
+    <div class="tags"><span>Pilates</span><span>Reformer</span><span>Yoga</span><span>Funcional</span><span>Fitness</span></div>
+    <div class="cta">
+      <h2>Probalo gratis <em>30 días.</em></h2>
+      <span class="pill">reservas.temppo.uy</span>
+      <span class="note">Sin tarjeta · link en la bio</span>
+    </div>
+    <div class="footer"><span>Un producto de @temppo.uy</span><span class="brand light" data-brand></span></div>
   </section>
 
   <!-- 4 · Perfil @temppo.reservas -->

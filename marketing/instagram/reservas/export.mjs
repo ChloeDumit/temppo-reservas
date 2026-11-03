@@ -15,6 +15,9 @@ const ids = [
   "carrusel-lista-4",
   "carrusel-lista-5",
   "post-recuperaciones",
+  "intro-hola",
+  "intro-que-hace",
+  "intro-para-quien",
   "perfil-temppo-reservas",
   "perfil-temppo-uy",
 ];

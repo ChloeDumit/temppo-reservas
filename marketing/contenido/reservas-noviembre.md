@@ -75,3 +75,45 @@ Lo que sigue: dos reels con pantallas reales de la app de clases (una alumna que
 - Link: temppo.uy
 
 Las tres publicaciones de presentación de @temppo.uy ("Somos Temppo", "Nuestros productos", "Hecho en Uruguay") salen en colaboración con cada producto.
+
+---
+
+## Presentación: las 3 primeras del feed (se suben a mano, ya)
+
+Se suben en este orden, así en la grilla quedan de izquierda a derecha: hola, qué hace, para quién.
+
+### 1 · Hola (`instagram/reservas/intro-hola.png`)
+
+> Hola 👋 Somos TEMPPO Reservas.
+>
+> Hacemos un sistema de reservas online para estudios de pilates, yoga y fitness, para que tus alumnas reserven solas y vos dejes de coordinar todo por WhatsApp.
+>
+> Lo hacemos en Uruguay 🇺🇾, de la mano de @temppo.uy.
+>
+> Seguinos para ver cómo funciona por dentro 👀
+>
+> #pilates #yoga #estudiodepilates #montevideo #uruguay #emprendedoras
+
+### 2 · Qué hace (`instagram/reservas/intro-que-hace.png`)
+
+> Todo lo que tu estudio necesita, en un solo lugar 📲
+>
+> ✅ Reservas desde el celular
+> ✅ Cupos fijos y packs de clases
+> ✅ Lista de espera
+> ✅ Recuperaciones con tus reglas
+> ✅ Cobros con Mercado Pago o transferencia
+>
+> Guardalo para cuando lo necesites 📌
+>
+> #pilatesreformer #estudiodepilates #yoga #gestion #reservasonline #uruguay
+
+### 3 · Para quién (`instagram/reservas/intro-para-quien.png`)
+
+> ¿Tenés un estudio de pilates, reformer, yoga o funcional? Esto es para vos 🧘‍♀️
+>
+> Probá TEMPPO Reservas gratis durante 30 días, sin tarjeta. Lo configurás en una tarde y tus alumnas empiezan a reservar solas.
+>
+> 👉 reservas.temppo.uy (link en la bio)
+>
+> #pilates #pilatesuruguay #yoga #funcional #estudiodepilates #montevideo
