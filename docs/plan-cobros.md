@@ -113,8 +113,5 @@ Una página nueva, **Mi plan**. Se entra desde el menú **Más → Mi plan** y d
    - Solo Temppo Beauty.
    - O también los negocios de Temppo Reservas.
 5. **¿Precio de lanzamiento?** ¿Lo respetamos durante 12 meses para los primeros 50 negocios, como dice la landing?
-6. **¿Cuándo vale un cambio de plan?**
-   - Si sube de plan, al instante, y el precio nuevo se cobra en el próximo vencimiento.
-   - Si baja, desde el próximo mes.
-   - ¿O preferís otra regla?
-7. **¿Mensajes extra de WhatsApp?** ¿Se pueden comprar desde la app ($190 por 200 mensajes), o por ahora te escriben y los cargás vos?
+6. ✅ **Cambio de plan:** si sube, vale al instante y el precio nuevo se cobra en el próximo vencimiento. Si baja, vale desde el próximo mes.
+7. ✅ **Mensajes extra de WhatsApp:** se compran desde la app, $190 por 200 mensajes, con Mercado Pago. Cuando el pago se aprueba, se suman al cupo del mes solos.
