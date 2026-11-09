@@ -461,7 +461,9 @@
     "changesLeft": "Podés mover {count} clases más este mes.",
     "changesLeftOne": "Podés mover 1 clase más este mes.",
     "changesNone": "Ya usaste tus cambios del mes. Si cancelás, perdés la clase.",
-    "makeupsExpire": "Vencen a fin de mes."
+    "makeupsExpire": "Vencen a fin de mes.",
+    "makeupsLeft": "{count, plural, one {1 recuperación} other {# recuperaciones}}",
+    "makeupOnly": "{count, plural, one {Tenés 1 clase para recuperar} other {Tenés # clases para recuperar}} hasta el {date}."
   },
   "marketing": {
     "eyebrow": "Cupos fijos · Packs · Lista de espera",

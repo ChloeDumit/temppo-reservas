@@ -461,7 +461,9 @@
     "changesLeft": "You can move {count} more classes this month.",
     "changesLeftOne": "You can move 1 more class this month.",
     "changesNone": "You have used this month’s changes. Cancelling now loses the class.",
-    "makeupsExpire": "They expire at the end of the month."
+    "makeupsExpire": "They expire at the end of the month.",
+    "makeupsLeft": "{count, plural, one {1 make-up} other {# make-ups}}",
+    "makeupOnly": "{count, plural, one {You have 1 class to make up} other {You have # classes to make up}} until {date}."
   },
   "marketing": {
     "eyebrow": "Fixed spots · Packs · Waitlist",
