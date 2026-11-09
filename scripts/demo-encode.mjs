@@ -13,8 +13,14 @@ import sharp from "sharp";
 import { join } from "node:path";
 
 const OUT = "demo";
-const STILLS = join(OUT, "stills");
-const WORK = join(OUT, "work");
+/*
+  One encoder, two films. The padel promo shoots the same app with a different
+  story, so it passes its own stills in rather than owning a second copy of the
+  push-in, the cross-fade and the caption pills.
+*/
+const EDIT = process.env.EDIT || "classes";
+const STILLS = join(OUT, EDIT === "padel" ? "padel-stills" : "stills");
+const WORK = join(OUT, `work-${EDIT}`);
 const W = 1080;
 const H = 1920;
 const FPS = 30;
@@ -59,7 +65,21 @@ function card({ eyebrow, title, subtitle, cta }) {
  * The story. Each beat is one captured screen plus the line that explains it.
  * `hold` is seconds on screen, before the cross-fade into the next beat.
  */
-const beats = [
+const PADEL_BEATS = [
+  { still: "01-what", caption: "Reservá la cancha desde el celular", hold: 3.0 },
+  { still: "02-duration", caption: "Una hora, o una hora y media", hold: 2.6 },
+  { still: "03-day", caption: "Mirás qué día hay lugar", hold: 2.8 },
+  { still: "04-time", caption: "Cada horario con su precio", hold: 3.2 },
+  { still: "05-confirm", caption: "Ves todo antes de confirmar", hold: 3.2 },
+  { still: "06-details", caption: "Sin crear una cuenta", hold: 2.8 },
+  { still: "07-booked", caption: "Reservada", hold: 2.6 },
+  { still: "08-dashboard", caption: "Y en el club entra sola", hold: 3.4 },
+  // The morning is empty on purpose in the app; the evening is what sells.
+  { still: "10-agenda-evening", caption: "Tu noche, cancha por cancha", hold: 3.4 },
+  { still: "11-courts", caption: "Tus precios y tus horarios", hold: 3.2 },
+];
+
+const CLASS_BEATS = [
   { still: "01-dashboard", caption: "Tu estudio, de un vistazo", hold: 3.4 },
   { still: "02-schedule", caption: "La agenda de la semana", hold: 3.4 },
   { still: "03-standing-spots", caption: "Cupos fijos, sin planillas", hold: 3.6 },
@@ -70,6 +90,8 @@ const beats = [
   { still: "09-student-book", caption: "Reservan solos. Y hay lista de espera", hold: 3.6 },
   { still: "10-student-buy", caption: "Compran packs sin que muevas un dedo", hold: 3.4 },
 ];
+
+const beats = EDIT === "padel" ? PADEL_BEATS : CLASS_BEATS;
 
 const FADE = 0.6;
 
@@ -100,17 +122,17 @@ console.log("Preparing frames…");
 const intro = join(OUT, "cards", "intro.png");
 const outro = join(OUT, "cards", "outro.png");
 
-await sharp(Buffer.from(card({
-  eyebrow: "TEMPPO",
-  title: "Reservas",
-  subtitle: "Gestión para estudios de pilates y yoga",
-}))).png().toFile(intro);
+await sharp(Buffer.from(card(
+  EDIT === "padel"
+    ? { eyebrow: "TEMPPO", title: "Reservas", subtitle: "Para canchas y clubes" }
+    : { eyebrow: "TEMPPO", title: "Reservas", subtitle: "Gestión para estudios de pilates y yoga" },
+))).png().toFile(intro);
 
-await sharp(Buffer.from(card({
-  title: "Probalo gratis",
-  subtitle: "Un mes sin costo. Sin tarjeta.",
-  cta: "temppo.uy",
-}))).png().toFile(outro);
+await sharp(Buffer.from(card(
+  EDIT === "padel"
+    ? { title: "Que reserven solos", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }
+    : { title: "Probalo gratis", subtitle: "Un mes sin costo. Sin tarjeta.", cta: "temppo.uy" },
+))).png().toFile(outro);
 
 /**
  * Renders one beat as its own clip: the screen on a brand-coloured field,
@@ -208,7 +230,8 @@ for (let i = 1; i < timeline.length; i++) {
   elapsed += timeline[i].hold - FADE;
 }
 
-const master = join(OUT, "temppo-reservas-demo.mp4");
+const NAME = EDIT === "padel" ? "temppo-canchas" : "temppo-reservas-demo";
+const master = join(OUT, `${NAME}.mp4`);
 
 execFileSync(
   "ffmpeg",
@@ -231,17 +254,17 @@ execFileSync("ffmpeg", [
   "-y", "-i", master, "-vf", "scale=720:-2",
   "-c:v", "libx264", "-preset", "slow", "-crf", "26",
   "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-  join(OUT, "temppo-reservas-demo-web.mp4"),
+  join(OUT, `${NAME}-web.mp4`),
 ], { stdio: ["ignore", "ignore", "pipe"] });
 
 execFileSync("ffmpeg", [
   "-y", "-i", master, "-ss", "4.5", "-frames:v", "1",
-  join(OUT, "temppo-reservas-poster.jpg"),
+  join(OUT, `${NAME}-poster.jpg`),
 ], { stdio: ["ignore", "ignore", "pipe"] });
 
 console.log(`
-  demo/temppo-reservas-demo.mp4       1080x1920, ~${elapsed.toFixed(0)}s
-  demo/temppo-reservas-demo-web.mp4   720x1280, lighter for embedding
+  demo/${NAME}.mp4   1080x1920, ~${elapsed.toFixed(0)}s
+  demo/${NAME}-web.mp4   720x1280, lighter for embedding
   demo/temppo-reservas-poster.jpg     poster frame
   demo/stills/*.png                   individual screens
 `);

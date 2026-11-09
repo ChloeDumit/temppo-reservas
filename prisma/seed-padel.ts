@@ -144,11 +144,74 @@ async function main() {
     });
   }
 
+  /*
+    A club with an empty agenda tells you nothing about whether the thing
+    works. These are today's bookings — the evening busy, the afternoon
+    patchy — so the screens show a club in use rather than a club on its
+    first day.
+  */
+  const spaces = await db.space.findMany({
+    where: { studioId: studio.id },
+    orderBy: { position: "asc" },
+  });
+  const padel = spaces.filter((s) => s.kind === "Pádel");
+
+  const PLAYERS = [
+    ["Martín Pereira", "099123456"],
+    ["Rodrigo Sosa", "098445566"],
+    ["Flor Methol", "091778899"],
+    ["Diego Lema", "094220011"],
+    ["Santi Cabrera", "099887766"],
+    ["Lucía Arregui", "092334455"],
+    ["Nico Bentancur", "095667788"],
+    ["Pau Rodríguez", "096112233"],
+  ];
+
+  /** Today at this local hour, as an instant. */
+  const todayAt = (hour: number, minute = 0) => {
+    const local = new Date().toLocaleDateString("en-CA", { timeZone: "America/Montevideo" });
+    const [y, m, d] = local.split("-").map(Number);
+    // Montevideo is UTC−3 the year round.
+    return new Date(Date.UTC(y, m - 1, d, hour + 3, minute));
+  };
+
+  const SLOTS: [number, number, number][] = [
+    // [court index, hour, minutes]
+    [0, 18, 0], [1, 18, 0], [2, 18, 30],
+    [0, 19, 30], [1, 19, 0], [2, 20, 0],
+    [0, 21, 0], [1, 21, 30],
+  ];
+
+  for (const [i, [court, hour, minute]] of SLOTS.entries()) {
+    const space = padel[court % padel.length];
+    const [name, phone] = PLAYERS[i % PLAYERS.length];
+    const startsAt = todayAt(hour, minute);
+    const endsAt = new Date(startsAt.getTime() + 60 * 60_000);
+
+    await db.rental.create({
+      data: {
+        studioId: studio.id,
+        spaceId: space.id,
+        spaceName: space.name,
+        contactName: name,
+        contactPhone: phone,
+        startsAt,
+        endsAt,
+        blockedUntil: new Date(endsAt.getTime() + space.bufferAfterMin * 60_000),
+        status: "CONFIRMED",
+        source: i % 3 === 0 ? "ONLINE" : "STAFF",
+        priceCents: hour >= 18 ? 120_000 : 80_000,
+        manageTokenHash: `seed-${studio.id}-${i}`,
+      },
+    });
+  }
+
   console.log("\nClub del Este is ready.");
   console.log(`  Owner         dueno@clubdeleste.uy / ${PASSWORD}`);
   console.log("  Log in        http://localhost:3000/es/login");
   console.log(`  Booking page  http://localhost:3000/es/r/${SLUG}`);
   console.log(`\n  ${SPACES.length} spaces: ${SPACES.map((s) => s.name).join(", ")}`);
+  console.log(`  ${SLOTS.length} bookings this evening`);
 }
 
 main()

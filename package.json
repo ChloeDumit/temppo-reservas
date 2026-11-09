@@ -25,7 +25,9 @@
     "grant:admin": "tsx scripts/grant-admin.ts",
     "wa:templates": "tsx scripts/whatsapp-templates.ts",
     "emails:preview": "tsx scripts/preview-emails.ts",
-    "seed:padel": "tsx prisma/seed-padel.ts"
+    "seed:padel": "tsx prisma/seed-padel.ts",
+    "padel:video": "node scripts/padel-video.mjs",
+    "padel:encode": "EDIT=padel node scripts/demo-encode.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
