@@ -994,9 +994,9 @@
     "opensAhead": "Agenda abierta",
     "opensAheadHint": "Cuántos días hacia adelante se puede reservar.",
     "step": "Horarios cada",
-    "stepHint": "Cada cuánto se ofrece un horario de inicio.",
+    "stepHint": "Dentro de tu horario de atención, se ofrece un horario de inicio cada tantos minutos.",
     "fixedStarts": "Horarios fijos de inicio (opcional)",
-    "fixedStartsHint": "Si los cargás, tus clientas solo pueden reservar a esas horas (por ejemplo: 8:15, 10:00, 13:00) y no se usa «Horarios cada». Vacío: se ofrecen horarios cada tanto, como siempre. Igual tienen que entrar en tu horario de atención.",
+    "fixedStartsHint": "Tus clientas solo pueden reservar a estas horas. Cada una tiene que entrar en tu horario de atención.",
     "fixedStartsInvalid": "Revisá los horarios fijos: escribilos separados por coma, como 8:15, 10:00, 13:00.",
     "cutoff": "Cancelar sin perder la seña hasta",
     "cutoffHint": "Horas antes del turno.",
@@ -1025,7 +1025,14 @@
     "mpFeePassedOnHint": "Al pagar con Mercado Pago se le suma la comisión, así te llega la seña entera. Por transferencia no se suma nada.",
     "mpFeePercent": "Tu comisión de Mercado Pago (%)",
     "mpFeePercentHint": "Con IVA incluido. Mirala en Mercado Pago → Tu negocio → Costos.",
-    "mpFeeInvalid": "Revisá la comisión: un número entre 0 y 20, por ejemplo 7,31."
+    "mpFeeInvalid": "Revisá la comisión: un número entre 0 y 20, por ejemplo 7,31.",
+    "startMode": "¿Cuándo pueden empezar los turnos?",
+    "modeEvery": "Cada tantos minutos",
+    "modeFixed": "En horarios fijos",
+    "everyPrefix": "Un horario cada",
+    "addTime": "Agregar",
+    "fixedEmpty": "Todavía no agregaste horarios: elegí una hora y tocá «Agregar».",
+    "removeTime": "Sacar {time}"
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",

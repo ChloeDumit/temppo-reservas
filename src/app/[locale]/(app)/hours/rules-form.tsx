@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { saveBookingRulesAction, type ActionState } from "./actions";
+import { StartTimesField } from "./start-times-field";
 
 export type Rules = {
   minNoticeMinutes: number;
@@ -35,6 +36,7 @@ export function RulesForm({ rules }: { rules: Rules }) {
   return (
     <form action={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
+        <StartTimesField step={rules.slotStepMinutes} fixed={rules.fixedStartTimes} />
         <Field label={t("minNotice")} hint={t("minNoticeHint")}>
           <Select name="minNoticeMinutes" defaultValue={String(rules.minNoticeMinutes)}>
             {[0, 30, 60, 120, 240, 720, 1440].map((m) => (
@@ -46,18 +48,6 @@ export function RulesForm({ rules }: { rules: Rules }) {
         </Field>
         <Field label={t("opensAhead")} hint={t("opensAheadHint")}>
           <Input name="bookingOpensDaysAhead" type="number" min={1} max={365} defaultValue={rules.bookingOpensDaysAhead} />
-        </Field>
-        <Field label={t("step")} hint={t("stepHint")}>
-          <Select name="slotStepMinutes" defaultValue={String(rules.slotStepMinutes)}>
-            {[5, 10, 15, 20, 30, 60].map((m) => (
-              <option key={m} value={m}>
-                {m} min
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label={t("fixedStarts")} hint={t("fixedStartsHint")}>
-          <Input name="fixedStartTimes" placeholder="8:15, 10:00, 13:00, 15:00" defaultValue={rules.fixedStartTimes} />
         </Field>
         <Field label={t("cutoff")} hint={t("cutoffHint")}>
           <Input name="cancellationCutoffHours" type="number" min={0} max={336} defaultValue={rules.cancellationCutoffHours} />

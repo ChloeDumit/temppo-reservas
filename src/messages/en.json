@@ -994,9 +994,9 @@
     "opensAhead": "Booking window",
     "opensAheadHint": "How many days ahead can be booked.",
     "step": "Start times every",
-    "stepHint": "How often a start time is offered.",
+    "stepHint": "Within your working hours, a start time is offered every few minutes.",
     "fixedStarts": "Fixed start times (optional)",
-    "fixedStartsHint": "If you add them, clients can only book at those times (for example: 8:15, 10:00, 13:00) and «Start times every» is not used. Empty: times are offered at every step, as usual. They still have to fall within your working hours.",
+    "fixedStartsHint": "Clients can only book at these times. Each one has to fall within your working hours.",
     "fixedStartsInvalid": "Check the fixed start times: separate them with commas, like 8:15, 10:00, 13:00.",
     "cutoff": "Cancel without losing the deposit until",
     "cutoffHint": "Hours before the appointment.",
@@ -1025,7 +1025,14 @@
     "mpFeePassedOnHint": "Paying by Mercado Pago adds its fee, so you get the whole deposit. Nothing is added to transfers.",
     "mpFeePercent": "Your Mercado Pago fee (%)",
     "mpFeePercentHint": "Tax included. Find it in Mercado Pago → Your business → Costs.",
-    "mpFeeInvalid": "Check the fee: a number from 0 to 20, e.g. 7.31."
+    "mpFeeInvalid": "Check the fee: a number from 0 to 20, e.g. 7.31.",
+    "startMode": "When can appointments start?",
+    "modeEvery": "Every few minutes",
+    "modeFixed": "At set times",
+    "everyPrefix": "A start time every",
+    "addTime": "Add",
+    "fixedEmpty": "No times yet: pick a time and tap «Add».",
+    "removeTime": "Remove {time}"
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
