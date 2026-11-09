@@ -423,7 +423,8 @@
     "archiveLocationConfirm": "¿Eliminar la sucursal «{name}»? Deja de aparecer para reservar y en la agenda, y se borran los horarios cargados ahí. El historial se mantiene.",
     "locationLimit": "Tu plan incluye 1 sucursal. Para sumar más, pasate al plan Salón desde Mi plan.",
     "locationHasAppointments": "Tiene turnos por delante: movelos a otra sucursal o cancelalos antes de eliminarla.",
-    "locationHasClasses": "Tiene clases programadas por delante: movelas o cancelalas antes de eliminarla."
+    "locationHasClasses": "Tiene clases programadas por delante: movelas o cancelalas antes de eliminarla.",
+    "editLocation": "Editar"
   },
   "booking": {
     "title": "Reservar clase",

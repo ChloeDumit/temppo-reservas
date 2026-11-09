@@ -172,6 +172,33 @@ export async function createLocationAction(
   return { ok: true };
 }
 
+/** Renames a sucursal or changes its address. Bookings already made show the new one. */
+export async function updateLocationAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await assertAdmin();
+  const parsed = locationSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "generic" };
+  const location = await db.location.findFirst({ where: { id: String(formData.get("id") ?? ""), studioId: user.studioId, isActive: true } });
+  if (!location) return { error: "generic" };
+
+  await db.location.update({
+    where: { id: location.id },
+    data: { name: parsed.data.name, address: parsed.data.address || null },
+  });
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "location.update",
+    entityType: "Location",
+    entityId: location.id,
+    metadata: { from: location.name, to: parsed.data.name },
+  });
+
+  // The name shows up top, in the agenda and on the booking page.
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 /**
  * Removes a sucursal from use: no longer offered, chosen or filtered by. Its
  * history stays (past appointments and classes keep it), and nothing is

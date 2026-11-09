@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import {
   createLocationAction,
   archiveLocationAction,
+  updateLocationAction,
   inviteMemberAction,
   updateRulesAction,
   updateStudioAction,
@@ -306,6 +307,56 @@ export function LocationForm() {
         {tc("create")}
       </SubmitButton>
     </form>
+  );
+}
+
+/** A sucursal in the list: its name and address, «Editar» and «Eliminar». */
+export function LocationRow({ id, name, address }: { id: string; name: string; address: string | null }) {
+  const t = useTranslations("settings");
+  const tc = useTranslations("common");
+  const [editing, setEditing] = useState(false);
+  const [state, submit] = useActionState<ActionState, FormData>(async (prev, fd) => {
+    const result = await updateLocationAction(prev, fd);
+    if (result?.ok) setEditing(false);
+    return result;
+  }, null);
+  const message = useMessage(state);
+
+  if (editing) {
+    return (
+      <form action={submit} className="flex flex-wrap items-end gap-3 py-2.5">
+        <input type="hidden" name="id" value={id} />
+        <Field label={t("locationName")} className="min-w-40 flex-1">
+          <Input name="name" required maxLength={80} defaultValue={name} autoFocus />
+        </Field>
+        <Field label={t("address")} className="min-w-40 flex-1" error={message}>
+          <Input name="address" maxLength={200} defaultValue={address ?? ""} />
+        </Field>
+        <div className="flex gap-2">
+          <SubmitButton size="sm" pendingLabel={tc("saving")}>
+            {tc("save")}
+          </SubmitButton>
+          <button type="button" onClick={() => setEditing(false)} className="px-2 text-sm text-muted hover:text-ink">
+            {tc("cancel")}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <div>
+        <p className="text-sm font-medium">{name}</p>
+        {address && <p className="text-xs text-muted">{address}</p>}
+      </div>
+      <div className="flex items-start gap-4">
+        <button type="button" onClick={() => setEditing(true)} className="text-xs font-medium text-accent underline-offset-4 hover:underline">
+          {t("editLocation")}
+        </button>
+        <ArchiveLocationButton id={id} name={name} />
+      </div>
+    </div>
   );
 }
 

@@ -423,7 +423,8 @@
     "archiveLocationConfirm": "Remove the location «{name}»? It stops being offered for booking and in the agenda, and the hours set there are deleted. Its history is kept.",
     "locationLimit": "Your plan includes 1 location. To add more, move to the Salón plan in My plan.",
     "locationHasAppointments": "It has upcoming appointments: move or cancel them before removing it.",
-    "locationHasClasses": "It has upcoming classes: move or cancel them before removing it."
+    "locationHasClasses": "It has upcoming classes: move or cancel them before removing it.",
+    "editLocation": "Edit"
   },
   "booking": {
     "title": "Book a class",

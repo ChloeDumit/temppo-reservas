@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { ArchiveLocationButton, InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
+import { LocationRow, InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
 import { PushToggle } from "@/components/app/push-toggle";
 import { MercadoPagoCard } from "./mercadopago-card";
 import { WhatsAppCard } from "./whatsapp-card";
@@ -102,14 +102,8 @@ export default async function SettingsPage({
           <CardBody className="space-y-4">
             <ul className="divide-y divide-line">
               {locations.map((location) => (
-                <li key={location.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <div>
-                    <p className="text-sm font-medium">{location.name}</p>
-                    {location.address && (
-                      <p className="text-xs text-muted">{location.address}</p>
-                    )}
-                  </div>
-                  <ArchiveLocationButton id={location.id} name={location.name} />
+                <li key={location.id}>
+                  <LocationRow id={location.id} name={location.name} address={location.address} />
                 </li>
               ))}
             </ul>
