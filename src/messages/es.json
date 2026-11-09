@@ -516,8 +516,6 @@
     "linkStep2Body": "Eligen día y horario sobre tu disponibilidad real.",
     "linkStep3Title": "Lo ves en tu agenda",
     "linkStep3Body": "Sin llamadas y sin cargar nada a mano.",
-    "videoTitle": "El sistema en funcionamiento",
-    "videoAlt": "Demostración de TEMPPO Reservas",
     "capsTitle": "Tareas que dejan de ser manuales",
     "cap1Title": "Agenda recurrente",
     "cap1Body": "Se configura una vez y se repite semana a semana.",
@@ -573,7 +571,13 @@
     "networkLocations": "varias",
     "mostChosen": "El más elegido",
     "faq5Q": "¿El precio sube si tengo más alumnos?",
-    "faq5A": "Dentro de tu plan, no: pagás lo mismo con 20 que con 250. Si lo superás te avisamos para pasar al siguiente, nunca te bloqueamos una reserva."
+    "faq5A": "Dentro de tu plan, no: pagás lo mismo con 20 que con 250. Si lo superás te avisamos para pasar al siguiente, nunca te bloqueamos una reserva.",
+    "stat1Value": "0%",
+    "stat1Label": "Comisión sobre lo que cobrás",
+    "stat2Value": "24/7",
+    "stat2Label": "Reservan sin que atiendas",
+    "stat3Value": "1 mes",
+    "stat3Label": "De prueba, sin tarjeta"
   },
   "errors": {
     "generic": "Algo salió mal. Intentá de nuevo.",

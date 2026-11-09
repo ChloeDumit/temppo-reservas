@@ -516,8 +516,6 @@
     "linkStep2Body": "Choosing from what is genuinely free.",
     "linkStep3Title": "You see it in your agenda",
     "linkStep3Body": "No calls, nothing entered by hand.",
-    "videoTitle": "The system in use",
-    "videoAlt": "TEMPPO Reservas demonstration",
     "capsTitle": "Work that stops being manual",
     "cap1Title": "Recurring schedule",
     "cap1Body": "Set up once, repeated week after week.",
@@ -573,7 +571,13 @@
     "networkLocations": "several",
     "mostChosen": "Most chosen",
     "faq5Q": "Does the price go up as I grow?",
-    "faq5A": "Not within your plan: 20 students or 250 cost the same. If you pass it we tell you so you can move up — we never block a booking."
+    "faq5A": "Not within your plan: 20 students or 250 cost the same. If you pass it we tell you so you can move up — we never block a booking.",
+    "stat1Value": "0%",
+    "stat1Label": "Commission on what you charge",
+    "stat2Value": "24/7",
+    "stat2Label": "They book without you",
+    "stat3Value": "1 month",
+    "stat3Label": "Free, no card"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",

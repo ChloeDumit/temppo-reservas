@@ -331,3 +331,65 @@ html[data-brand="beauty"] :is(h1, h2, h3, .font-display) {
   font-size-adjust: 0.5;
   letter-spacing: -0.005em;
 }
+
+/*
+  A court seen from above — the outer line, the net across it, the service
+  box — laid very faintly over a dark band. A literal reference to what the
+  product books, which is the opposite of the gradient any product page could
+  have worn.
+*/
+.court-lines {
+  position: relative;
+  isolation: isolate;
+}
+
+.court-lines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    /* the net, across the middle */
+    linear-gradient(to bottom, transparent calc(50% - 1px), rgba(255, 255, 255, 0.11) calc(50% - 1px), rgba(255, 255, 255, 0.11) calc(50% + 1px), transparent calc(50% + 1px)),
+    /* the service line, down the centre */
+    linear-gradient(to right, transparent calc(50% - 1px), rgba(255, 255, 255, 0.07) calc(50% - 1px), rgba(255, 255, 255, 0.07) calc(50% + 1px), transparent calc(50% + 1px));
+  background-repeat: no-repeat;
+  /* Inset, so the lines read as a court drawn inside the band. */
+  background-position: center;
+  background-size: 100% 62%, 78% 62%;
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+}
+
+/* The outline of that court. */
+.court-lines::after {
+  content: "";
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: 19%;
+  bottom: 19%;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 2px;
+}
+
+@media (max-width: 640px) {
+  /*
+    A court drawn into a tall, narrow band stops looking like a court and
+    starts looking like a stray line. On a phone only the net survives.
+  */
+  .court-lines::after {
+    display: none;
+  }
+
+  .court-lines::before {
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(50% - 1px),
+      rgba(255, 255, 255, 0.1) calc(50% - 1px),
+      rgba(255, 255, 255, 0.1) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+    background-size: 100% 62%;
+  }
+}

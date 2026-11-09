@@ -34,6 +34,12 @@ export default async function LandingPage({
 
   const pain = [t("pain1"), t("pain2"), t("pain3"), t("pain4")];
 
+  const stats = [
+    { value: t("stat1Value"), label: t("stat1Label") },
+    { value: t("stat2Value"), label: t("stat2Label") },
+    { value: t("stat3Value"), label: t("stat3Label") },
+  ];
+
   const linkSteps = [
     { title: t("linkStep1Title"), body: t("linkStep1Body"), icon: "share" as const },
     { title: t("linkStep2Title"), body: t("linkStep2Body"), icon: "phone" as const },
@@ -109,50 +115,92 @@ export default async function LandingPage({
         comes here for, and the Spanish labels are the long ones — a fixed
         layout that fits today breaks on the next copy change.
       */}
-      <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-5">
-        <Brand />
-        <nav className="flex w-full items-center gap-2 sm:w-auto">
-          <Link href="/login" className={buttonClass("ghost", "sm", "flex-1 sm:flex-none")}>
-            {t("ctaSecondary")}
-          </Link>
-          <Link href="/register" className={buttonClass("primary", "sm", "flex-1 sm:flex-none")}>
-            {t("ctaPrimary")}
-          </Link>
-        </nav>
+      {/*
+        On the dark band so the page opens as one surface. The subdued brand
+        is what reads on it: the product word is set in muted, which carries
+        on near-black where ink-soft would disappear.
+      */}
+      <header className="bg-ink text-paper">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-5">
+          <Brand subdued />
+          <nav className="flex w-full items-center gap-2 sm:w-auto">
+            <Link
+              href="/login"
+              className="pressable touch-target inline-flex flex-1 items-center justify-center rounded-md px-3 text-sm font-medium text-paper/70 sm:flex-none"
+            >
+              {t("ctaSecondary")}
+            </Link>
+            <Link href="/register" className={buttonClass("primary", "sm", "flex-1 sm:flex-none")}>
+              {t("ctaPrimary")}
+            </Link>
+          </nav>
+        </div>
       </header>
 
       <main>
         {/* ------------------------------------------------------------ hero */}
-        <section className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-          <p className="mb-4 text-sm font-medium uppercase tracking-widest text-accent">
-            {t("eyebrow")}
-          </p>
-          <h1 className="max-w-3xl text-balance text-4xl leading-[1.1] sm:text-5xl">
-            {t("tagline")}
-          </h1>
-          <p className="mt-5 max-w-xl text-lg text-ink-soft">{t("subtitle")}</p>
-          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
-            <Link href="/register" className={buttonClass("primary", "md")}>
-              {t("ctaPrimary")}
-            </Link>
-            {whatsapp && (
-              <a
-                href={whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonClass("secondary", "md")}
-              >
-                {t("whatsapp")}
-              </a>
-            )}
+        {/*
+          Dark, and marked out like a court. The product books courts, pitches
+          and halls as readily as class times, and a cream page with a serif
+          headline reads as a boutique rather than as somewhere a club would
+          keep its Friday night.
+        */}
+        <section className="court-lines bg-ink text-paper">
+          <div className="mx-auto max-w-5xl px-5 py-20 sm:py-28">
+            <p className="mb-5 text-xs font-medium uppercase tracking-[0.2em] text-accent">
+              {t("eyebrow")}
+            </p>
+            <h1 className="max-w-3xl text-balance font-display text-[2.6rem] font-semibold leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
+              {t("tagline")}
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper/70">{t("subtitle")}</p>
+
+            <div className="mt-9 flex flex-wrap items-center gap-x-4 gap-y-3">
+              <Link href="/register" className={buttonClass("primary", "md")}>
+                {t("ctaPrimary")}
+              </Link>
+              {whatsapp && (
+                <a
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pressable touch-target inline-flex items-center justify-center rounded-md border border-paper/25 px-4 text-sm font-medium text-paper"
+                >
+                  {t("whatsapp")}
+                </a>
+              )}
+            </div>
+            <p className="mt-4 text-sm text-paper/55">{t("trialNote")}</p>
           </div>
-          <p className="mt-4 text-sm text-muted">{t("trialNote")}</p>
+
+          {/*
+            Three numbers, set big. What a club reads first on any page is a
+            figure, and these are the three that answer "what does it cost me
+            and what does it change".
+          */}
+          <div className="border-t border-paper/15">
+            <dl className="mx-auto grid max-w-5xl grid-cols-3 divide-x divide-paper/15">
+              {stats.map((stat) => (
+                <div key={stat.label} className="px-5 py-7 text-center sm:py-9">
+                  <dt className="sr-only">{stat.label}</dt>
+                  <dd>
+                    <span className="block font-display text-3xl tabular-nums text-accent sm:text-5xl">
+                      {stat.value}
+                    </span>
+                    <span className="mt-1 block text-[11px] uppercase tracking-wider text-paper/55 sm:text-xs">
+                      {stat.label}
+                    </span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
 
         {/* ------------------------------------------------- the way it is now */}
         <section className="border-y border-line bg-sunken">
           <div className="mx-auto max-w-5xl px-5 py-14 sm:py-20">
-            <h2 className="max-w-lg text-balance text-2xl sm:text-3xl">{t("painTitle")}</h2>
+            <h2 className="max-w-lg text-balance font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-4xl">{t("painTitle")}</h2>
 
             {/*
               Recognition before features. A studio owner has to see her own
@@ -174,7 +222,7 @@ export default async function LandingPage({
 
         {/* ------------------------------------------------------- the rubros */}
         <section id="rubros" className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-          <h2 className="max-w-2xl text-balance text-2xl sm:text-3xl">{t("kindsTitle")}</h2>
+          <h2 className="max-w-2xl text-balance font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-4xl">{t("kindsTitle")}</h2>
           <p className="mt-4 max-w-2xl text-ink-soft">{t("kindsBody")}</p>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -195,30 +243,32 @@ export default async function LandingPage({
         </section>
 
         {/* ------------------------------------------------ the public link */}
-        <section id="link" className="border-y border-line bg-sunken">
+        <section id="link" className="court-lines border-y border-ink bg-ink text-paper">
           <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-xl text-balance text-2xl sm:text-3xl">{t("linkTitle")}</h2>
-            <p className="mt-4 max-w-xl text-ink-soft">{t("linkBody")}</p>
+            <h2 className="max-w-xl text-balance font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
+              {t("linkTitle")}
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-paper/70">{t("linkBody")}</p>
 
             <ol className="mt-10 grid gap-4 sm:grid-cols-3">
               {linkSteps.map((step, i) => (
                 <li
                   key={step.title}
-                  className="seq-step flex gap-4 rounded-[var(--radius-lg)] border border-line bg-surface p-5 sm:flex-col sm:gap-3"
+                  className="seq-step flex gap-4 rounded-[var(--radius-lg)] border border-paper/15 bg-paper/5 p-5 sm:flex-col sm:gap-3"
                   style={{ animationDelay: `${i * 900}ms` }}
                 >
                   <span
                     className={
                       i === 2
-                        ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-positive-soft text-positive"
-                        : "flex size-9 shrink-0 items-center justify-center rounded-full bg-sunken text-ink-soft"
+                        ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-white"
+                        : "flex size-9 shrink-0 items-center justify-center rounded-full bg-paper/10 text-paper/80"
                     }
                   >
                     <Icon name={step.icon} className="size-4" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block font-medium text-ink">{step.title}</span>
-                    <span className="mt-1 block text-sm leading-relaxed text-ink-soft">
+                    <span className="block font-medium text-paper">{step.title}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-paper/60">
                       {step.body}
                     </span>
                   </span>
@@ -228,41 +278,10 @@ export default async function LandingPage({
           </div>
         </section>
 
-        {/* ------------------------------------------------------------ video */}
-        <section className="mx-auto max-w-5xl px-5 py-14 sm:py-20">
-          <div className="grid items-center gap-10 sm:grid-cols-[1fr_auto]">
-            <div>
-              <h2 className="text-2xl sm:text-3xl">{t("videoTitle")}</h2>
-              <p className="mt-3 max-w-md text-ink-soft">{t("subtitle")}</p>
-              <div className="mt-6">
-                <Link href="/register" className={buttonClass("secondary", "md")}>
-                  {t("ctaPrimary")}
-                </Link>
-              </div>
-            </div>
-
-            <div className="mx-auto w-full max-w-[260px] sm:mx-0">
-              <div className="overflow-hidden rounded-[2rem] border-8 border-ink bg-ink shadow-lift">
-                <video
-                  className="block h-auto w-full"
-                  src="/temppo-reservas-demo-web.mp4"
-                  poster="/temppo-reservas-poster.jpg"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-label={t("videoAlt")}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ----------------------------------------------------- capabilities */}
         <section id="funciones" className="border-t border-line">
           <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-lg text-balance text-2xl sm:text-3xl">{t("capsTitle")}</h2>
+            <h2 className="max-w-lg text-balance font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-4xl">{t("capsTitle")}</h2>
 
             <div className="mt-10 grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
               {capabilities.map((cap) => (
@@ -279,7 +298,7 @@ export default async function LandingPage({
         {/* ---------------------------------------------------------- prices */}
         <section id="precios" className="border-t border-line bg-sunken">
           <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-lg text-balance text-2xl sm:text-3xl">{t("pricesTitle")}</h2>
+            <h2 className="max-w-lg text-balance font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-4xl">{t("pricesTitle")}</h2>
             <p className="mt-4 max-w-xl text-ink-soft">{t("pricesBody")}</p>
 
             <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -355,7 +374,7 @@ export default async function LandingPage({
         {/* --------------------------------------------------------------- faq */}
         <section id="preguntas" className="border-t border-line">
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
-            <h2 className="text-2xl sm:text-3xl">{t("faqTitle")}</h2>
+            <h2 className="font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-4xl">{t("faqTitle")}</h2>
 
             {/*
               Native disclosure elements: they open without JavaScript, they are
@@ -382,12 +401,12 @@ export default async function LandingPage({
         </section>
 
         {/* ----------------------------------------------------------- closing */}
-        <section className="border-t border-line bg-blush">
-          <div className="mx-auto max-w-5xl px-5 py-16 text-center sm:py-20">
-            <h2 className="mx-auto max-w-lg text-balance text-2xl sm:text-3xl">
+        <section className="court-lines border-t border-ink bg-ink text-paper">
+          <div className="mx-auto max-w-5xl px-5 py-20 text-center sm:py-24">
+            <h2 className="mx-auto max-w-lg text-balance font-display text-4xl font-semibold leading-[1.02] tracking-tight sm:text-6xl">
               {t("closingTitle")}
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-ink-soft">{t("closingBody")}</p>
+            <p className="mx-auto mt-4 max-w-md text-lg text-paper/70">{t("closingBody")}</p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Link href="/register" className={buttonClass("primary", "md")}>
                 {t("ctaPrimary")}
@@ -397,7 +416,7 @@ export default async function LandingPage({
                   href={whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={buttonClass("secondary", "md")}
+                  className="pressable touch-target inline-flex items-center justify-center rounded-md border border-paper/25 px-4 text-sm font-medium text-paper"
                 >
                   {t("whatsapp")}
                 </a>
