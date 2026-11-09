@@ -93,6 +93,11 @@ export async function availabilityQuery(
     addOnIds?: string[];
     /** Restrict to one professional; omit for "cualquiera". */
     staffId?: string | null;
+    /**
+     * The sucursal she is booking at: only shifts worked there (or at any of
+     * them) count. Omit for a business with one location.
+     */
+    locationId?: string | null;
     fromDate: string;
     days: number;
     now?: Date;
@@ -113,7 +118,13 @@ export async function availabilityQuery(
   const windowEnd = wallTimeToUtc(shiftDateKey(opts.fromDate, opts.days + 1), "00:00", studio.timezone);
 
   const [hours, appointments, blocks] = await Promise.all([
-    client.workingHours.findMany({ where: { studioId: studio.id, staffId: { in: staffIds } } }),
+    client.workingHours.findMany({
+      where: {
+        studioId: studio.id,
+        staffId: { in: staffIds },
+        ...(opts.locationId ? { OR: [{ locationId: opts.locationId }, { locationId: null }] } : {}),
+      },
+    }),
     client.appointment.findMany({
       where: {
         studioId: studio.id,

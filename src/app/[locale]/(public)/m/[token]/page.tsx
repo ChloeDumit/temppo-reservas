@@ -113,6 +113,15 @@ export default async function ManagePage({
               <dt className="text-muted">{t("with")}</dt>
               <dd className="font-medium text-ink">{appt.staff.name}</dd>
             </div>
+            {appt.location && (
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">{t("where")}</dt>
+                <dd className="text-right font-medium text-ink">
+                  {appt.location.name}
+                  {appt.location.address && <span className="block text-xs font-normal text-muted">{appt.location.address}</span>}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between gap-3">
               <dt className="text-muted">{t("price")}</dt>
               <dd className="tabular-nums text-ink">{money(total)}</dd>
@@ -201,6 +210,7 @@ export default async function ManagePage({
                 slug={studio.slug}
                 serviceId={appt.serviceId}
                 staffId={appt.staffId}
+                locationId={appt.locationId}
                 addOnIds={appt.addOns.map((a) => a.addOnId).filter((id): id is string => Boolean(id))}
                 timeZone={studio.timezone}
                 today={dateKeyInZone(now, studio.timezone)}

@@ -27,7 +27,7 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
   if (!studio || studio.vertical !== "APPOINTMENTS" || studio.suspendedAt) notFound();
   const t = await getTranslations("bookPublic");
 
-  const [services, addOns, staff] = await Promise.all([
+  const [services, addOns, staff, locations, shifts] = await Promise.all([
     db.service.findMany({
       where: { studioId: studio.id, isActive: true },
       include: { category: true, staff: true },
@@ -39,7 +39,16 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
       select: { id: true, name: true },
       orderBy: { createdAt: "asc" },
     }),
+    db.location.findMany({
+      where: { studioId: studio.id, isActive: true },
+      select: { id: true, name: true, address: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.workingHours.findMany({ where: { studioId: studio.id }, select: { staffId: true, locationId: true }, distinct: ["staffId", "locationId"] }),
   ]);
+  // Where each professional works, so the flow offers only who is there.
+  const staffLocations: Record<string, (string | null)[]> = {};
+  for (const shift of shifts) (staffLocations[shift.staffId] ??= []).push(shift.locationId);
 
   const staffIds = new Set(staff.map((s) => s.id));
   const flowServices: FlowService[] = services
@@ -97,6 +106,8 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
             methods={{ mp: canMp, transfer: canTransfer }}
             whatsappAuto={studio.waMode === "CLOUD"}
             mpFee={{ mpFeePassedOn: studio.mpFeePassedOn, mpFeeBps: studio.mpFeeBps }}
+            locations={locations}
+            staffLocations={staffLocations}
           />
         )}
       </main>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { saveHoursAction, type ActionState } from "./actions";
 
-export type DayShifts = { from: string; to: string }[];
+export type DayShifts = { from: string; to: string; locationId?: string | null }[];
 
 // Monday first: that is how a working week reads here.
 const ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -15,11 +15,14 @@ export function HoursForm({
   staffId,
   week,
   dayNames,
+  locations = [],
 }: {
   staffId: string;
   /** Index = weekday (0 Sunday). */
   week: DayShifts[];
   dayNames: string[];
+  /** Two or more: each shift says where it is worked. */
+  locations?: { id: string; name: string }[];
 }) {
   const t = useTranslations("hours");
   const tc = useTranslations("common");
@@ -71,6 +74,21 @@ export function HoursForm({
                       className="w-[6.5rem]"
                       aria-label={t("to")}
                     />
+                    {locations.length > 1 && (
+                      <select
+                        name={`d${d}s${n}loc`}
+                        defaultValue={week[d][n - 1]?.locationId ?? ""}
+                        aria-label={t("shiftLocation")}
+                        className="rounded-[var(--radius-md)] border border-line-strong bg-surface px-2 py-2 text-sm text-ink sm:py-1.5"
+                      >
+                        <option value="">{t("anyLocation")}</option>
+                        {locations.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </span>
                 ),
               )}

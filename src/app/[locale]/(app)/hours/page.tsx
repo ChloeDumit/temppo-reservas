@@ -12,6 +12,7 @@ import { TimeOffForm } from "./time-off-form";
 import { RulesForm } from "./rules-form";
 import { deleteTimeOffAction } from "./actions";
 import { formatStartTimes } from "@/lib/appointments/fixed-times";
+import { listLocations } from "@/lib/locations";
 
 function hhmm(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
@@ -28,7 +29,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
   const tc = await getTranslations("common");
 
   const now = new Date();
-  const [staff, hours, blocks] = await Promise.all([
+  const [staff, hours, blocks, locations] = await Promise.all([
     db.user.findMany({
       where: {
         studioId: studio.id,
@@ -47,6 +48,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
       orderBy: { startsAt: "asc" },
       take: 50,
     }),
+    listLocations(studio.id),
   ]);
 
   // Sunday-first names from a known Sunday, in the viewer's language.
@@ -58,7 +60,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
     Array.from({ length: 7 }, (_, weekday) =>
       hours
         .filter((h) => h.staffId === staffId && h.weekday === weekday)
-        .map((h) => ({ from: hhmm(h.startMin), to: hhmm(h.endMin) })),
+        .map((h) => ({ from: hhmm(h.startMin), to: hhmm(h.endMin), locationId: h.locationId })),
     );
 
   return (
@@ -121,7 +123,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
           <Card key={s.id}>
             <CardHeader title={staff.length > 1 ? s.name : t("yourWeek")} />
             <CardBody>
-              <HoursForm staffId={s.id} week={weekFor(s.id)} dayNames={dayNames} />
+              <HoursForm staffId={s.id} week={weekFor(s.id)} dayNames={dayNames} locations={locations.length > 1 ? locations : []} />
             </CardBody>
           </Card>
         ))}

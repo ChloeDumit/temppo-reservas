@@ -24,7 +24,9 @@ export type FlowService = {
   addOns: { id: string; name: string; durationMin: number; priceCents: number }[];
 };
 
-type Step = "service" | "extras" | "staff" | "time" | "details";
+type Step = "location" | "service" | "extras" | "staff" | "time" | "details";
+
+export type FlowLocation = { id: string; name: string; address: string | null };
 
 const WINDOW_DAYS = 14;
 
@@ -51,6 +53,8 @@ export function BookingFlow({
   methods,
   whatsappAuto = false,
   mpFee,
+  locations = [],
+  staffLocations = {},
 }: {
   slug: string;
   services: FlowService[];
@@ -66,12 +70,22 @@ export function BookingFlow({
   whatsappAuto?: boolean;
   /** Whether a Mercado Pago payer also pays its fee, and at what rate. */
   mpFee: { mpFeePassedOn: boolean; mpFeeBps: number };
+  /** Two or more: she picks one first. */
+  locations?: FlowLocation[];
+  /** Where each professional works: location ids, null for «any of them». */
+  staffLocations?: Record<string, (string | null)[]>;
 }) {
   const t = useTranslations("bookPublic");
   const locale = useLocale();
   const money = (cents: number) => formatMoney(cents, currency, locale);
 
-  const [step, setStep] = useState<Step>("service");
+  const multi = locations.length > 1;
+  const [step, setStep] = useState<Step>(multi ? "location" : "service");
+  const [locationId, setLocationId] = useState<string | null>(null);
+  const location = locations.find((l) => l.id === locationId) ?? null;
+  // Who works at the chosen sucursal: a shift there, or one for any of them.
+  const worksHere = (id: string) =>
+    !multi || !locationId || (staffLocations[id] ?? []).some((l) => l === null || l === locationId);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [addOnIds, setAddOnIds] = useState<string[]>([]);
   const [staffId, setStaffId] = useState<string | null>(null);
@@ -89,7 +103,7 @@ export function BookingFlow({
   const length = (service?.durationMin ?? 0) + chosenAddOns.reduce((s, a) => s + a.durationMin, 0);
   const deposit = service && (methods.mp || methods.transfer) ? depositFor(service.depositType, service.depositValue, total) : 0;
   const surcharge = pay === "mp" ? onlineSurchargeFor(deposit, mpFee) : 0;
-  const offeredStaff = service ? staff.filter((s) => service.staffIds.includes(s.id)) : [];
+  const offeredStaff = service ? staff.filter((s) => service.staffIds.includes(s.id) && worksHere(s.id)) : [];
 
   const timeFmt = useMemo(
     () => new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", hour12: false, timeZone }),
@@ -109,12 +123,12 @@ export function BookingFlow({
   useEffect(() => {
     if (step !== "time" || !serviceId) return;
     startLoading(async () => {
-      const result = await getSlotsAction({ slug, serviceId, addOnIds, staffId, fromDate, days: WINDOW_DAYS });
+      const result = await getSlotsAction({ slug, serviceId, addOnIds, staffId, locationId, fromDate, days: WINDOW_DAYS });
       setDays(result);
       const first = result.find((d) => d.slots.length);
       setDate((current) => (current && result.some((d) => d.date === current && d.slots.length) ? current : (first?.date ?? null)));
     });
-  }, [step, slug, serviceId, addOnIds, staffId, fromDate]);
+  }, [step, slug, serviceId, addOnIds, staffId, locationId, fromDate]);
 
   const pickService = (id: string) => {
     const s = services.find((x) => x.id === id)!;
@@ -122,14 +136,16 @@ export function BookingFlow({
     setAddOnIds([]);
     setStart(null);
     setDays(null);
-    const eligible = staff.filter((x) => s.staffIds.includes(x.id));
+    const eligible = staff.filter((x) => s.staffIds.includes(x.id) && worksHere(x.id));
     setStaffId(eligible.length === 1 ? eligible[0].id : null);
     setStep(s.addOns.length ? "extras" : eligible.length > 1 ? "staff" : "time");
   };
 
   const afterExtras = () => setStep(offeredStaff.length > 1 ? "staff" : "time");
 
-  const byCategory = services.reduce<Record<string, FlowService[]>>((acc, s) => {
+  // Only what someone at the chosen sucursal does.
+  const servicesHere = services.filter((s) => !multi || staff.some((x) => s.staffIds.includes(x.id) && worksHere(x.id)));
+  const byCategory = servicesHere.reduce<Record<string, FlowService[]>>((acc, s) => {
     const key = s.category ?? "";
     (acc[key] ??= []).push(s);
     return acc;
@@ -151,6 +167,7 @@ export function BookingFlow({
         name: t("errName"),
         emailForMp: t("errEmailForMp"),
         tooManyHolds: t("errTooManyHolds"),
+        location: t("errLocation"),
       } as Record<string, string>)[state.error] ?? t("errGeneric")
     : null;
 
@@ -182,6 +199,47 @@ export function BookingFlow({
 
   return (
     <div className="space-y-4">
+      {location && step !== "location" && (
+        <button type="button" onClick={() => setStep("location")} className={cn(card, "flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm")}>
+          <span>
+            <span className="font-medium text-ink">📍 {location.name}</span>
+            {location.address && <span className="text-muted"> · {location.address}</span>}
+          </span>
+          <span className="shrink-0 text-accent">{t("change")}</span>
+        </button>
+      )}
+
+      {step === "location" && (
+        <div className="space-y-3">
+          <h2 className="px-1 text-lg">{t("whereLocation")}</h2>
+          <ul className={cn(card, "divide-y divide-line overflow-hidden")}>
+            {locations.map((l) => (
+              <li key={l.id}>
+                <button
+                  type="button"
+                  className={choice}
+                  onClick={() => {
+                    setLocationId(l.id);
+                    // A new place can mean other professionals and other times.
+                    setServiceId(null);
+                    setStaffId(null);
+                    setStart(null);
+                    setDays(null);
+                    setStep("service");
+                  }}
+                >
+                  <span className="min-w-0">
+                    <span className="block font-medium text-ink">{l.name}</span>
+                    {l.address && <span className="block text-sm text-muted">{l.address}</span>}
+                  </span>
+                  <span className="text-accent">→</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* What has been chosen so far, each part a way back. */}
       {service && step !== "service" && (
         <div className={cn(card, "space-y-1 px-4 py-3 text-sm")}>
@@ -216,6 +274,7 @@ export function BookingFlow({
 
       {step === "service" && (
         <div className="space-y-5">
+          {multi && back("location")}
           <h2 className="px-1 text-lg">{t("whatService")}</h2>
           {Object.entries(byCategory).map(([category, items]) => (
             <section key={category || "none"}>
@@ -413,6 +472,7 @@ export function BookingFlow({
             <input key={id} type="hidden" name="addOnIds" value={id} />
           ))}
           {staffId && <input type="hidden" name="staffId" value={staffId} />}
+          {locationId && <input type="hidden" name="locationId" value={locationId} />}
           <input type="hidden" name="startsAt" value={chosenSlot.start} />
           {/* Honeypot, hidden from people. */}
           <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />

@@ -11,6 +11,7 @@ import { findOrCreateClient } from "@/lib/appointments/clients";
 import { collectedFor, markDepositReceived, recordAppointmentPayment } from "@/lib/appointments/payments";
 import { afterDepositSettled, notifyClientChanged, notifyStaffBookedForYou } from "@/lib/appointments/notify";
 import { parseMoneyToCents } from "@/lib/money";
+import { bookingLocation } from "@/lib/locations";
 
 export type AgendaState = { error?: string; ok?: boolean } | null;
 
@@ -45,6 +46,7 @@ const createSchema = z.object({
   clientPhone: z.string().trim().max(30).optional(),
   serviceId: z.string().min(1),
   staffId: z.string().min(1),
+  locationId: z.string().optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   time: z.string().regex(/^\d{2}:\d{2}$/),
   notes: z.string().trim().max(300).optional(),
@@ -70,12 +72,17 @@ export async function createStaffAppointmentAction(_prev: AgendaState, formData:
     clientId = (await findOrCreateClient(user.studioId, { name: v.clientName, phone: v.clientPhone })).profile.id;
   }
 
+  // With several sucursales, every appointment says which one.
+  const locationId = await bookingLocation(user.studioId, v.locationId);
+  if (locationId === undefined) return { error: "location" };
+
   const result = await bookAppointment({
     studio: user.studio,
     clientId,
     serviceId: v.serviceId,
     addOnIds: formData.getAll("addOnIds").map(String),
     staffId: v.staffId,
+    locationId,
     startsAt: wallTimeToUtc(v.date, v.time, user.studio.timezone),
     source: "STAFF",
     collectDeposit: false,

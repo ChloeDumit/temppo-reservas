@@ -38,7 +38,9 @@ async function staffYouMayEdit(staffId: string) {
 export async function saveHoursAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { user, staff } = await staffYouMayEdit(String(formData.get("staffId") ?? ""));
 
-  const rows: { weekday: number; startMin: number; endMin: number }[] = [];
+  // Where each shift is worked, when the business has several sucursales.
+  const locationIds = new Set((await db.location.findMany({ where: { studioId: user.studioId, isActive: true }, select: { id: true } })).map((l) => l.id));
+  const rows: { weekday: number; startMin: number; endMin: number; locationId: string | null }[] = [];
   for (let weekday = 0; weekday < 7; weekday++) {
     for (const n of [1, 2]) {
       const from = formData.get(`d${weekday}s${n}from`);
@@ -47,7 +49,8 @@ export async function saveHoursAction(_prev: ActionState, formData: FormData): P
       const startMin = toMinutes(from);
       const endMin = toMinutes(to);
       if (startMin === null || endMin === null || endMin <= startMin) return { error: "badShift" };
-      rows.push({ weekday, startMin, endMin });
+      const loc = String(formData.get(`d${weekday}s${n}loc`) ?? "");
+      rows.push({ weekday, startMin, endMin, locationId: locationIds.has(loc) ? loc : null });
     }
   }
 

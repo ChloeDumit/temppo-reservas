@@ -14,6 +14,7 @@ export const agendaInclude = {
   client: { include: { user: true } },
   addOns: true,
   staff: { select: { name: true } },
+  location: { select: { name: true } },
   // A transfer the client announced, so staff can match the code, and what
   // has been paid so far, so the sheet knows what is left to charge.
   payments: {
@@ -44,6 +45,7 @@ type Row = {
   depositStatus: string;
   addOns: { name: string }[];
   staff: { name: string };
+  location?: { name: string } | null;
   client: { allergies: string | null; user: { name: string; phone: string | null } };
   payments?: { shortCode: string | null; status?: string; amountCents?: number }[];
 };
@@ -62,6 +64,7 @@ export function toAgendaView(a: Row, studio: Studio, locale: string, now: Date):
     startTime: formatTime(a.startsAt, tz, "es"),
     staffId: a.staffId,
     staffName: a.staff.name,
+    locationName: a.location?.name ?? null,
     clientId: a.clientId,
     clientName: client.name,
     clientPhone: client.phone,

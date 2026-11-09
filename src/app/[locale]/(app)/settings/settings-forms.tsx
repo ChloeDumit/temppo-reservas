@@ -8,6 +8,7 @@ import { LOGO_ACCEPT, shrinkLogo } from "@/lib/logo/shrink";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
   createLocationAction,
+  archiveLocationAction,
   inviteMemberAction,
   updateRulesAction,
   updateStudioAction,
@@ -28,9 +29,13 @@ const TIMEZONES = [
 function useMessage(state: ActionState) {
   const te = useTranslations("errors");
   const ta = useTranslations("auth");
+  const ts = useTranslations("settings");
   if (!state?.error) return undefined;
   if (state.error === "emailTaken") return ta("emailTaken");
   if (state.error === "invalidEmail") return te("invalidEmail");
+  if (state.error === "locationLimit") return ts("locationLimit");
+  if (state.error === "locationHasAppointments") return ts("locationHasAppointments");
+  if (state.error === "locationHasClasses") return ts("locationHasClasses");
   return te("generic");
 }
 
@@ -300,6 +305,26 @@ export function LocationForm() {
       <SubmitButton variant="secondary" pendingLabel={tc("saving")}>
         {tc("create")}
       </SubmitButton>
+    </form>
+  );
+}
+
+/** «Eliminar» on a sucursal, after a confirm that says what it does. */
+export function ArchiveLocationButton({ id, name }: { id: string; name: string }) {
+  const t = useTranslations("settings");
+  const [state, submit] = useActionState<ActionState, FormData>(archiveLocationAction, null);
+  const message = useMessage(state);
+  return (
+    <form
+      action={submit}
+      onSubmit={(e) => {
+        if (!window.confirm(t("archiveLocationConfirm", { name }))) e.preventDefault();
+      }}
+      className="flex flex-col items-end gap-1"
+    >
+      <input type="hidden" name="id" value={id} />
+      <button className="text-xs font-medium text-critical underline-offset-4 hover:underline">{t("archiveLocation")}</button>
+      {message && <p className="max-w-56 text-right text-xs text-critical">{message}</p>}
     </form>
   );
 }

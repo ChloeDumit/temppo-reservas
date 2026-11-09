@@ -24,6 +24,7 @@ import { NewAppointmentForm } from "../agenda/new-appointment-form";
 import { TimeOffForm } from "../hours/time-off-form";
 import { HomeGrid, HomeSlot, type HomeLayout } from "./home-grid";
 import { PlanBanner } from "./plan-banner";
+import { appointmentLocationScope, currentLocationId } from "@/lib/locations";
 
 const DAY = 86_400_000;
 
@@ -70,7 +71,9 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
 
   const working = await workingStaff(studio.id);
   const staffIds = (isAdmin ? working : working.filter((s) => s.id === user.id)).map((s) => s.id);
-  const mineOnly = { staffId: { in: staffIds } };
+  // Her own (or the team's), at the sucursal chosen up top.
+  const locationId = await currentLocationId(studio.id);
+  const mineOnly = { staffId: { in: staffIds }, ...appointmentLocationScope(locationId) };
 
   const [todays, week, upcoming7, hours, monthDone, monthNoShows, newClients, monthIncome, pendingDeposits, rebookCandidates, options] =
     await Promise.all([

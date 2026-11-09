@@ -89,6 +89,7 @@ export function RescheduleForm({
   slug,
   serviceId,
   staffId,
+  locationId = null,
   addOnIds,
   timeZone,
   today,
@@ -97,6 +98,8 @@ export function RescheduleForm({
   slug: string;
   serviceId: string;
   staffId: string;
+  /** Moved within the same sucursal. */
+  locationId?: string | null;
   addOnIds: string[];
   timeZone: string;
   today: string;
@@ -124,11 +127,11 @@ export function RescheduleForm({
   useEffect(() => {
     if (!open || days) return;
     start(async () => {
-      const result = await getSlotsAction({ slug, serviceId, addOnIds, staffId, fromDate: today, days: 21 });
+      const result = await getSlotsAction({ slug, serviceId, addOnIds, staffId, locationId, fromDate: today, days: 21 });
       setDays(result);
       setDate(result.find((d) => d.slots.length)?.date ?? null);
     });
-  }, [open, days, slug, serviceId, addOnIds, staffId, today]);
+  }, [open, days, slug, serviceId, addOnIds, staffId, locationId, today]);
 
   if (!open) {
     return (

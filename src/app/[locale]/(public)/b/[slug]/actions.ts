@@ -13,6 +13,7 @@ import { bookAppointment } from "@/lib/appointments/book";
 import { findOrCreateClient } from "@/lib/appointments/clients";
 import { startDepositCheckout, submitDepositTransfer } from "@/lib/appointments/payments";
 import { manageUrlFor, notifyBooked } from "@/lib/appointments/notify";
+import { bookingLocation } from "@/lib/locations";
 
 async function bookableStudio(slug: string) {
   const studio = await db.studio.findUnique({ where: { slug } });
@@ -25,6 +26,7 @@ const slotsSchema = z.object({
   serviceId: z.string().min(1),
   addOnIds: z.array(z.string()).max(10).default([]),
   staffId: z.string().nullable(),
+  locationId: z.string().nullable().optional(),
   fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   days: z.number().int().min(1).max(21),
 });
@@ -38,7 +40,12 @@ export async function getSlotsAction(input: z.input<typeof slotsSchema>): Promis
   const studio = await bookableStudio(parsed.data.slug);
   if (!studio) return [];
 
-  const found = await availabilityQuery(studio, parsed.data);
+  // Without one — rescheduling a booking made before there were several —
+  // every shift counts.
+  const locationId = parsed.data.locationId ? await bookingLocation(studio.id, parsed.data.locationId) : null;
+  if (locationId === undefined) return [];
+
+  const found = await availabilityQuery(studio, { ...parsed.data, locationId });
   if (!found) return [];
   return findSlots(found.query).map((d) => ({
     date: d.date,
@@ -50,6 +57,7 @@ const bookSchema = z.object({
   slug: z.string().min(1),
   serviceId: z.string().min(1),
   staffId: z.string().optional(),
+  locationId: z.string().optional(),
   startsAt: z.string().datetime(),
   name: z.string().trim().min(2).max(80),
   phone: z
@@ -87,6 +95,8 @@ export async function bookPublicAction(_prev: BookState, formData: FormData): Pr
 
   const studio = await bookableStudio(v.slug);
   if (!studio) return { error: "generic" };
+  const locationId = await bookingLocation(studio.id, v.locationId);
+  if (locationId === undefined) return { error: "location" };
 
   // Which ways to pay exist decides whether a deposit can be asked for at all.
   const { mp: canMp, transfer: canTransfer } = depositMethods(studio);
@@ -107,6 +117,7 @@ export async function bookPublicAction(_prev: BookState, formData: FormData): Pr
     serviceId: v.serviceId,
     addOnIds,
     staffId: v.staffId || null,
+    locationId,
     startsAt: new Date(v.startsAt),
     source: "CLIENT_PUBLIC",
     collectDeposit: canMp || canTransfer,

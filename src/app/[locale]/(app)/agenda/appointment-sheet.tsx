@@ -29,6 +29,8 @@ export type AgendaAppointment = {
   startTime: string;
   staffId: string;
   staffName: string;
+  /** The sucursal, when the business has several. */
+  locationName?: string | null;
   clientId: string;
   clientName: string;
   clientPhone: string | null;
@@ -108,6 +110,7 @@ function Details({ appt, staff }: { appt: AgendaAppointment; staff: { id: string
           {appt.addOns.length > 0 && <p className="text-sm text-muted">+ {appt.addOns.join(", ")}</p>}
           <p className="mt-1 text-sm text-ink-soft">
             {appt.timeLabel} · {appt.staffName}
+            {appt.locationName && ` · 📍 ${appt.locationName}`}
           </p>
         </div>
         <Badge tone={STATUS_TONE[appt.status]}>{t(`status${appt.status}` as "statusCONFIRMED")}</Badge>

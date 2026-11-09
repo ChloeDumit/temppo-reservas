@@ -20,12 +20,17 @@ export function NewAppointmentForm({
   staff,
   defaultStaffId,
   defaultDate,
+  locations = [],
+  defaultLocationId = null,
 }: {
   clients: { id: string; name: string; phone: string | null }[];
   services: Service[];
   staff: { id: string; name: string }[];
   defaultStaffId: string;
   defaultDate: string;
+  /** Two or more: the appointment says which sucursal. */
+  locations?: { id: string; name: string }[];
+  defaultLocationId?: string | null;
 }) {
   const t = useTranslations("agenda");
   const close = useSheetClose();
@@ -139,6 +144,18 @@ export function NewAppointmentForm({
         </Field>
       ) : (
         <input type="hidden" name="staffId" value={eligible[0]?.id ?? defaultStaffId} />
+      )}
+
+      {locations.length > 1 && (
+        <Field label={t("location")}>
+          <Select name="locationId" defaultValue={defaultLocationId ?? locations[0].id}>
+            {locations.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
       )}
 
       <div className="grid grid-cols-2 gap-3">

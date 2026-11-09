@@ -418,7 +418,12 @@
     "waPitch": "Confirmation, reminder and changes to the appointment, on WhatsApp, without you having to send them.",
     "waManualHint": "Meanwhile, every appointment in the agenda has a WhatsApp button to message your client from your phone.",
     "waNeedsNumber": "Add your business's WhatsApp: when you move or cancel an appointment, we ask your client to message you there. Without it, we send her to your booking page.",
-    "waNeedsNumberCta": "Add it"
+    "waNeedsNumberCta": "Add it",
+    "archiveLocation": "Remove",
+    "archiveLocationConfirm": "Remove the location «{name}»? It stops being offered for booking and in the agenda, and the hours set there are deleted. Its history is kept.",
+    "locationLimit": "Your plan includes 1 location. To add more, move to the Salón plan in My plan.",
+    "locationHasAppointments": "It has upcoming appointments: move or cancel them before removing it.",
+    "locationHasClasses": "It has upcoming classes: move or cancel them before removing it."
   },
   "booking": {
     "title": "Book a class",
@@ -1033,7 +1038,9 @@
     "everyPrefix": "A start time every",
     "addTime": "Add",
     "fixedEmpty": "No times yet: pick a time and tap «Add».",
-    "removeTime": "Remove {time}"
+    "removeTime": "Remove {time}",
+    "shiftLocation": "Location",
+    "anyLocation": "Any location"
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",
@@ -1081,7 +1088,10 @@
     "errGeneric": "We couldn't book that. Try again.",
     "depositExplainCredit": "To confirm, you pay a {amount} deposit, taken off the total. Cancel more than {hours} hours ahead and it stays as credit for your next appointment.",
     "phoneHintWhatsApp": "We'll send your confirmation and reminder on WhatsApp. Reply STOP if you don't want them.",
-    "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}."
+    "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}.",
+    "whereLocation": "Which location?",
+    "errLocation": "Choose the location again.",
+    "change": "Change"
   },
   "manage": {
     "title": "Your appointment",
@@ -1136,7 +1146,8 @@
     "sendToMyWhatsapp": "Send it to my WhatsApp",
     "selfMessage": "My {service} appointment: {url}",
     "confirmMove": "Move to {time}",
-    "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}."
+    "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}.",
+    "where": "Where"
   },
   "agenda": {
     "title": "Agenda",
@@ -1231,7 +1242,8 @@
     "cancelByClient": "The client (she told me)",
     "cancelByStudio": "We are",
     "cancelClientDeposit": "If she gave less notice than agreed, the business keeps the deposit. Otherwise it's refunded or kept as credit, per your rules.",
-    "setHours": "Set working hours"
+    "setHours": "Set working hours",
+    "location": "Location"
   },
   "clients": {
     "title": "Clients",

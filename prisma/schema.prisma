@@ -179,6 +179,9 @@ model Location {
   /// Which students train here. A person can belong to several sucursales —
   /// reformer at one, mat at another — so this is a plain many-to-many.
   students       StudentProfile[]
+  /// Temppo Beauty: where each shift is worked, and where each appointment is.
+  workingHours   WorkingHours[]
+  appointments   Appointment[]
 
   @@index([studioId])
 }
@@ -1048,6 +1051,13 @@ model WorkingHours {
   startMin Int // minutes since local midnight
   endMin   Int
 
+  /// Which sucursal this shift is worked at. Null: any of them — a business
+  /// with one location, or a professional who goes where she is booked. She
+  /// is never booked twice at once either way: busy time is hers, not the
+  /// location's.
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
   @@index([staffId, weekday])
   @@index([studioId])
 }
@@ -1117,6 +1127,10 @@ model Appointment {
   client    StudentProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
   serviceId String?
   service   Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  /// The sucursal she comes to. Null for a business with a single location
+  /// (and for appointments made before there were several).
+  locationId String?
+  location   Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   /// Snapshot, so renaming or repricing the service leaves history alone.
   serviceName  String

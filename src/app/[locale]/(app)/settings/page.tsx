@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
+import { ArchiveLocationButton, InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
 import { PushToggle } from "@/components/app/push-toggle";
 import { MercadoPagoCard } from "./mercadopago-card";
 import { WhatsAppCard } from "./whatsapp-card";
@@ -31,7 +31,8 @@ export default async function SettingsPage({
   const tpush = await getTranslations("push");
 
   const [locations, team] = await Promise.all([
-    db.location.findMany({ where: { studioId: studio.id }, orderBy: { createdAt: "asc" } }),
+    // Archived ones are gone from use, and from here.
+    db.location.findMany({ where: { studioId: studio.id, isActive: true }, orderBy: { createdAt: "asc" } }),
     db.user.findMany({
       where: { studioId: studio.id, role: { in: ["OWNER", "ADMIN", "INSTRUCTOR"] } },
       include: { instructorProfile: true },
@@ -108,7 +109,7 @@ export default async function SettingsPage({
                       <p className="text-xs text-muted">{location.address}</p>
                     )}
                   </div>
-                  {!location.isActive && <Badge>{tc("inactive")}</Badge>}
+                  <ArchiveLocationButton id={location.id} name={location.name} />
                 </li>
               ))}
             </ul>

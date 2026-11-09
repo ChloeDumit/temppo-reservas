@@ -17,6 +17,7 @@ import { CopyButton } from "@/components/app/copy-button";
 import { ButtonLink } from "@/components/ui/button";
 import { AppointmentSheet, STATUS_TONE } from "./appointment-sheet";
 import { NewAppointmentForm } from "./new-appointment-form";
+import { appointmentLocationScope, currentLocationId, listLocations } from "@/lib/locations";
 
 const PX_PER_MIN = 1.1;
 const HIDDEN = ["CANCELLED", "LATE_CANCELLED", "EXPIRED"];
@@ -114,9 +115,16 @@ export default async function AgendaPage({
   const rangeStart = wallTimeToUtc(firstKey, "00:00", tz);
   const rangeEnd = wallTimeToUtc(shiftDateKey(firstKey, rangeDays), "00:00", tz);
 
+  // The sucursal chosen up top: its appointments, and the shifts worked there.
+  const [locations, locationId] = await Promise.all([listLocations(studio.id), currentLocationId(studio.id)]);
   const [appointments, blocks, hours, options] = await Promise.all([
     db.appointment.findMany({
-      where: { studioId: studio.id, staffId: { in: staffIds }, startsAt: { gte: rangeStart, lt: rangeEnd } },
+      where: {
+        studioId: studio.id,
+        staffId: { in: staffIds },
+        startsAt: { gte: rangeStart, lt: rangeEnd },
+        ...appointmentLocationScope(locationId),
+      },
       include: agendaInclude,
       orderBy: { startsAt: "asc" },
     }),
@@ -128,7 +136,13 @@ export default async function AgendaPage({
         endsAt: { gt: rangeStart },
       },
     }),
-    db.workingHours.findMany({ where: { studioId: studio.id, staffId: { in: staffIds } } }),
+    db.workingHours.findMany({
+      where: {
+        studioId: studio.id,
+        staffId: { in: staffIds },
+        ...(locationId ? { OR: [{ locationId }, { locationId: null }] } : {}),
+      },
+    }),
     newAppointmentOptions(studio.id),
   ]);
 
@@ -182,6 +196,8 @@ export default async function AgendaPage({
         staff={allStaffOptions}
         defaultStaffId={staffIds[0] ?? user.id}
         defaultDate={date}
+        locations={locations}
+        defaultLocationId={locationId}
       />
     </SheetForm>
   );

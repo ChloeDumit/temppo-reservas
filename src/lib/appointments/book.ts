@@ -131,6 +131,8 @@ export async function bookAppointment(opts: {
   addOnIds?: string[];
   /** null: any professional free at that time. */
   staffId: string | null;
+  /** The sucursal, when the business has more than one. */
+  locationId?: string | null;
   startsAt: Date;
   source: AppointmentSource;
   /** Ask for the service's deposit. Online bookings always do; staff choose. */
@@ -163,6 +165,7 @@ export async function bookAppointment(opts: {
           serviceId: opts.serviceId,
           addOnIds: opts.addOnIds,
           staffId: opts.staffId,
+          locationId: opts.locationId,
           fromDate: dateKeyInZone(opts.startsAt, studio.timezone),
           days: 1,
           now,
@@ -217,6 +220,7 @@ export async function bookAppointment(opts: {
           clientId: client.id,
           serviceId: offer.service.id,
           serviceName: offer.service.name,
+          locationId: opts.locationId ?? null,
           startsAt: opts.startsAt,
           endsAt,
           blockedUntil: new Date(endsAt.getTime() + offer.service.bufferAfterMin * MINUTE),
@@ -347,6 +351,7 @@ export async function rescheduleAppointment(opts: {
       serviceId: appt.serviceId,
       addOnIds: appt.addOns.map((a) => a.addOnId).filter((id): id is string => Boolean(id)),
       staffId,
+      locationId: appt.locationId,
       fromDate: dateKeyInZone(opts.startsAt, opts.studio.timezone),
       days: 1,
       now,
@@ -441,6 +446,12 @@ export async function markAppointment(opts: {
 export function findByManageToken(token: string) {
   return db.appointment.findUnique({
     where: { manageTokenHash: hashToken(token) },
-    include: { studio: true, staff: { select: { id: true, name: true } }, client: { include: { user: true } }, addOns: true },
+    include: {
+      studio: true,
+      staff: { select: { id: true, name: true } },
+      client: { include: { user: true } },
+      addOns: true,
+      location: { select: { name: true, address: true } },
+    },
   });
 }

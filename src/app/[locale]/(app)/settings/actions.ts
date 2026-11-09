@@ -16,6 +16,7 @@ import { disconnectMercadoPago } from "@/lib/payments/mercadopago-oauth";
 import { brandByKey } from "@/lib/brand/registry";
 import { appUrlFor } from "@/lib/brand/url";
 import { deleteLogo, readLogo, storeLogo } from "@/lib/logo/store";
+import { beautyPlan } from "@/lib/billing/beauty";
 
 export type ActionState = {
   error?: string;
@@ -141,6 +142,14 @@ export async function createLocationAction(
   const parsed = locationSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "generic" };
 
+  // Temppo Beauty sells sucursales by plan: Salón has as many as she wants.
+  if (user.studio.brand === "beauty") {
+    const plan = user.studio.plan === "TRIAL" ? "STUDIO" : user.studio.plan;
+    const limit = beautyPlan(plan).locations;
+    const active = await db.location.count({ where: { studioId: user.studioId, isActive: true } });
+    if (limit !== null && active >= limit) return { error: "locationLimit" };
+  }
+
   const created = await db.location.create({
     data: {
       studioId: user.studioId,
@@ -160,6 +169,47 @@ export async function createLocationAction(
   });
 
   revalidateSettings();
+  return { ok: true };
+}
+
+/**
+ * Removes a sucursal from use: no longer offered, chosen or filtered by. Its
+ * history stays (past appointments and classes keep it), and nothing is
+ * archived while it still has bookings or classes ahead — those must move
+ * first, or nobody would know where to go.
+ */
+export async function archiveLocationAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await assertAdmin();
+  const location = await db.location.findFirst({ where: { id: String(formData.get("id") ?? ""), studioId: user.studioId, isActive: true } });
+  if (!location) return { error: "generic" };
+  const now = new Date();
+
+  const [appointments, classes] = await Promise.all([
+    db.appointment.count({ where: { locationId: location.id, startsAt: { gt: now }, status: { in: ["CONFIRMED", "PENDING_PAYMENT"] } } }),
+    db.classInstance.count({ where: { locationId: location.id, startsAt: { gt: now }, status: "SCHEDULED" } }),
+  ]);
+  if (appointments) return { error: "locationHasAppointments" };
+  if (classes) return { error: "locationHasClasses" };
+
+  await db.$transaction([
+    db.location.update({ where: { id: location.id }, data: { isActive: false } }),
+    // Its shifts go with it: nobody works at a place that is closed.
+    db.workingHours.deleteMany({ where: { locationId: location.id } }),
+    // Weekly classes stop being generated there.
+    db.classTemplate.updateMany({ where: { locationId: location.id, isActive: true }, data: { isActive: false } }),
+  ]);
+
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "location.archive",
+    entityType: "Location",
+    entityId: location.id,
+    metadata: { name: location.name },
+  });
+
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

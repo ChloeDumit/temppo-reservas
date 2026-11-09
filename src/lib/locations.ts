@@ -81,3 +81,24 @@ export const locationsFor = cache(
     return mine.length > 0 ? mine : listLocations(studioId);
   },
 );
+
+/**
+ * Appointments for the sucursal in view — plus those with none, made before
+ * the business had several — or everything when none is chosen. Spread into
+ * a `where`; nested under AND so it never collides with the caller's own OR.
+ */
+export function appointmentLocationScope(locationId: string | null) {
+  return locationId ? { AND: [{ OR: [{ locationId }, { locationId: null }] }] } : {};
+}
+
+/**
+ * The sucursal a booking is for, checked against the studio: a valid id, or
+ * null when the business has a single location. Undefined means one was
+ * needed and not given (or not hers).
+ */
+export async function bookingLocation(studioId: string, locationId: string | null | undefined) {
+  const locations = await listLocations(studioId);
+  if (locations.length < 2) return null;
+  return locations.find((l) => l.id === locationId)?.id;
+}
+

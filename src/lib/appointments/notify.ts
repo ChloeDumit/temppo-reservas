@@ -62,8 +62,13 @@ export function manageUrlFor(studio: { brand: string; locale: string }, token: s
 async function load(appointmentId: string) {
   return db.appointment.findUnique({
     where: { id: appointmentId },
-    include: { studio: true, client: { include: { user: true } }, staff: true },
+    include: { studio: true, client: { include: { user: true } }, staff: true, location: true },
   });
+}
+
+/** Where she goes, for a business with several sucursales: a line for an email. */
+function whereLine(location: { name: string; address: string | null } | null) {
+  return location ? `\n📍 ${location.name}${location.address ? ` — ${location.address}` : ""}` : "";
 }
 
 /**
@@ -81,7 +86,8 @@ export async function notifyBooked(appointmentId: string, manageToken: string, c
   const { studio } = appt;
   const client = { ...appt.client.user, email: contactEmail || appt.client.user.email };
   const manageUrl = manageUrlFor(studio, manageToken);
-  const when = whenText(appt.startsAt, studio);
+  // The sucursal rides along with the time, in the WhatsApp text too.
+  const when = `${whenText(appt.startsAt, studio)}${appt.location ? ` · ${appt.location.name}` : ""}`;
   const en = studio.locale === "en";
 
   if (client.email) {
@@ -94,8 +100,8 @@ export async function notifyBooked(appointmentId: string, manageToken: string, c
       body: pending
         ? en
           ? `Hi ${client.name}, we're holding ${when} for your ${appt.serviceName}. It is confirmed once the deposit arrives.\n\nYour booking: ${manageUrl}`
-          : `Hola ${client.name}, te guardamos el ${when} para tu ${appt.serviceName}. Queda confirmado cuando llegue la seña.\n\nTu reserva: ${manageUrl}`
-        : confirmationText(appt, studio, client.name, manageUrl),
+          : `Hola ${client.name}, te guardamos el ${when} para tu ${appt.serviceName}. Queda confirmado cuando llegue la seña.${whereLine(appt.location)}\n\nTu reserva: ${manageUrl}`
+        : `${confirmationText(appt, studio, client.name, manageUrl)}${whereLine(appt.location)}`,
       relatedType: "Appointment",
       relatedId: appt.id,
     });

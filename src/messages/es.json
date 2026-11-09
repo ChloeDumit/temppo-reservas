@@ -418,7 +418,12 @@
     "waPitch": "La confirmación, el recordatorio y los cambios de turno, por WhatsApp y sin que tengas que mandarlos vos.",
     "waManualHint": "Mientras tanto, en cada turno de la agenda tenés el botón de WhatsApp para escribirle a tu clienta desde tu celular.",
     "waNeedsNumber": "Cargá el WhatsApp de tu negocio: cuando movés o cancelás un turno, le pedimos a tu clienta que te escriba ahí. Sin él, la mandamos a tu página de reservas.",
-    "waNeedsNumberCta": "Cargarlo"
+    "waNeedsNumberCta": "Cargarlo",
+    "archiveLocation": "Eliminar",
+    "archiveLocationConfirm": "¿Eliminar la sucursal «{name}»? Deja de aparecer para reservar y en la agenda, y se borran los horarios cargados ahí. El historial se mantiene.",
+    "locationLimit": "Tu plan incluye 1 sucursal. Para sumar más, pasate al plan Salón desde Mi plan.",
+    "locationHasAppointments": "Tiene turnos por delante: movelos a otra sucursal o cancelalos antes de eliminarla.",
+    "locationHasClasses": "Tiene clases programadas por delante: movelas o cancelalas antes de eliminarla."
   },
   "booking": {
     "title": "Reservar clase",
@@ -1033,7 +1038,9 @@
     "everyPrefix": "Un horario cada",
     "addTime": "Agregar",
     "fixedEmpty": "Todavía no agregaste horarios: elegí una hora y tocá «Agregar».",
-    "removeTime": "Sacar {time}"
+    "removeTime": "Sacar {time}",
+    "shiftLocation": "Sucursal",
+    "anyLocation": "Todas las sucursales"
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",
@@ -1081,7 +1088,10 @@
     "errGeneric": "No pudimos reservar. Probá de nuevo.",
     "depositExplainCredit": "Para confirmar el turno se paga una seña de {amount}, que se descuenta del total. Si cancelás con más de {hours} horas de anticipación, te queda como crédito para tu próximo turno.",
     "phoneHintWhatsApp": "Te mandamos la confirmación y el recordatorio por WhatsApp. Respondé BAJA si no los querés.",
-    "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}."
+    "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}.",
+    "whereLocation": "¿En qué sucursal?",
+    "errLocation": "Elegí la sucursal de nuevo.",
+    "change": "Cambiar"
   },
   "manage": {
     "title": "Tu turno",
@@ -1136,7 +1146,8 @@
     "sendToMyWhatsapp": "Mandármelo por WhatsApp",
     "selfMessage": "Mi turno de {service}: {url}",
     "confirmMove": "Pasar a {time}",
-    "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}."
+    "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}.",
+    "where": "Dónde"
   },
   "agenda": {
     "title": "Agenda",
@@ -1231,7 +1242,8 @@
     "cancelByClient": "La clienta (me avisó)",
     "cancelByStudio": "Nosotros",
     "cancelClientDeposit": "Si avisó con menos anticipación que la acordada, la seña queda para el negocio. Si no, se le devuelve o queda como crédito, según tus reglas.",
-    "setHours": "Cargar horarios"
+    "setHours": "Cargar horarios",
+    "location": "Sucursal"
   },
   "clients": {
     "title": "Clientas",
