@@ -114,6 +114,16 @@ async function main() {
   check("the token is single use", (await resolveStudioChoice(token)) === null);
   check("a forged token is rejected", (await resolveStudioChoice("not-a-real-token")) === null);
 
+  console.log("\nA suspended studio");
+  const { preferOpenStudios } = await import("../src/lib/auth/open-studios");
+  const withStudio = () =>
+    db.user.findMany({ where: { email: EMAIL, isActive: true }, include: { studio: { select: { suspendedAt: true } } }, orderBy: { studioId: "asc" } });
+  await db.studio.update({ where: { id: a.id }, data: { suspendedAt: new Date() } });
+  const left = preferOpenStudios(await withStudio());
+  check("signing in skips the suspended studio and lands on the open one", left.length === 1 && left[0].studioId === b.id);
+  await db.studio.update({ where: { id: b.id }, data: { suspendedAt: new Date() } });
+  check("with every studio suspended, the accounts stay (to show «suspendido»)", preferOpenStudios(await withStudio()).length === 2);
+
   await db.studio.deleteMany({ where: { id: { in: [a.id, b.id] } } });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

@@ -25,6 +25,7 @@ import { appUrlFor } from "@/lib/brand/url";
 import { brandByKey } from "@/lib/brand/registry";
 import { seedAppointmentStudio } from "@/lib/appointments/seed";
 import { BEAUTY_TRIAL_WA_QUOTA, WA_AUTO_LIVE } from "@/lib/brand/pricing";
+import { preferOpenStudios } from "@/lib/auth/open-studios";
 
 export type AuthState = { error?: string; sent?: boolean } | null;
 
@@ -72,8 +73,8 @@ export async function signInAction(_prev: AuthState, formData: FormData): Promis
 
   // The same handle can exist at several studios, each with its own hashes.
   const candidates = byEmail
-    ? await db.user.findMany({ where: { email: identifier.toLowerCase() } })
-    : await db.user.findMany({ where: { documentId: normalizeDocumentId(identifier) } });
+    ? await db.user.findMany({ where: { email: identifier.toLowerCase() }, include: { studio: { select: { suspendedAt: true } } } })
+    : await db.user.findMany({ where: { documentId: normalizeDocumentId(identifier) }, include: { studio: { select: { suspendedAt: true } } } });
 
   const verified = [];
   for (const candidate of candidates) {
@@ -91,7 +92,7 @@ export async function signInAction(_prev: AuthState, formData: FormData): Promis
 
   if (verified.length === 0) return { error: "invalidCredentials" };
 
-  const usable = verified.filter((candidate) => candidate.isActive);
+  const usable = preferOpenStudios(verified.filter((candidate) => candidate.isActive));
   if (usable.length === 0) return { error: "accountInactive" };
 
   // Proven, but ambiguous — let them say which studio they meant.
@@ -132,12 +133,13 @@ export async function magicLinkAction(_prev: AuthState, formData: FormData): Pro
 
   const accounts = await db.user.findMany({
     where: { email: parsed.data, isActive: true },
-    include: { studio: { select: { brand: true } } },
+    include: { studio: { select: { brand: true, suspendedAt: true } } },
   });
+  const open = preferOpenStudios(accounts);
   // The link opens on the brand it was asked from: sessions are per domain,
   // so a Temppo Beauty owner sent to TEMPPO's domain would land signed out.
   const brand = await getBrand();
-  const user = accounts.find((a) => a.studio.brand === brand.key) ?? accounts[0];
+  const user = open.find((a) => a.studio.brand === brand.key) ?? open[0];
 
   // Always report success — otherwise this endpoint tells the world who has an account.
   if (user) {

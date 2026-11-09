@@ -5,6 +5,7 @@ import { createSession } from "@/lib/auth/session";
 import { createStudioChoice } from "@/lib/auth/studio-choice";
 import { recordAudit } from "@/lib/audit";
 import { routing, localePath } from "@/i18n/routing";
+import { preferOpenStudios } from "@/lib/auth/open-studios";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
@@ -41,10 +42,12 @@ export async function GET(request: NextRequest) {
 
   // The click proves control of the address, which may cover an account at
   // several studios. The token is only anchored to one of them, so expand.
-  const accounts = await db.user.findMany({
-    where: { email: record.user.email, isActive: true },
-    select: { id: true },
-  });
+  const accounts = preferOpenStudios(
+    await db.user.findMany({
+      where: { email: record.user.email, isActive: true },
+      include: { studio: { select: { suspendedAt: true } } },
+    }),
+  );
 
   if (accounts.length > 1) {
     const choice = await createStudioChoice(accounts.map((account) => account.id));
@@ -53,20 +56,24 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  await createSession(record.userId, {
+  // The one account left may not be the one the token was anchored to: the
+  // anchor's studio may have been suspended since.
+  const user = accounts[0] ?? record.user;
+
+  await createSession(user.id, {
     userAgent: request.headers.get("user-agent"),
     ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
   });
 
   await recordAudit({
-    studioId: record.user.studioId,
-    actorId: record.userId,
-    actorLabel: record.user.name,
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
     action: "auth.magic_link",
     entityType: "User",
-    entityId: record.userId,
+    entityId: user.id,
   });
 
-  const destination = record.user.role === "STUDENT" ? "/my" : "/dashboard";
+  const destination = user.role === "STUDENT" ? "/my" : "/dashboard";
   return NextResponse.redirect(new URL(localePath(locale, destination), request.url));
 }
