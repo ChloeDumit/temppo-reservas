@@ -65,6 +65,28 @@ Cuando te llega el comprobante, lo registrás en **Cobros → registrar pago**, 
 - **En cada negocio:** el botón "Copiar mensaje de cobro", para mandarlo también desde tu WhatsApp personal.
 - **El día que alguien vence sin pagar:** un push para vos.
 
+### 7. Pantalla "Mi plan" para el negocio
+
+Una página nueva, **Mi plan**. Se entra desde el menú **Más → Mi plan** y desde una tarjeta en el inicio que dice, por ejemplo, "Plan Equipo · prueba hasta el 12/12". Para la dueña solamente. Reemplaza la página `/billing`, que hoy está oculta y armada para Reservas.
+
+- **Tu plan.**
+  - Qué plan tiene y cuánto cuesta, con el precio de lanzamiento si le corresponde.
+  - Qué incluye: profesionales, sucursales y mensajes de WhatsApp.
+  - Su estado: "Prueba: te quedan 5 días", "Pagado hasta el 12/01" o "Vencido el 12/12".
+- **WhatsApp este mes.**
+  - Una barra "123 de 300 mensajes", que se pone naranja al pasar el 80 %.
+  - La fecha en que se renueva el cupo.
+  - El botón "Sumar 200 mensajes por $190" (`WA_PACK`), que lleva al pago.
+  - Los datos ya existen: `waMonthlyQuota`, `waSentThisPeriod` y `waPeriodStart`.
+- **Cambiar de plan.**
+  - Las tres tarjetas, Individual, Equipo y Salón, con lo que incluye cada una, y un botón "Elegir este plan".
+  - Si hoy tiene más profesionales de los que permite el plan nuevo, se lo dice y no la deja bajar ("Tenés 3 profesionales: el plan Individual incluye 1").
+  - Te llega un aviso cada vez que alguien cambia de plan.
+- **Pagar.**
+  - El mismo botón de Mercado Pago y los datos de transferencia del recordatorio.
+  - Si se activa, la opción de débito automático.
+- **Historial.** Los pagos registrados, con fecha, monto y forma de pago.
+
 ## Pasos
 
 1. **Configuración de cobro.** Tabla `PlatformSetting` y formulario "Datos para cobrar" en la consola.
@@ -72,8 +94,9 @@ Cuando te llega el comprobante, lo registrás en **Cobros → registrar pago**, 
 3. **Envío.** Campos de seguimiento, `sendBillingReminders(now)` dentro del proceso de cada 15 minutos, y el email con push.
 4. **Pago con Mercado Pago.** Link de pago con referencia `sub:` y su manejo en el webhook (registra el cobro solo, sin duplicar).
 5. **Consola.** "Próximos vencimientos" y "Copiar mensaje".
-6. *(Opcional)* WhatsApp con una plantilla nueva aprobada por Meta.
-7. **Pruebas** (`verify-billing-reminders.ts`) y una prueba manual en local, sin cobros reales en Mercado Pago.
+6. **Pantalla "Mi plan".** Plan, consumo de WhatsApp, cambio de plan, pagar e historial, más la tarjeta en el inicio.
+7. *(Opcional)* WhatsApp con una plantilla nueva aprobada por Meta.
+8. **Pruebas** (`verify-billing-reminders.ts`) y una prueba manual en local, sin cobros reales en Mercado Pago.
 
 ## Para decidir
 
@@ -90,3 +113,8 @@ Cuando te llega el comprobante, lo registrás en **Cobros → registrar pago**, 
    - Solo Temppo Beauty.
    - O también los negocios de Temppo Reservas.
 5. **¿Precio de lanzamiento?** ¿Lo respetamos durante 12 meses para los primeros 50 negocios, como dice la landing?
+6. **¿Cuándo vale un cambio de plan?**
+   - Si sube de plan, al instante, y el precio nuevo se cobra en el próximo vencimiento.
+   - Si baja, desde el próximo mes.
+   - ¿O preferís otra regla?
+7. **¿Mensajes extra de WhatsApp?** ¿Se pueden comprar desde la app ($190 por 200 mensajes), o por ahora te escriben y los cargás vos?
