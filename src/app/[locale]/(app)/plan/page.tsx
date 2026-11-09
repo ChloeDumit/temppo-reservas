@@ -167,7 +167,11 @@ export default async function MyPlanPage({
                   </div>
                 </div>
               ) : (
-                <p className="text-ink-soft">Tu plan no incluye avisos automáticos por WhatsApp: podés sumar mensajes cuando quieras.</p>
+                <p className="text-ink-soft">
+                  {trial
+                    ? "Tu prueba no tiene avisos automáticos por WhatsApp: podés sumar mensajes cuando quieras."
+                    : "Tu plan no incluye avisos automáticos por WhatsApp: podés sumar mensajes cuando quieras."}
+                </p>
               )}
               {s.wa.extra > 0 && <p className="text-ink-soft">Además tenés {s.wa.extra} mensajes extra, que se usan cuando se terminan los del mes.</p>}
               {waTotal > 0 && waPct >= 80 && s.wa.extra === 0 && (
