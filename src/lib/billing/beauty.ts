@@ -94,6 +94,13 @@ export function dueDate(studio: BillingStudio, subscription: BillingSubscription
 export type ReminderStage = 1 | 2 | 3;
 
 /**
+ * Reminders began on 10 November 2026. A trial or month that ended before
+ * then gets none — those studios are followed up by hand from the console —
+ * so the first sweep does not greet them with a late notice.
+ */
+export const REMINDERS_FROM = new Date("2026-11-10T03:00:00Z");
+
+/**
  * Which reminder is due now, or null: 1 from three days before, 2 from the
  * due date, 3 from three days after. Stages already sent for this date are
  * skipped, and a later one replaces an earlier one never sent (a studio found
@@ -103,10 +110,11 @@ export function reminderDue(
   studio: BillingStudio & { billingRemindedFor: Date | null; billingReminderStage: number },
   subscription: BillingSubscription,
   now: Date,
+  from: Date = REMINDERS_FROM,
 ): { stage: ReminderStage; dueAt: Date } | null {
   if (studio.suspendedAt || onAutoDebit(subscription)) return null;
   const dueAt = dueDate(studio, subscription);
-  if (!dueAt) return null;
+  if (!dueAt || dueAt < from) return null;
 
   const left = dueAt.getTime() - now.getTime();
   const stage: ReminderStage | 0 = left <= -3 * DAY ? 3 : left <= 0 ? 2 : left <= 3 * DAY ? 1 : 0;

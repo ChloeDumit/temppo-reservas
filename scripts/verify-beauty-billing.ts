@@ -56,6 +56,7 @@ async function main() {
       { plan: "TRIAL", nextPlan: null, trialEndsAt: at(days), suspendedAt: null, billingRemindedFor: remindedFor, billingReminderStage: sent },
       null,
       now,
+      new Date(0),
     )?.stage ?? null;
   check("four days before: nothing yet", trialEnding(4), null);
   check("three days before: the first reminder", trialEnding(2.9), 1);
@@ -66,6 +67,15 @@ async function main() {
   check(
     "never twice for the same date",
     rules.reminderDue({ plan: "TRIAL", nextPlan: null, trialEndsAt: due, suspendedAt: null, billingRemindedFor: due, billingReminderStage: 1 }, null, now),
+    null,
+  );
+  check(
+    "a date gone before reminders began gets nothing",
+    rules.reminderDue(
+      { plan: "TRIAL", nextPlan: null, trialEndsAt: new Date("2026-11-08T12:00:00Z"), suspendedAt: null, billingRemindedFor: null, billingReminderStage: 0 },
+      null,
+      new Date("2026-11-12T12:00:00Z"),
+    ),
     null,
   );
   check(
