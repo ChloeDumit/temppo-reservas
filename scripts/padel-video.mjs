@@ -11,7 +11,7 @@
  *   npm run seed:padel
  */
 import { chromium } from "playwright";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const BASE = `http://localhost:${process.env.PORT || 8899}`;
@@ -53,10 +53,33 @@ process.on("uncaughtException", (e) => {
   process.exit(1);
 });
 
+let lastShot = null;
+
 async function shot(name) {
   currentStep = name;
+  lastShot = name;
   await page.screenshot({ path: join(STILLS, `${name}.png`) });
   console.log(`  · ${name}`);
+}
+
+/*
+  Where the finger lands, in still pixels, recorded against the shot that was
+  on screen when it happened. The edit draws a ring there — without it the
+  film is a slideshow of screens, and what sells a booking page is watching
+  somebody press it.
+*/
+const taps = {};
+
+async function tap(locator) {
+  const box = await locator.boundingBox();
+  if (box && lastShot) {
+    taps[lastShot] = {
+      x: Math.round((box.x + box.width / 2) * SCALE),
+      y: Math.round((box.y + box.height / 2) * SCALE),
+    };
+  }
+  await locator.click();
+  await beat(900);
 }
 
 /** Scrolls by hand so the capture reads as a person using the app. */
@@ -74,14 +97,12 @@ async function glide(distance, steps = 20) {
 */
 async function pick(text) {
   currentStep = `pick ${text}`;
-  await page.locator("section li button", { hasText: text }).first().click();
-  await beat(900);
+  await tap(page.locator("section li button", { hasText: text }).first());
 }
 
 async function pickRow(index) {
   currentStep = `row ${index}`;
-  await page.locator("section li button").nth(index).click();
-  await beat(900);
+  await tap(page.locator("section li button").nth(index));
 }
 
 console.log("Shooting…");
@@ -106,8 +127,8 @@ await shot("04-time");
 // An evening slot: the one that carries the peak price.
 const slots = page.locator("section .grid button");
 const count = await slots.count();
-await slots.nth(Math.min(20, count - 1)).click();
-await beat(1200);
+await tap(slots.nth(Math.min(20, count - 1)));
+await beat(600);
 await shot("05-confirm");
 
 await page.fill('input[autocomplete="name"]', "Joaquín Ferrés");
@@ -119,8 +140,8 @@ await shot("06-details");
 currentStep = "confirm";
 // The confirm button is the last one on the step, and its label changes with
 // whether the club asks for a seña — so it is taken by position, not by text.
-await page.locator("section button").last().click();
-await page.waitForTimeout(2500);
+await tap(page.locator("section button").last());
+await page.waitForTimeout(2200);
 await shot("07-booked");
 
 // ── The club, seeing it land ────────────────────────────────────
@@ -145,5 +166,8 @@ await page.goto(`${BASE}/es/spaces`, { waitUntil: "networkidle" });
 await beat(1700);
 await shot("11-courts");
 
+writeFileSync(join(STILLS, "taps.json"), JSON.stringify(taps, null, 2));
+
 await browser.close();
-console.log(`\nStills in ${STILLS}. Now: npm run padel:encode`);
+console.log(`\nStills in ${STILLS}, ${Object.keys(taps).length} taps recorded.`);
+console.log("Now: npm run padel:encode");

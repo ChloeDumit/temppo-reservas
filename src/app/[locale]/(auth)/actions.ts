@@ -193,6 +193,13 @@ const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: emailSchema,
   password: z.string().min(8).max(200),
+  /*
+    What this business sells, asked at sign-up rather than inferred from the
+    domain. The same page now sells classes and courts, so the domain cannot
+    tell them apart — and a club that signed up through it was landing in an
+    app about pilates.
+  */
+  vertical: z.enum(["CLASSES", "VENUES", "APPOINTMENTS"]).optional(),
 });
 
 export async function registerAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -202,6 +209,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
+    vertical: formData.get("vertical") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -221,10 +229,14 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   // Hashed before the transaction — bcrypt is slow and would hold the tx open.
   const passwordHash = await hashPassword(password);
 
-  // The domain someone signs up on decides what they are buying: a class
-  // studio on TEMPPO, an appointment business on the beauty brand.
+  /*
+    The brand still decides the look and the emails — Temppo Beauty is its own
+    product at its own domain. What the business sells is its own answer now,
+    falling back to the brand's for anyone who did not give one.
+  */
   const brand = await getBrand();
-  const appointments = brand.vertical === "APPOINTMENTS";
+  const vertical = brand.key === "temppo" ? (parsed.data.vertical ?? "CLASSES") : brand.vertical;
+  const appointments = vertical === "APPOINTMENTS";
 
   const user = await db.$transaction(async (tx) => {
     const studio = await tx.studio.create({
@@ -235,7 +247,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
         plan: "TRIAL",
         trialEndsAt,
         brand: brand.key,
-        vertical: brand.vertical,
+        vertical,
         accentColor: brand.accent,
         // The trial includes a taste of automatic WhatsApp, once it sends.
         ...(appointments && WA_AUTO_LIVE ? { waMode: "CLOUD", waMonthlyQuota: BEAUTY_TRIAL_WA_QUOTA } : {}),

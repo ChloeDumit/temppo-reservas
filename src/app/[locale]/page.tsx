@@ -23,10 +23,21 @@ export default async function LandingPage({
 
   const pain = [t("pain1"), t("pain2"), t("pain3"), t("pain4")];
 
-  const waitlist = [
-    { title: t("waitStep1Title"), body: t("waitStep1Body"), icon: "x" as const },
-    { title: t("waitStep2Title"), body: t("waitStep2Body"), icon: "alert" as const },
-    { title: t("waitStep3Title"), body: t("waitStep3Body"), icon: "check" as const },
+  const linkSteps = [
+    { title: t("linkStep1Title"), body: t("linkStep1Body"), icon: "share" as const },
+    { title: t("linkStep2Title"), body: t("linkStep2Body"), icon: "phone" as const },
+    { title: t("linkStep3Title"), body: t("linkStep3Body"), icon: "check" as const },
+  ];
+
+  /*
+    Three ways the same system is used, not three products. The rubro is
+    chosen at sign-up and can be changed afterwards, so this section is a
+    description of what it adapts to rather than a price list.
+  */
+  const kinds = [
+    { icon: "repeat" as const, name: t("kind1Name"), who: t("kind1For"), body: t("kind1Body") },
+    { icon: "court" as const, name: t("kind2Name"), who: t("kind2For"), body: t("kind2Body") },
+    { icon: "clock" as const, name: t("kind3Name"), who: t("kind3For"), body: t("kind3Body") },
   ];
 
   const capabilities = [
@@ -126,55 +137,36 @@ export default async function LandingPage({
           </div>
         </section>
 
-        {/* --------------------------------------------------- the two models */}
-        <section id="modelos" className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-          <h2 className="max-w-2xl text-balance text-2xl sm:text-3xl">{t("modelsTitle")}</h2>
-          <p className="mt-4 max-w-2xl text-ink-soft">{t("modelsBody")}</p>
+        {/* ------------------------------------------------------- the rubros */}
+        <section id="rubros" className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
+          <h2 className="max-w-2xl text-balance text-2xl sm:text-3xl">{t("kindsTitle")}</h2>
+          <p className="mt-4 max-w-2xl text-ink-soft">{t("kindsBody")}</p>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            {/*
-              The fixed spot leads and carries the accent: it is the half of this
-              that no competitor models, and the reason the page exists.
-            */}
-            <article className="rounded-[var(--radius-lg)] border border-accent/30 bg-accent-soft p-6 sm:p-7">
-              <p className="text-xs font-medium uppercase tracking-widest text-accent">
-                {t("modelFixedTag")}
-              </p>
-              <h3 className="mt-3 font-display text-2xl">{t("modelFixedTitle")}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-ink">{t("modelFixedBody")}</p>
-              <p className="mt-4 border-t border-accent/20 pt-4 text-[15px] leading-relaxed text-ink-soft">
-                {t("modelFixedRule")}
-              </p>
-            </article>
-
-            <article className="rounded-[var(--radius-lg)] border border-line bg-surface p-6 sm:p-7">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted">
-                {t("modelPackTag")}
-              </p>
-              <h3 className="mt-3 font-display text-2xl">{t("modelPackTitle")}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-ink">{t("modelPackBody")}</p>
-              <p className="mt-4 border-t border-line pt-4 text-[15px] leading-relaxed text-ink-soft">
-                {t("modelPackRule")}
-              </p>
-            </article>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {kinds.map((kind) => (
+              <article
+                key={kind.name}
+                className="rounded-[var(--radius-lg)] border border-line bg-surface p-6"
+              >
+                <Icon name={kind.icon} className="size-5 text-accent" />
+                <h3 className="mt-3 font-display text-xl">{kind.name}</h3>
+                <p className="mt-0.5 text-xs uppercase tracking-wider text-muted">{kind.who}</p>
+                <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{kind.body}</p>
+              </article>
+            ))}
           </div>
+
+          <p className="mt-5 text-sm text-muted">{t("kindsNote")}</p>
         </section>
 
-        {/* ------------------------------------------------ the waitlist, shown */}
-        <section id="lista-de-espera" className="border-y border-line bg-sunken">
+        {/* ------------------------------------------------ the public link */}
+        <section id="link" className="border-y border-line bg-sunken">
           <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-xl text-balance text-2xl sm:text-3xl">{t("waitTitle")}</h2>
-            <p className="mt-4 max-w-xl text-ink-soft">{t("waitBody")}</p>
+            <h2 className="max-w-xl text-balance text-2xl sm:text-3xl">{t("linkTitle")}</h2>
+            <p className="mt-4 max-w-xl text-ink-soft">{t("linkBody")}</p>
 
-            {/*
-              Three steps that arrive in order, then hold. The sequence is the
-              argument — a still list of the same three sentences reads as a
-              feature, watching the seat refill reads as money recovered.
-              Motion is decoration here, so it goes away entirely when the
-              visitor has asked for less of it (see globals.css).
-            */}
             <ol className="mt-10 grid gap-4 sm:grid-cols-3">
-              {waitlist.map((step, i) => (
+              {linkSteps.map((step, i) => (
                 <li
                   key={step.title}
                   className="seq-step flex gap-4 rounded-[var(--radius-lg)] border border-line bg-surface p-5 sm:flex-col sm:gap-3"

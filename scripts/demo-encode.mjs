@@ -10,6 +10,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, existsSync, rmSync } from "node:fs";
 import sharp from "sharp";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const OUT = "demo";
@@ -48,6 +49,16 @@ const MASCOT = `
   <circle cx="38" cy="56" r="4" fill="#C85C35" opacity="0.35"/>
 `;
 
+/** The first frame of the reel: big, two lines, no branding to decode. */
+function hook({ line1, line2 }) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    <rect width="${W}" height="${H}" fill="#1C1917"/>
+    <text x="${W / 2}" y="${H / 2 - 40}" text-anchor="middle" font-family="Helvetica,Arial" font-size="96" font-weight="bold" fill="#FFFFFF">${line1}</text>
+    <text x="${W / 2}" y="${H / 2 + 80}" text-anchor="middle" font-family="Helvetica,Arial" font-size="96" font-weight="bold" fill="#E07A5F">${line2}</text>
+    <text x="${W / 2}" y="${H / 2 + 230}" text-anchor="middle" font-family="Helvetica,Arial" font-size="40" fill="#A8A29E">Reservan, no vienen, y no pagaron nada</text>
+  </svg>`;
+}
+
 /** Opening and closing cards. Centred by anchor so no font metrics are needed. */
 function card({ eyebrow, title, subtitle, cta }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
@@ -66,17 +77,16 @@ function card({ eyebrow, title, subtitle, cta }) {
  * `hold` is seconds on screen, before the cross-fade into the next beat.
  */
 const PADEL_BEATS = [
-  { still: "01-what", caption: "Reservá la cancha desde el celular", hold: 3.0 },
-  { still: "02-duration", caption: "Una hora, o una hora y media", hold: 2.6 },
-  { still: "03-day", caption: "Mirás qué día hay lugar", hold: 2.8 },
-  { still: "04-time", caption: "Cada horario con su precio", hold: 3.2 },
-  { still: "05-confirm", caption: "Ves todo antes de confirmar", hold: 3.2 },
-  { still: "06-details", caption: "Sin crear una cuenta", hold: 2.8 },
-  { still: "07-booked", caption: "Reservada", hold: 2.6 },
-  { still: "08-dashboard", caption: "Y en el club entra sola", hold: 3.4 },
-  // The morning is empty on purpose in the app; the evening is what sells.
-  { still: "10-agenda-evening", caption: "Tu noche, cancha por cancha", hold: 3.4 },
-  { still: "11-courts", caption: "Tus precios y tus horarios", hold: 3.2 },
+  { still: "01-what", caption: "Elige qué quiere jugar", hold: 2.0 },
+  { still: "02-duration", caption: "Y por cuánto tiempo", hold: 1.8 },
+  { still: "03-day", caption: "Ve qué día hay lugar", hold: 2.0 },
+  { still: "04-time", caption: "Cada horario con su precio", hold: 2.4 },
+  { still: "05-confirm", caption: "Todo a la vista antes de confirmar", hold: 2.4 },
+  { still: "06-details", caption: "Sin crear una cuenta", hold: 2.0 },
+  { still: "07-booked", caption: "Reservada", hold: 1.8 },
+  { still: "08-dashboard", caption: "Y en el club entra sola", hold: 2.6 },
+  { still: "10-agenda-evening", caption: "Tu noche, cancha por cancha", hold: 2.6 },
+  { still: "11-courts", caption: "Tus precios y tus horarios", hold: 2.4 },
 ];
 
 const CLASS_BEATS = [
@@ -93,7 +103,39 @@ const CLASS_BEATS = [
 
 const beats = EDIT === "padel" ? PADEL_BEATS : CLASS_BEATS;
 
-const FADE = 0.6;
+/*
+  A Reel is not a corporate demo. The padel cut is quicker, the screens slide
+  rather than dissolve, and where the capture recorded a tap the edit draws
+  the ring — watching somebody press the thing is what sells a booking page.
+*/
+const REEL = EDIT === "padel";
+const FADE = REEL ? 0.25 : 0.6;
+const TRANSITION = REEL ? "slideup" : "fade";
+
+const TAPS = (() => {
+  const file = join(STILLS, "taps.json");
+  try {
+    return JSON.parse(readFileSync(file, "utf8"));
+  } catch {
+    return {};
+  }
+})();
+
+/** The ring and dot drawn where the finger landed, on the still's own scale. */
+async function tapPng(tap, index) {
+  const file = join(WORK, `tap-${index}.png`);
+  const R = 92;
+  await sharp(
+    Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${R * 2}" height="${R * 2}">
+      <circle cx="${R}" cy="${R}" r="${R - 8}" fill="none" stroke="#FFFFFF" stroke-width="6" opacity="0.85"/>
+      <circle cx="${R}" cy="${R}" r="${R - 26}" fill="#FFFFFF" opacity="0.28"/>
+      <circle cx="${R}" cy="${R}" r="${R - 8}" fill="none" stroke="#1C1917" stroke-width="2" opacity="0.35"/>
+    </svg>`),
+  )
+    .png()
+    .toFile(file);
+  return { file, size: R * 2, ...tap };
+}
 
 /** Caption pill, drawn as an image because this ffmpeg has no drawtext. */
 async function captionPng(text, index) {
@@ -122,11 +164,15 @@ console.log("Preparing frames…");
 const intro = join(OUT, "cards", "intro.png");
 const outro = join(OUT, "cards", "outro.png");
 
-await sharp(Buffer.from(card(
-  EDIT === "padel"
-    ? { eyebrow: "TEMPPO", title: "Reservas", subtitle: "Para canchas y clubes" }
-    : { eyebrow: "TEMPPO", title: "Reservas", subtitle: "Gestión para estudios de pilates y yoga" },
-))).png().toFile(intro);
+/*
+  A Reel is scrolled past in a second, so the first frame asks the question
+  the club already has instead of showing it a logo it does not know yet.
+*/
+await sharp(Buffer.from(
+  REEL
+    ? hook({ line1: "¿Cuántas canchas", line2: "perdés por semana?" })
+    : card({ eyebrow: "TEMPPO", title: "Reservas", subtitle: "Gestión para estudios de pilates y yoga" }),
+)).png().toFile(intro);
 
 await sharp(Buffer.from(card(
   EDIT === "padel"
@@ -149,21 +195,42 @@ async function renderBeat(beat, i) {
   const clip = join(WORK, `beat-${String(i).padStart(2, "0")}.mp4`);
   const frames = Math.round(beat.hold * FPS);
 
-  // zoompan needs its own frame clock; 1.0 → 1.06 over the hold is a gentle push.
-  const zoom = `zoompan=z='min(1.0+0.06*on/${frames},1.06)':d=${frames}:s=${W}x${H}:fps=${FPS}`;
+  // zoompan needs its own frame clock. The reel pushes harder and faster.
+  const push = REEL ? 0.09 : 0.06;
+  const zoom = `zoompan=z='min(1.0+${push}*on/${frames},1.0${Math.round(push * 100)})':d=${frames}:s=${W}x${H}:fps=${FPS}`;
+
+  const tap = TAPS[beat.still] ? await tapPng(TAPS[beat.still], i) : null;
+
+  /*
+    The still is letterboxed into the frame, so a tap recorded in still
+    coordinates has to be moved by the same scale and offset to land on the
+    thing it pressed.
+  */
+  const inputs = ["-loop", "1", "-t", String(beat.hold), "-i", src, "-i", cap];
+  const filters = [
+    `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=0xFAF7F4,setsar=1,${zoom}[bg]`,
+  ];
+
+  let label = "bg";
+  if (tap) {
+    inputs.push("-loop", "1", "-t", String(beat.hold), "-i", tap.file);
+    const meta = await sharp(src).metadata();
+    const fit = Math.min(W / meta.width, H / meta.height);
+    const x = Math.round(tap.x * fit + (W - meta.width * fit) / 2 - tap.size / 2);
+    const y = Math.round(tap.y * fit + (H - meta.height * fit) / 2 - tap.size / 2);
+    // Appears a beat in, so the eye reaches the screen before the finger.
+    filters.push(`[${label}][2:v]overlay=x=${x}:y=${y}:enable='gte(t,0.55)'[tapped]`);
+    label = "tapped";
+  }
+
+  filters.push(`[${label}][1:v]overlay=x=0:y=H-268[v]`);
 
   execFileSync(
     "ffmpeg",
     [
       "-y",
-      "-loop", "1", "-t", String(beat.hold), "-i", src,
-      "-i", cap,
-      "-filter_complex",
-      [
-        // Fit the tall screenshot inside the frame, padding with paper colour.
-        `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=0xFAF7F4,setsar=1,${zoom}[bg]`,
-        `[bg][1:v]overlay=x=0:y=H-268[v]`,
-      ].join(";"),
+      ...inputs,
+      "-filter_complex", filters.join(";"),
       "-map", "[v]",
       "-c:v", "libx264", "-preset", "medium", "-crf", "18",
       "-pix_fmt", "yuv420p",
@@ -225,7 +292,7 @@ let elapsed = timeline[0].hold;
 for (let i = 1; i < timeline.length; i++) {
   const next = `x${i}`;
   const offset = (elapsed - FADE).toFixed(3);
-  filter += `[${label}][${i}:v]xfade=transition=fade:duration=${FADE}:offset=${offset}[${next}];`;
+  filter += `[${label}][${i}:v]xfade=transition=${TRANSITION}:duration=${FADE}:offset=${offset}[${next}];`;
   label = next;
   elapsed += timeline[i].hold - FADE;
 }
