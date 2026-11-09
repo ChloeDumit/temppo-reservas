@@ -74,5 +74,31 @@ check("in both languages", Boolean(en.marketing.linkTitle), true);
 // The old split is gone for good.
 check("no separate courts namespace survives", Boolean(es.venuesLanding), false);
 
+
+console.log("\nPublished prices");
+
+/*
+  The landing quotes planPrices(), which the PlanPrice table overrides. A row
+  left in that table once had the page publishing numbers nobody had agreed
+  to — so the code constants are pinned here, and the console is the only
+  place allowed to differ from them deliberately.
+*/
+const plans = readFileSync("src/lib/billing/plans.ts", "utf8");
+const amount = (plan: string) =>
+  Number(plans.match(new RegExp(`${plan}: ([\\d_]+),`))?.[1].replace(/_/g, "") ?? 0);
+
+check("Esencial", amount("ESSENTIAL"), 99_000);
+check("Estudio", amount("STUDIO"), 199_000);
+check("Red", amount("NETWORK"), 349_000);
+check("none of them is still a placeholder", /placeholder/i.test(plans), false);
+
+const landingSource = readFileSync("src/app/[locale]/page.tsx", "utf8");
+check("the page reads them rather than repeating them", landingSource.includes("planPrices()"), true);
+check(
+  "and says the limits in each rubro's own unit",
+  ["limitClasses", "limitVenues", "limitAppointments"].every((k) => landingSource.includes(k)),
+  true,
+);
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 if (failed > 0) process.exitCode = 1;

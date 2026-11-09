@@ -4,8 +4,18 @@ import { Brand } from "@/components/brand";
 import { Icon } from "@/components/app/icon";
 import { buttonClass } from "@/components/ui/button";
 import { whatsappLink } from "@/lib/payment-code";
+import { PAID_PLANS, PLATFORM_CURRENCY } from "@/lib/billing/plans";
+import { planPrices } from "@/lib/billing";
+import { formatMoney } from "@/lib/money";
 import { getBrand } from "@/lib/brand/server";
 import { BeautyLanding } from "@/components/landing/beauty";
+
+/*
+  Prices are read rather than written here, so changing one in the platform
+  console changes the page too. Hourly is far more often than a price moves
+  and keeps the most-visited page off the database on every hit.
+*/
+export const revalidate = 3600;
 
 export default async function LandingPage({
   params,
@@ -20,6 +30,7 @@ export default async function LandingPage({
   if (brand.key === "beauty") return <BeautyLanding brand={brand} />;
 
   const t = await getTranslations("marketing");
+  const tb = await getTranslations("billing");
 
   const pain = [t("pain1"), t("pain2"), t("pain3"), t("pain4")];
 
@@ -53,10 +64,34 @@ export default async function LandingPage({
 
   const faq = [
     { q: t("faq1Q"), a: t("faq1A") },
+    { q: t("faq5Q"), a: t("faq5A") },
     { q: t("faq2Q"), a: t("faq2A") },
     { q: t("faq3Q"), a: t("faq3A") },
     { q: t("faq4Q"), a: t("faq4A") },
   ];
+
+  const prices = await planPrices();
+
+  /*
+    Each plan says what it covers in the unit its rubro understands: a studio
+    counts students, a club counts courts. One price list, three ways of
+    reading the same line.
+  */
+  const tiers = PAID_PLANS.map((plan) => {
+    const key = plan === "ESSENTIAL" ? "essential" : plan === "STUDIO" ? "studio" : "network";
+    return {
+      plan,
+      name: tb(`plan.${plan}`),
+      price: formatMoney(prices[plan], PLATFORM_CURRENCY, locale),
+      featured: plan === "STUDIO",
+      limits: [
+        { label: t("limitClasses"), value: t(`${key}Classes`) },
+        { label: t("limitVenues"), value: t(`${key}Venues`) },
+        { label: t("limitAppointments"), value: t(`${key}Appointments`) },
+        { label: t("limitLocations"), value: t(`${key}Locations`) },
+      ],
+    };
+  });
 
   const phone = process.env.TEMPPO_WHATSAPP;
   const whatsapp = phone ? whatsappLink(phone, t("whatsappMessage")) : null;
@@ -237,6 +272,60 @@ export default async function LandingPage({
                   <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{cap.body}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------- prices */}
+        <section id="precios" className="border-t border-line bg-sunken">
+          <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
+            <h2 className="max-w-lg text-balance text-2xl sm:text-3xl">{t("pricesTitle")}</h2>
+            <p className="mt-4 max-w-xl text-ink-soft">{t("pricesBody")}</p>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {tiers.map((tier) => (
+                <article
+                  key={tier.plan}
+                  className={
+                    tier.featured
+                      ? "rounded-[var(--radius-lg)] border border-accent/40 bg-accent-soft p-6"
+                      : "rounded-[var(--radius-lg)] border border-line bg-surface p-6"
+                  }
+                >
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <h3 className="font-display text-xl">{tier.name}</h3>
+                    {tier.featured && (
+                      <span className="rounded-[var(--radius-pill)] bg-accent px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-white">
+                        {t("mostChosen")}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-4 font-display text-3xl tabular-nums text-accent">
+                    {tier.price}
+                  </p>
+                  <p className="text-xs uppercase tracking-widest text-muted">{t("perMonth")}</p>
+
+                  <dl className="mt-5 space-y-2 border-t border-line pt-4 text-sm">
+                    {tier.limits.map((limit) => (
+                      <div key={limit.label} className="flex justify-between gap-3">
+                        <dt className="text-muted">{limit.label}</dt>
+                        <dd className="text-right text-ink">{limit.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </article>
+              ))}
+            </div>
+
+            <p className="mt-5 text-sm text-muted">{t("priceEverything")}</p>
+            <p className="mt-1 text-sm text-muted">{t("priceAnnual")}</p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+              <Link href="/register" className={buttonClass("primary", "md")}>
+                {t("ctaPrimary")}
+              </Link>
+              <span className="text-sm text-muted">{t("trialNote")}</span>
             </div>
           </div>
         </section>

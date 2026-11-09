@@ -22,16 +22,18 @@ export const PLATFORM_CURRENCY = "UYU";
  *
  * These are what a plan costs until the platform console says otherwise — the
  * PlanPrice table overrides them. They stay in code as the floor so an empty
- * table, a fresh database or a failed query can never leave the platform unable
- * to quote a price.
+ * table, a fresh database or a failed query can never leave the platform
+ * unable to quote a price.
  *
- * ⚠️ Still placeholders. Set real ones in the console, or here for a new
- * deployment's starting point.
+ * Set against what is actually published in Uruguay rather than a share of
+ * what a studio bills: the gym systems here run $690–$4.990, and the court
+ * booking tools lower still, around USD 14. A percentage-of-revenue figure
+ * put these at three times the market.
  */
 export const PLAN_PRICE_CENTS: Record<PaidPlan, number> = {
-  ESSENTIAL: 100_000, // UYU 1.000 — placeholder
-  STUDIO: 200_000, // UYU 2.000 — placeholder
-  NETWORK: 300_000, // UYU 3.000 — placeholder
+  ESSENTIAL: 99_000, // UYU 990
+  STUDIO: 199_000, // UYU 1.990
+  NETWORK: 349_000, // UYU 3.490
 };
 
 /** Synchronous fallback. Prefer `planPrices()`, which reads the console's values. */
