@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   const record = await db.verificationToken.findUnique({
     where: { tokenHash: hashToken(token) },
-    include: { user: true },
+    include: { user: { include: { studio: { select: { brand: true } } } } },
   });
 
   if (
@@ -44,7 +44,8 @@ export async function GET(request: NextRequest) {
   // several studios. The token is only anchored to one of them, so expand.
   const accounts = preferOpenStudios(
     await db.user.findMany({
-      where: { email: record.user.email, isActive: true },
+      // Only the product the link was sent for: its domain is the one opened.
+      where: { email: record.user.email, isActive: true, studio: { brand: record.user.studio.brand } },
       include: { studio: { select: { suspendedAt: true } } },
     }),
   );

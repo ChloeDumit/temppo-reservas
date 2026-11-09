@@ -98,7 +98,9 @@
     "hidePassword": "Hide password",
     "registerTitleBeauty": "Create your online agenda",
     "studioNameBeauty": "Your business name",
-    "createStudioBeauty": "Create my agenda"
+    "createStudioBeauty": "Create my agenda",
+    "accountOnTemppo": "That password belongs to your TEMPPO Reservas account: sign in at reservas.temppo.uy. If you have a Temppo Beauty account, use its password.",
+    "accountOnBeauty": "That password belongs to your Temppo Beauty account: sign in at beauty.temppo.uy. If you have a TEMPPO Reservas account, use its password."
   },
   "dashboard": {
     "title": "Dashboard",

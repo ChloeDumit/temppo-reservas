@@ -98,7 +98,9 @@
     "hidePassword": "Ocultar contraseña",
     "registerTitleBeauty": "Creá tu agenda online",
     "studioNameBeauty": "Nombre de tu negocio",
-    "createStudioBeauty": "Crear mi agenda"
+    "createStudioBeauty": "Crear mi agenda",
+    "accountOnTemppo": "Esa contraseña es de tu cuenta de TEMPPO Reservas: entrá en reservas.temppo.uy. Si tenés cuenta en Temppo Beauty, usá su contraseña.",
+    "accountOnBeauty": "Esa contraseña es de tu cuenta de Temppo Beauty: entrá en beauty.temppo.uy. Si tenés cuenta en TEMPPO Reservas, usá su contraseña."
   },
   "dashboard": {
     "title": "Panel",
