@@ -58,7 +58,8 @@
     "services": "Services",
     "hours": "Hours",
     "myAppointments": "My appointments",
-    "home": "Home"
+    "home": "Home",
+    "myPlan": "My plan"
   },
   "auth": {
     "loginTitle": "Log in",

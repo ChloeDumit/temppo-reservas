@@ -66,10 +66,11 @@ async function sendTemplate(to: string, template: string, language: string, para
 
 /**
  * Takes one message from the studio's quota, starting a new month first when
- * the last one is over. Atomic, so two sweeps running at once cannot both
- * spend the last message.
+ * the last one is over — and once the month's quota is spent, from the extra
+ * messages she bought. Atomic, so two sweeps running at once cannot both
+ * spend the last message. Says which it took, so a failed send gives it back.
  */
-export async function claimWhatsAppMessage(studioId: string, now: Date): Promise<boolean> {
+export async function claimWhatsAppMessage(studioId: string, now: Date): Promise<"month" | "extra" | null> {
   await db.studio.updateMany({
     where: { id: studioId, OR: [{ waPeriodStart: null }, { waPeriodStart: { lte: addMonths(now, -1) } }] },
     data: { waPeriodStart: now, waSentThisPeriod: 0 },
@@ -78,10 +79,19 @@ export async function claimWhatsAppMessage(studioId: string, now: Date): Promise
     where: { id: studioId, waMode: "CLOUD", waSentThisPeriod: { lt: db.studio.fields.waMonthlyQuota } },
     data: { waSentThisPeriod: { increment: 1 } },
   });
-  return claimed.count === 1;
+  if (claimed.count === 1) return "month";
+  const extra = await db.studio.updateMany({
+    where: { id: studioId, waMode: "CLOUD", waExtraCredits: { gt: 0 } },
+    data: { waExtraCredits: { decrement: 1 } },
+  });
+  return extra.count === 1 ? "extra" : null;
 }
 
-async function releaseWhatsAppMessage(studioId: string) {
+async function releaseWhatsAppMessage(studioId: string, from: "month" | "extra") {
+  if (from === "extra") {
+    await db.studio.update({ where: { id: studioId }, data: { waExtraCredits: { increment: 1 } } });
+    return;
+  }
   await db.studio.updateMany({
     where: { id: studioId, waSentThisPeriod: { gt: 0 } },
     data: { waSentThisPeriod: { decrement: 1 } },
@@ -121,11 +131,12 @@ export async function notifyWhatsApp(payload: WhatsAppPayload): Promise<boolean>
   const to = toWhatsAppNumber(payload.phone);
   if (!to) return false;
   if (await db.whatsAppOptOut.findUnique({ where: { phone: to } })) return false;
-  if (!(await claimWhatsAppMessage(payload.studioId, payload.now ?? new Date()))) return false;
+  const claimed = await claimWhatsAppMessage(payload.studioId, payload.now ?? new Date());
+  if (!claimed) return false;
 
   const metaName = metaTemplateName(payload.template);
   const result = await sendTemplate(to, metaName, payload.language, payload.params);
-  if (!result.ok) await releaseWhatsAppMessage(payload.studioId);
+  if (!result.ok) await releaseWhatsAppMessage(payload.studioId, claimed);
 
   // Kept so the platform console can show what she actually read.
   const logged: WhatsAppLogPayload = {

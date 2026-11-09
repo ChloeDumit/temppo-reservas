@@ -108,6 +108,20 @@ model Studio {
   waMonthlyQuota   Int       @default(0)
   waSentThisPeriod Int       @default(0)
   waPeriodStart    DateTime?
+  /// Messages bought on top of the monthly quota. Spent only once the month's
+  /// quota is used up, and kept from one month to the next until used.
+  waExtraCredits   Int       @default(0)
+
+  /// The plan a Temppo Beauty studio moves to at its next payment: the one
+  /// chosen during the trial, or a smaller one chosen mid-month (a bigger one
+  /// applies at once). Null: it stays where it is.
+  nextPlan         Plan?
+  /// Launch pricing kept until then (the first studios, for a year).
+  launchPriceUntil DateTime?
+  /// Billing reminders: the due date the last one was about, and how far they
+  /// went — 1 three days before, 2 on the day, 3 three days late.
+  billingRemindedFor   DateTime?
+  billingReminderStage Int       @default(0)
 
   /// Set while the studio has its own Mercado Pago connected: online deposits
   /// then go straight to its account rather than the platform's. The tokens
@@ -897,6 +911,11 @@ model SubscriptionCharge {
   /// time back, which is only possible because it is written down here.
   months Int @default(1)
 
+  /// "PLAN" for a month of the plan, "WA_PACK" for extra WhatsApp messages.
+  purpose String @default("PLAN")
+  /// The plan a PLAN charge pays for — the studio moves to it when paid.
+  plan    Plan?
+
   /// The manual path only: "transferencia BROU 21/08".
   note         String?
   /// Platform admin who recorded a manual payment. Deliberately not a relation
@@ -1319,4 +1338,16 @@ model ContentMedia {
   createdAt DateTime @default(now())
 
   @@index([postId, position])
+}
+
+/**
+ * Platform-wide settings edited from the console, one row per key — today the
+ * bank details studios are told to transfer to. Kept out of the code so they
+ * change without a deploy.
+ */
+model PlatformSetting {
+  key         String   @id
+  value       Json
+  updatedAt   DateTime @updatedAt
+  updatedById String?
 }

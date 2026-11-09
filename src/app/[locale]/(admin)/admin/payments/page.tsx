@@ -13,7 +13,10 @@ import {
 import { formatMoney } from "@/lib/money";
 import { beautyPlanFor, getAdminProduct, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
 import { BEAUTY_TRIAL_DAYS, LAUNCH_LOCK_MONTHS, LAUNCH_SPOTS } from "@/lib/brand/pricing";
-import { setPlanPricesAction, voidChargeAction } from "../actions";
+import { saveTransferDetailsAction, setPlanPricesAction, voidChargeAction } from "../actions";
+import { billingMessage, transferDetails, upcomingBeautyDues } from "@/lib/billing/beauty-server";
+import { beautyPlan } from "@/lib/billing/beauty";
+import { CopyText } from "../content/copy-text";
 
 /**
  * The platform's own books.
@@ -60,6 +63,14 @@ export default async function AdminPaymentsPage({
   const active = allActive.filter((s) => ours.has(s.studio.id));
   const attention = allAttention.filter((s) => ours.has(s.studio.id));
 
+  // Temppo Beauty: who is due soon or behind, with the message to send them.
+  const dues = beauty
+    ? await Promise.all(
+        (await upcomingBeautyDues()).map(async (d) => ({ ...d, message: (await billingMessage(d.id, d.daysLeft < -2 ? 3 : d.daysLeft <= 0 ? 2 : 1)).text })),
+      )
+    : [];
+  const transfer = beauty ? await transferDetails() : null;
+
   const money = (cents: number) => formatMoney(cents, PLATFORM_CURRENCY, locale);
   const date = (d: Date) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
 
@@ -96,6 +107,81 @@ export default async function AdminPaymentsPage({
           </div>
         ))}
       </div>
+
+      {beauty && (
+        <>
+          {/* ── Due soon ───────────────────────────────────────── */}
+          <section className="mt-8 overflow-hidden rounded-[var(--radius-lg)] border border-white/10">
+            <h2 className="border-b border-white/10 bg-white/5 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+              Próximos vencimientos
+            </h2>
+            {dues.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-white/40">Nadie vence en los próximos 7 días.</p>
+            ) : (
+              <ul className="divide-y divide-white/10">
+                {dues.map((d) => (
+                  <li key={d.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/admin/studios/${d.id}`} className="text-sm underline underline-offset-2">
+                        {d.name}
+                      </Link>
+                      <p className="text-xs text-white/40">
+                        {d.trial ? "Prueba" : planLabel("beauty", d.plan)}
+                        {d.nextPlan && d.nextPlan !== "TRIAL" && ` → ${beautyPlan(d.nextPlan).name}`}
+                        {` · ${d.trial ? "termina" : "vence"} ${date(d.dueAt)}`}
+                        {d.autoDebit && " · débito automático"}
+                        {d.reminded > 0 && ` · aviso ${d.reminded === 1 ? "previo" : d.reminded === 2 ? "del día" : "de atraso"} enviado`}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-[var(--radius-pill)] px-3 py-1 text-xs ${
+                        d.daysLeft < 0 ? "bg-red-500/20 text-red-300" : d.daysLeft <= 3 ? "bg-amber-500/20 text-amber-200" : "bg-white/10 text-white/60"
+                      }`}
+                    >
+                      {d.daysLeft < 0 ? `Atrasado ${-d.daysLeft} d` : d.daysLeft === 0 ? "Vence hoy" : `En ${d.daysLeft} d`}
+                    </span>
+                    <CopyText value={d.message} label="Copiar mensaje" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* ── Transfer details ───────────────────────────────── */}
+          <section className="mt-4 rounded-[var(--radius-lg)] border border-white/10 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50">Datos para cobrar</h2>
+            <p className="mt-1 text-xs text-white/40">
+              Salen en los recordatorios de pago y en «Mi plan» de cada negocio. Cuando llega un comprobante, registrá el pago en la ficha del negocio.
+            </p>
+            <form action={saveTransferDetailsAction} className="mt-4 grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  ["bank", "Banco", "BROU"],
+                  ["accountType", "Tipo de cuenta", "Caja de ahorro en pesos"],
+                  ["accountNumber", "Número de cuenta", ""],
+                  ["holder", "Titular", ""],
+                  ["whatsapp", "WhatsApp para comprobantes", "+598 9…"],
+                  ["note", "Nota (opcional)", "Poné el nombre de tu negocio en el concepto"],
+                ] as const
+              ).map(([name, label, placeholder]) => (
+                <label key={name} className="space-y-1 text-xs text-white/60">
+                  <span>{label}</span>
+                  <input
+                    name={name}
+                    defaultValue={transfer?.[name] ?? ""}
+                    placeholder={placeholder}
+                    required={name === "accountNumber"}
+                    className="w-full rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+              ))}
+              <div className="sm:col-span-2">
+                <button className="rounded-[var(--radius-pill)] bg-white px-4 py-2 text-sm font-medium text-black hover:bg-white/90">Guardar datos</button>
+              </div>
+            </form>
+          </section>
+        </>
+      )}
 
       {/* ── Needs chasing ──────────────────────────────────── */}
       <section className="mt-8 overflow-hidden rounded-[var(--radius-lg)] border border-white/10">

@@ -23,6 +23,7 @@ import { AppointmentSheet, DepositPaid, STATUS_TONE } from "../agenda/appointmen
 import { NewAppointmentForm } from "../agenda/new-appointment-form";
 import { TimeOffForm } from "../hours/time-off-form";
 import { HomeGrid, HomeSlot, type HomeLayout } from "./home-grid";
+import { PlanBanner } from "./plan-banner";
 
 const DAY = 86_400_000;
 
@@ -179,6 +180,8 @@ export async function BeautyDashboard({ user, locale }: { user: SessionUser; loc
           <h1 className="text-[22px] leading-tight text-ink sm:text-3xl">{t("hello", { name: user.name.split(" ")[0] })}</h1>
         </div>
       </div>
+
+      {user.role === "OWNER" && <PlanBanner studioId={studio.id} timezone={tz} locale={locale} />}
 
       {/* ---------------------------------------------------------- numbers */}
       <div className={cn("mb-4 grid grid-cols-2 gap-3", isAdmin ? "md:grid-cols-4" : "md:grid-cols-3")}>

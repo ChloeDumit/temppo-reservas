@@ -13,6 +13,7 @@ import { parsePaymentRef } from "@/lib/payments/reference";
 import { settleDeposit } from "@/lib/appointments/payments";
 import { afterDepositSettled } from "@/lib/appointments/notify";
 import { studioAccessToken } from "@/lib/payments/mercadopago-oauth";
+import { settlePlatformCharge } from "@/lib/billing/beauty-server";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,17 @@ export async function POST(request: NextRequest) {
   if (!resolved || !ref) return NextResponse.json({ ok: true });
   // A studio's own account only ever carries its own deposits.
   if (studioId && ref.kind !== "appt") return NextResponse.json({ ok: true });
+
+  // A studio paying the platform: its plan, or extra WhatsApp messages.
+  if (ref.kind === "charge") {
+    await settlePlatformCharge({
+      chargeId: ref.id,
+      providerPaymentId: resolved.providerPaymentId,
+      status: resolved.status,
+      amountCents: resolved.amountCents,
+    });
+    return NextResponse.json({ ok: true });
+  }
 
   // A deposit for an appointment rather than a pack.
   if (ref.kind === "appt") {

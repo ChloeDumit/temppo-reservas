@@ -20,6 +20,7 @@ import { createPayout } from "@/lib/appointments/payments";
 import { parseMoneyToCents } from "@/lib/money";
 import { deleteLogo, readLogo, storeLogo } from "@/lib/logo/store";
 import type { Plan } from "@/generated/prisma/enums";
+import { recordManualBeautyCharge, saveTransferDetails } from "@/lib/billing/beauty-server";
 
 /**
  * Platform-level actions.
@@ -200,6 +201,31 @@ export async function recordManualChargeAction(formData: FormData) {
   const admin = await assertPlatformAdmin();
   const parsed = manualChargeSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return;
+
+  const studio = await db.studio.findUnique({ where: { id: parsed.data.studioId }, select: { brand: true } });
+  if (studio?.brand === "beauty") {
+    // Temppo Beauty prices its own plans and moves the studio onto the plan paid for.
+    const typed = parsed.data.amount ? parseMoneyToCents(parsed.data.amount) : null;
+    if (parsed.data.amount && typed === null) return;
+    const charged = await recordManualBeautyCharge({
+      studioId: parsed.data.studioId,
+      plan: parsed.data.plan,
+      months: parsed.data.months,
+      amountCents: typed,
+      note: parsed.data.note || null,
+      recordedById: admin.id,
+    });
+    await recordAudit({
+      studioId: parsed.data.studioId,
+      actorId: admin.id,
+      actorLabel: `${admin.name} (plataforma)`,
+      action: "platform.subscription_manual_charge",
+      entityType: "Subscription",
+      entityId: parsed.data.studioId,
+      metadata: { amountCents: charged, months: parsed.data.months, plan: parsed.data.plan },
+    });
+    return finishAdminAction(formData.get("returnTo"));
+  }
 
   const amountCents = parsed.data.amount
     ? parseMoneyToCents(parsed.data.amount)
@@ -406,3 +432,22 @@ export async function createPayoutAction(formData: FormData) {
 
   revalidatePath("/[locale]/(admin)/admin/payouts", "page");
 }
+
+const transferSchema = z.object({
+  bank: z.string().trim().max(60),
+  accountType: z.string().trim().max(60),
+  accountNumber: z.string().trim().min(3).max(60),
+  holder: z.string().trim().max(80),
+  whatsapp: z.string().trim().max(30),
+  note: z.string().trim().max(200),
+});
+
+/** Where studios transfer to: shown in the billing reminders and in Mi plan. */
+export async function saveTransferDetailsAction(formData: FormData) {
+  const admin = await assertPlatformAdmin();
+  const parsed = transferSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+  await saveTransferDetails(parsed.data, admin.id);
+  await finishAdminAction("/admin/payments");
+}
+

@@ -8,6 +8,7 @@ import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
 import { renewExpiringMercadoPagoTokens } from "@/lib/payments/mercadopago-oauth";
 import { publishDueContent } from "@/lib/content/instagram";
 import { remindManualContent } from "@/lib/content/reminders";
+import { sendBillingReminders } from "@/lib/billing/beauty-server";
 
 /**
  * Sends the pre-class reminder for every studio whose window has arrived.
@@ -125,7 +126,13 @@ export async function sendDueReminders(now = new Date()) {
     return 0;
   });
 
-  return { studios: studios.length, classes, sent, birthdays, appointments, mpRenewed, content, contentReminders };
+  // Temppo Beauty studios whose trial or month is about to end, or has.
+  const billingReminders = await sendBillingReminders(now).catch((error) => {
+    console.error("[reminders] billing reminders failed", error);
+    return 0;
+  });
+
+  return { studios: studios.length, classes, sent, birthdays, appointments, mpRenewed, content, contentReminders, billingReminders };
 }
 
 type BirthdayStudio = { id: string; name: string; timezone: string; locale: string };

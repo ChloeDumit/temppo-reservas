@@ -31,7 +31,7 @@ const INSTRUCTOR_ALLOWED = ["/dashboard", "/schedule", "/availability", "/checki
   ADMIN runs the day to day — students, money coming in, the schedule — but the
   subscription is a contract with the person who signed it.
 */
-const OWNER_ONLY = ["/billing"];
+const OWNER_ONLY = ["/billing", "/plan"];
 
 const STUDENT_NAV: NavItem[] = [
   { href: "/my", label: "myClasses", icon: "calendar" },
@@ -53,7 +53,7 @@ const BEAUTY_STAFF_NAV: NavItem[] = [
   { href: "/hours", label: "hours", icon: "clock" },
   { href: "/reports", label: "reports", icon: "chart" },
   { href: "/settings", label: "settings", icon: "settings" },
-  { href: "/billing", label: "billing", icon: "card" },
+  { href: "/plan", label: "myPlan", icon: "card" },
 ];
 
 const BEAUTY_INSTRUCTOR_ALLOWED = ["/dashboard", "/agenda", "/clients", "/hours"];

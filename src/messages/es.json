@@ -58,7 +58,8 @@
     "services": "Servicios",
     "hours": "Horarios",
     "myAppointments": "Mis turnos",
-    "home": "Inicio"
+    "home": "Inicio",
+    "myPlan": "Mi plan"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",

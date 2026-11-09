@@ -51,10 +51,13 @@ export async function startAutoDebit(params: {
   payerEmail: string;
   studioName: string;
   backUrl: string;
+  /** Temppo Beauty prices its plans itself (launch pricing included). */
+  amountCents?: number;
+  productName?: string;
 }): Promise<{ redirectUrl: string } | { error: "notConfigured" | "providerFailed" }> {
   if (!isSubscriptionBillingConfigured()) return { error: "notConfigured" };
 
-  const amountCents = await planPriceCents(params.plan);
+  const amountCents = params.amountCents ?? (await planPriceCents(params.plan));
 
   const existing = await db.subscription.findUnique({ where: { studioId: params.studioId } });
 
@@ -86,7 +89,7 @@ export async function startAutoDebit(params: {
 
   const preapproval = await createPreapproval({
     subscriptionId: subscription.id,
-    reason: `TEMPPO Reservas — ${params.studioName}`,
+    reason: `${params.productName ?? "TEMPPO Reservas"} — ${params.studioName}`,
     payerEmail: params.payerEmail,
     amountCents,
     currency: PLATFORM_CURRENCY,

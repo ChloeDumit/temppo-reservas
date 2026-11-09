@@ -22,6 +22,8 @@ import {
 import { supportTargetFor } from "@/lib/auth/support";
 import { beautyPlanFor, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
 import { StudioLogoForm } from "./logo-form";
+import { billingMessage } from "@/lib/billing/beauty-server";
+import { CopyText } from "../../content/copy-text";
 
 const TIMEZONES = [
   "America/Montevideo",
@@ -97,6 +99,8 @@ export default async function AdminStudioPage({
     new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(d);
 
   const beauty = studio.brand === "beauty";
+  // What to send her by WhatsApp about paying, the same text the reminder uses.
+  const billingText = beauty ? (await billingMessage(studio.id, null)).text : null;
   const staffCount = studio.users.filter((u) => u.role !== "STUDENT").length;
   const facts = [
     ...(beauty
@@ -261,6 +265,12 @@ export default async function AdminStudioPage({
           transfer that landed in the bank has to be recordable by hand or the
           plan and the money drift apart.
         */}
+        {billingText && (
+          <div className="mt-4 flex items-center gap-3 border-t border-white/10 pt-4">
+            <CopyText value={billingText} label="Copiar mensaje de cobro" />
+            <span className="text-xs text-white/40">Para mandárselo por WhatsApp: plan, monto, link a Mi plan y datos de transferencia.</span>
+          </div>
+        )}
         <form
           action={recordManualChargeAction}
           className="mt-4 flex flex-wrap items-end gap-2 border-t border-white/10 pt-4"
@@ -272,7 +282,10 @@ export default async function AdminStudioPage({
             <select
               name="plan"
               defaultValue={
-                subscription?.plan && subscription.plan !== "TRIAL" ? subscription.plan : "ESSENTIAL"
+                // The plan she chose for her next payment, when she chose one.
+                studio.nextPlan && studio.nextPlan !== "TRIAL"
+                  ? studio.nextPlan
+                  : subscription?.plan && subscription.plan !== "TRIAL" ? subscription.plan : "ESSENTIAL"
               }
               className="mt-1 block rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-sm text-white"
             >
