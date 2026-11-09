@@ -39,15 +39,19 @@ Club del Este, cinco espacios, tres tipos (pádel, fútbol 5, salón).
 
 Probado de punta a punta en el navegador: reserva confirmada, guardada como `CONFIRMED` / `ONLINE`, con la tarifa nocturna correcta.
 
-**641 checks pasan** (36 nuevos), build limpio.
+**672 checks pasan** (67 nuevos), build limpio.
 
 Probado en el navegador: panel del club, agenda con la reserva online dibujada en su hora, reserva tomada desde el mostrador, y alta de una cancha nueva desde el formulario.
 
+**La seña.** Cada cancha puede pedir un porcentaje o un monto fijo. Una reserva online que debe seña queda **retenida**, no confirmada: tan ocupada como una reservada para cualquier otro, y devuelta por el cron si el pago no llega.
+
+El caso incómodo es la plata que llega justo cuando vence la retención. Si nadie tomó la cancha, se respeta —el cliente pagó, y negarlo sería feo y mal negocio—. Si alguien la tomó, la cancha queda para quien la reservó y la seña se registra como adeudada, nunca se queda callada. Los dos caminos tienen checks, igual que el webhook reintentado, el pago corto y el rechazo (que no toca la retención, porque una tarjeta rechazada se reintenta).
+
+Se paga con tarjeta o por transferencia con un código para citar. El cliente vuelve por el mismo link `/m/<token>` que usa el cliente de un salón: una sola forma de link para todas las verticales.
+
 ## Lo que NO entra, a propósito
 
-Esto es la rebanada que funciona de punta a punta, no la vertical terminada:
-
-- **Sin seña ni cobro online.** El esquema ya lleva los campos (`depositCents`, `holdExpiresAt`, `Payment.rentalId`) porque en pádel la seña es clave por el no-show, pero el flujo no está conectado.
 - **Un estudio sigue siendo de una sola vertical.** La fusión clases + canchas en el mismo club es un cambio aparte y más grande.
+- **El cobro con Mercado Pago está escrito pero no probado con credenciales reales** — la liquidación sí está cubierta por checks; lo que falta es una pasada con una cuenta de verdad.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
