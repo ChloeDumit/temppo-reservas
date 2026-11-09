@@ -69,9 +69,12 @@ export default async function AdminContentPage({
   const day = (d: Date) => new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", timeZone: TZ }).format(d);
   // A plan's button shows while any of its posts is still missing.
   const loadedTitles = new Set(
-    (await db.contentPost.findMany({ where: { brand: "beauty", title: { in: CONTENT_PLANS.flatMap((p) => p.items.map((i) => i.title)) } }, select: { title: true } })).map((p) => p.title),
+    (await db.contentPost.findMany({ where: { brand, title: { in: CONTENT_PLANS.flatMap((p) => p.items.map((i) => i.title)) } }, select: { title: true } })).map((p) => p.title),
   );
-  const pendingPlans = CONTENT_PLANS.filter((p) => p.items.some((i) => !loadedTitles.has(i.title)));
+  // Only this product's plans, and only the ones not already loaded.
+  const pendingPlans = CONTENT_PLANS.filter(
+    (p) => p.brand === brand && p.items.some((i) => !loadedTitles.has(i.title)),
+  );
 
   return (
     <>
@@ -104,7 +107,7 @@ export default async function AdminContentPage({
         )}
       </div>
 
-      {brand === "beauty" && pendingPlans.length > 0 && (
+      {pendingPlans.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {pendingPlans.map((plan) => (
             <form key={plan.id} action={loadPlanAction}>

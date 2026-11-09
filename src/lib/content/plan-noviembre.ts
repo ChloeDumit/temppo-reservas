@@ -4,6 +4,8 @@
   are attached by hand: they are in marketing/ and the kit, not in the app.
 */
 
+import { PLAN_TEMPPO_1, PLAN_TEMPPO_2 } from "./plan-temppo";
+
 export type PlanItem = {
   title: string;
   kind: "POST" | "CAROUSEL" | "REEL" | "STORY";
@@ -175,8 +177,20 @@ export const PLAN_NOVIEMBRE_2: PlanItem[] = [
   },
 ];
 
-/** Every plan the console can load, newest last. */
-export const CONTENT_PLANS = [
-  { id: "noviembre-1", label: "Plan del 2 al 15 de noviembre", items: PLAN_NOVIEMBRE },
-  { id: "noviembre-2", label: "Plan del 16 al 29 de noviembre", items: PLAN_NOVIEMBRE_2 },
+/**
+ * Every plan the console can load, newest last.
+ *
+ * Each says whose account it is for: the console shows the plans for whatever
+ * product is being looked at, and loading one creates its posts on that brand.
+ */
+export const CONTENT_PLANS: {
+  id: string;
+  brand: "beauty" | "temppo";
+  label: string;
+  items: PlanItem[];
+}[] = [
+  { id: "noviembre-1", brand: "beauty", label: "Plan del 2 al 15 de noviembre", items: PLAN_NOVIEMBRE },
+  { id: "noviembre-2", brand: "beauty", label: "Plan del 16 al 29 de noviembre", items: PLAN_NOVIEMBRE_2 },
+  { id: "temppo-1", brand: "temppo", label: "Reservas · del 11 al 21 de noviembre", items: PLAN_TEMPPO_1 },
+  { id: "temppo-2", brand: "temppo", label: "Reservas · del 23 de noviembre al 2 de diciembre", items: PLAN_TEMPPO_2 },
 ];

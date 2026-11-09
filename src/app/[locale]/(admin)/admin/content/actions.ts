@@ -222,11 +222,11 @@ export async function loadPlanAction(formData: FormData) {
   if (!plan) return back("/admin/content");
   let created = 0;
   for (const item of plan.items) {
-    const exists = await db.contentPost.findFirst({ where: { brand: "beauty", title: item.title } });
+    const exists = await db.contentPost.findFirst({ where: { brand: plan.brand, title: item.title } });
     if (exists) continue;
     await db.contentPost.create({
       data: {
-        brand: "beauty",
+        brand: plan.brand,
         title: item.title,
         kind: item.kind,
         caption: item.caption,
