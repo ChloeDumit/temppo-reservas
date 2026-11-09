@@ -26,6 +26,8 @@ const BLANK: SpaceValues = {
   pricePerHour: "",
   durations: "60, 90",
   bufferAfterMin: 0,
+  depositType: "NONE",
+  depositValue: "",
   weekdays: [1, 2, 3, 4, 5, 6, 0],
   openFrom: "08:00",
   openTo: "23:00",
@@ -78,6 +80,13 @@ export default async function SpacesPage({
     bandLabel: t("bandLabel"),
     bandLabelHint: t("bandLabelHint"),
     bandPlaceholder: t("bandPlaceholder"),
+    deposit: t("deposit"),
+    depositHint: t("depositHint"),
+    depositNone: t("depositNone"),
+    depositPercent: t("depositPercent"),
+    depositFixed: t("depositFixed"),
+    depositValue: t("depositValue"),
+    badDeposit: t("badDeposit"),
     from: t("from"),
     to: t("to"),
   };
@@ -142,6 +151,13 @@ export default async function SpacesPage({
                         {" · "}
                         {space.durationsMin.join(" / ")} min
                         {space.bufferAfterMin > 0 && ` · ${t("bufferShort", { min: space.bufferAfterMin })}`}
+                        {space.depositType !== "NONE" &&
+                          ` · ${t("depositShort", {
+                            amount:
+                              space.depositType === "PERCENT"
+                                ? `${space.depositValue}%`
+                                : money(space.depositValue),
+                          })}`}
                       </p>
                     </div>
 
@@ -161,6 +177,14 @@ export default async function SpacesPage({
                             pricePerHour: String(space.priceCentsPerHour / 100),
                             durations: space.durationsMin.join(", "),
                             bufferAfterMin: space.bufferAfterMin,
+                            depositType: space.depositType,
+                            // Percent is a plain number; a fixed seña is money.
+                            depositValue:
+                              space.depositType === "NONE"
+                                ? ""
+                                : space.depositType === "PERCENT"
+                                  ? String(space.depositValue)
+                                  : String(space.depositValue / 100),
                             weekdays: [...new Set(space.hours.map((h) => h.weekday))],
                             openFrom: hhmm(
                               space.hours.length ? Math.min(...space.hours.map((h) => h.startMin)) : 8 * 60,

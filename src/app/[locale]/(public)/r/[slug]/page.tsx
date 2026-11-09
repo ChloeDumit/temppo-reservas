@@ -75,6 +75,14 @@ export default async function RentPage({
     taken: t("taken"),
     generic: t("generic"),
     doneTitle: t("doneTitle"),
+    heldTitle: t("heldTitle"),
+    /*
+      Raw on purpose: the amount is only known once the booking comes back, so
+      the flow fills {amount} in the browser. Asking t() for it here would be
+      asking next-intl to format a placeholder nothing can supply yet.
+    */
+    payToHold: t.raw("payToHold"),
+    payNow: t("payNow"),
     manageLink: t("manageLink"),
   };
 

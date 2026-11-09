@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { dateKeyInZone, minutesIntoDayInZone, weekdayInZone } from "@/lib/dates";
 import { generateToken, hashToken } from "@/lib/auth/tokens";
 import { isSlotOpen, pickStaff } from "@/lib/appointments/slots";
+import { depositFor } from "@/lib/appointments/deposit";
 import { venueAvailabilityQuery, liveRentalFilter, type VenueStudio } from "./availability";
 import { rentalPriceCents } from "./pricing";
 
@@ -28,6 +29,12 @@ export type RentOptions = {
   source?: "STAFF" | "ONLINE";
   /** Staff may place a booking on a closed court; the public page may not. */
   allowBlocked?: boolean;
+  /**
+   * Hold the court while the client pays the seña, instead of confirming it
+   * outright. Online bookings do; a booking taken at the counter is settled
+   * face to face, so it is confirmed and the money is a separate matter.
+   */
+  collectDeposit?: boolean;
   now?: Date;
 };
 
@@ -38,6 +45,10 @@ export type RentResult =
       spaceId: string;
       spaceName: string;
       priceCents: number;
+      /** Zero when the club asks for nothing up front. */
+      depositCents: number;
+      /** True while the court is only held, not confirmed. */
+      pending: boolean;
       /** The plaintext half of the manage link. Shown once, never stored. */
       manageToken: string;
     }
@@ -147,6 +158,16 @@ export async function rentSpace(
       opts.durationMin,
     );
 
+    /*
+      A held court is as unavailable as a booked one until the hold lapses —
+      see liveRentalFilter — so the seña buys the club a real reservation
+      rather than a promise, and the cron hands it back if nobody pays.
+    */
+    const depositCents = opts.collectDeposit
+      ? depositFor(space.depositType, space.depositValue, priceCents)
+      : 0;
+    const pending = depositCents > 0;
+
     const rental = await tx.rental.create({
       data: {
         studioId: studio.id,
@@ -159,9 +180,12 @@ export async function rentSpace(
         startsAt: opts.startsAt,
         endsAt,
         blockedUntil: new Date(endsAt.getTime() + space.bufferAfterMin * MINUTE),
-        status: "CONFIRMED",
+        status: pending ? "PENDING_PAYMENT" : "CONFIRMED",
         source: opts.source ?? "STAFF",
         priceCents,
+        depositCents,
+        depositStatus: pending ? "PENDING" : "NONE",
+        holdExpiresAt: pending ? new Date(now.getTime() + studio.holdMinutes * MINUTE) : null,
         manageTokenHash: hashToken(manageToken),
         notes: opts.notes || null,
       },
@@ -173,6 +197,8 @@ export async function rentSpace(
       spaceId: space.id,
       spaceName: space.name,
       priceCents,
+      depositCents,
+      pending,
       manageToken,
     } as const;
   });
@@ -194,4 +220,12 @@ export async function cancelRental(
     data: { status: "CANCELLED", cancelledAt: new Date(), cancelReason: reason || null },
   });
   return true;
+}
+
+/** The booking behind a client's manage link. The token is never stored raw. */
+export function findRentalByManageToken(token: string) {
+  return db.rental.findUnique({
+    where: { manageTokenHash: hashToken(token) },
+    include: { studio: true, space: { select: { id: true, name: true, kind: true } } },
+  });
 }

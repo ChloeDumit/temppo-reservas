@@ -1447,7 +1447,10 @@
     "taken": "Alguien tomó ese horario. Elegí otro.",
     "generic": "No pudimos tomar la reserva. Probá de nuevo.",
     "doneTitle": "¡Reserva confirmada!",
-    "manageLink": "Ver o cancelar la reserva"
+    "manageLink": "Ver o cancelar la reserva",
+    "heldTitle": "Te guardamos la cancha",
+    "payToHold": "Pagá la seña de {amount} para confirmarla. Si no, se libera en unos minutos.",
+    "payNow": "Pagar la seña"
   },
   "rentals": {
     "title": "Agenda",
@@ -1522,7 +1525,15 @@
     "badDurations": "Revisá las duraciones: en minutos, separadas por coma.",
     "badPrice": "Revisá el precio.",
     "badHours": "El horario de cierre tiene que ser posterior al de apertura.",
-    "noDays": "Elegí al menos un día."
+    "noDays": "Elegí al menos un día.",
+    "deposit": "Seña",
+    "depositHint": "Lo que se cobra al reservar online.",
+    "depositNone": "Sin seña",
+    "depositPercent": "Porcentaje",
+    "depositFixed": "Monto fijo",
+    "depositValue": "Valor de la seña",
+    "badDeposit": "Revisá el valor de la seña.",
+    "depositShort": "seña {amount}"
   },
   "venueHome": {
     "welcome": "Hola, {name}",
@@ -1535,5 +1546,35 @@
     "openAgenda": "Ver la agenda",
     "coming": "Lo que viene",
     "nothingComing": "No hay reservas en las próximas horas."
+  },
+  "manageRental": {
+    "subtitle": "Tu reserva",
+    "status": {
+      "CONFIRMED": "Confirmada",
+      "PENDING_PAYMENT": "Esperando la seña",
+      "CANCELLED": "Cancelada",
+      "NO_SHOW": "No se presentó",
+      "EXPIRED": "Vencida"
+    },
+    "total": "Total de la cancha",
+    "deposit": "Seña",
+    "depositPaid": "pagada",
+    "expired": "Se venció el tiempo para pagar la seña y la cancha se liberó. Podés reservar de nuevo.",
+    "checkingPayment": "Estamos confirmando el pago. Puede tardar un momento.",
+    "payTitle": "Pagá la seña",
+    "payBody": "Falta pagar {amount} para confirmar la cancha.",
+    "payOnline": "Pagar con Mercado Pago",
+    "payTransfer": "Pagar por transferencia",
+    "emailLabel": "Tu mail (para el comprobante)",
+    "yourCode": "Tu código",
+    "copyCode": "Copiar",
+    "copiedCode": "Copiado",
+    "sendReceipt": "Mandar el comprobante por WhatsApp",
+    "cancel": "Cancelar la reserva",
+    "confirmCancel": "Sí, cancelar",
+    "tooLate": "Ya pasó el plazo para cancelar online ({hours} h antes). Escribinos y lo vemos.",
+    "askOnWhatsapp": "Escribir al club",
+    "hello": "Hola {studio}, soy de la reserva de {space} del {when}.",
+    "generic": "No pudimos completar la operación. Probá de nuevo."
   }
 }

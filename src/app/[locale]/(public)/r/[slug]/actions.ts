@@ -6,6 +6,7 @@ import { findSlots } from "@/lib/appointments/slots";
 import { venueAvailabilityQuery } from "@/lib/venues/availability";
 import { rentalPriceCents } from "@/lib/venues/pricing";
 import { rentSpace } from "@/lib/venues/book";
+import { findOrCreateClient } from "@/lib/appointments/clients";
 import { weekdayInZone, minutesIntoDayInZone } from "@/lib/dates";
 
 /** How many days of times the page asks for at once. */
@@ -85,7 +86,15 @@ export async function slotsAction(input: {
 }
 
 export type RentActionResult =
-  | { ok: true; manageUrl: string; spaceName: string; priceCents: number }
+  | {
+      ok: true;
+      manageUrl: string;
+      spaceName: string;
+      priceCents: number;
+      depositCents: number;
+      /** The court is held, not confirmed, until the seña is paid. */
+      pending: boolean;
+    }
   | { ok: false; error: "unavailable" | "generic" };
 
 /**
@@ -116,9 +125,22 @@ export async function rentAction(input: {
   const startsAt = new Date(input.startsAt);
   if (Number.isNaN(startsAt.getTime())) return { ok: false, error: "generic" };
 
+  /*
+      A phone is the identity here, as it is for an appointment: nobody makes
+      an account to book a court, but the same number next month is the same
+      person, and the club ends up with a customer list rather than a pile of
+      names. A seña needs one too — a payment belongs to a client.
+    */
+  const phone = input.phone?.trim() || "";
+  const client = phone
+    ? await findOrCreateClient(studio.id, { name, phone, email: input.email })
+    : null;
+
   const result = await rentSpace(studio, {
     spaceId: input.spaceId || null,
     kind: input.kind || null,
+    clientId: client?.profile.id ?? null,
+    collectDeposit: Boolean(client),
     startsAt,
     durationMin: input.durationMin,
     contactName: name,
@@ -136,6 +158,8 @@ export async function rentAction(input: {
     ok: true,
     spaceName: result.spaceName,
     priceCents: result.priceCents,
+    depositCents: result.depositCents,
+    pending: result.pending,
     // The one time the plaintext token is ever shown.
     manageUrl: `/m/${result.manageToken}`,
   };

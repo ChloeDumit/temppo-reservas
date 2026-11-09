@@ -25,6 +25,9 @@ const spaceSchema = z.object({
   /** "60,90" — the lengths this space is let for. */
   durations: z.string().trim().min(1),
   bufferAfterMin: z.coerce.number().int().min(0).max(240).default(0),
+  depositType: z.enum(["NONE", "PERCENT", "FIXED"]).default("NONE"),
+  /** Percent for PERCENT, money for FIXED — read according to the type. */
+  depositValue: z.string().optional(),
   colorHex: z.string().optional(),
   /** "08:00" and "23:00", applied to every weekday that is ticked. */
   openFrom: z.string().regex(/^\d{1,2}:\d{2}$/),
@@ -79,6 +82,23 @@ export async function saveSpaceAction(
     return { error: "generic" };
   }
 
+  /*
+    A percentage is a number; a fixed seña is money, and money is typed with
+    the separators people actually use. Parsed by the type rather than both
+    ways, so "1.500" is 1500 pesos and never 1.5 percent.
+  */
+  let depositValue = 0;
+  if (data.depositType === "PERCENT") {
+    depositValue = Math.round(Number(data.depositValue ?? 0));
+    if (!Number.isFinite(depositValue) || depositValue < 0 || depositValue > 100) {
+      return { error: "badDeposit" };
+    }
+  } else if (data.depositType === "FIXED") {
+    const cents = parseMoneyToCents(data.depositValue ?? "");
+    if (cents === null || cents < 0) return { error: "badDeposit" };
+    depositValue = cents;
+  }
+
   const fields = {
     name: data.name,
     kind: data.kind?.trim() || null,
@@ -86,6 +106,8 @@ export async function saveSpaceAction(
     priceCentsPerHour: priceCents,
     durationsMin: durations,
     bufferAfterMin: data.bufferAfterMin,
+    depositType: data.depositType,
+    depositValue,
     colorHex: data.colorHex ? normalizeHex(data.colorHex) : null,
   };
 

@@ -8,6 +8,8 @@ import { formatMoney } from "@/lib/money";
 import { depositMethods } from "@/lib/appointments/methods";
 import { onlineSurchargeFor } from "@/lib/appointments/deposit";
 import { findByManageToken } from "@/lib/appointments/book";
+import { findRentalByManageToken } from "@/lib/venues/book";
+import { RentalManage } from "./rental-manage";
 import { whenText, waLink } from "@/lib/appointments/whatsapp-text";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -31,7 +33,20 @@ export default async function ManagePage({
   const query = await searchParams;
 
   const appt = await findByManageToken(token);
-  if (!appt) notFound();
+
+  /*
+    One link shape across the verticals: a client is handed /m/<token> whether
+    they booked a chair or a court, and this decides which it was. Appointments
+    are looked up first only because they came first — the tokens are random
+    and cannot collide.
+  */
+  if (!appt) {
+    const rental = await findRentalByManageToken(token);
+    if (rental) {
+      return <RentalManage rental={rental} token={token} locale={locale} paid={query.paid === "1"} />;
+    }
+    notFound();
+  }
   const { studio } = appt;
   const t = await getTranslations("manage");
   const now = new Date();

@@ -1365,6 +1365,15 @@ model Space {
   /// What an hour costs when no band applies.
   priceCentsPerHour Int
 
+  /*
+    The seña. A court held for nothing is a court lost when nobody turns up,
+    and a club that cannot ask for one carries that cost itself — so this is
+    the setting that earns the online booking page its keep.
+  */
+  depositType  DepositType @default(NONE)
+  /// Percent (0–100) for PERCENT, cents for FIXED.
+  depositValue Int         @default(0)
+
   /// The lengths this space is let for, in minutes — [60, 90] on a court,
   /// [240] on a hall. The client picks one before seeing times.
   durationsMin Int[] @default([60, 90])

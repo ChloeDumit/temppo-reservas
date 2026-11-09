@@ -56,7 +56,13 @@ export function RentalFlow({
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ manageUrl: string; spaceName: string; priceCents: number } | null>(null);
+  const [done, setDone] = useState<{
+    manageUrl: string;
+    spaceName: string;
+    priceCents: number;
+    depositCents: number;
+    pending: boolean;
+  } | null>(null);
   const [pending, startTransition] = useTransition();
 
   // A length the chosen kind does not offer would show no times at all.
@@ -96,15 +102,29 @@ export function RentalFlow({
         <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-positive-soft text-positive">
           <Icon name="check" className="size-6" />
         </span>
-        <h2 className="mt-4 text-xl">{copy.doneTitle}</h2>
+        <h2 className="mt-4 text-xl">{done.pending ? copy.heldTitle : copy.doneTitle}</h2>
         <p className="mt-2 text-sm text-ink-soft">
           {done.spaceName} · {chosen?.label} · {money(done.priceCents)}
         </p>
+        {/*
+          A held court is not a booked one, and saying "confirmada" over a
+          court that lapses in fifteen minutes is the kind of lie a club pays
+          for at the counter.
+        */}
+        {done.pending && (
+          <p className="mt-3 rounded-[var(--radius-md)] bg-caution-soft px-3 py-2 text-sm text-caution">
+            {copy.payToHold.replace("{amount}", money(done.depositCents))}
+          </p>
+        )}
         <a
           href={done.manageUrl}
-          className="mt-5 inline-block text-sm font-medium text-accent underline-offset-4 hover:underline"
+          className={
+            done.pending
+              ? "pressable touch-target mt-5 inline-flex items-center justify-center rounded-md bg-accent px-4 text-sm font-medium text-white"
+              : "mt-5 inline-block text-sm font-medium text-accent underline-offset-4 hover:underline"
+          }
         >
-          {copy.manageLink}
+          {done.pending ? copy.payNow : copy.manageLink}
         </a>
       </section>
     );
@@ -283,6 +303,7 @@ export function RentalFlow({
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
               inputMode="tel"
               className="w-full rounded-[var(--radius-md)] border border-line-strong bg-paper px-3 py-2.5 text-[16px]"
               autoComplete="tel"
@@ -302,7 +323,7 @@ export function RentalFlow({
 
           <Button
             className="w-full"
-            disabled={pending || name.trim().length === 0}
+            disabled={pending || name.trim().length === 0 || phone.trim().length < 6}
             onClick={() =>
               startTransition(async () => {
                 setError(null);

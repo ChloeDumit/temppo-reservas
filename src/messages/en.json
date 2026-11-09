@@ -1447,7 +1447,10 @@
     "taken": "Someone took that time. Pick another.",
     "generic": "We could not take the booking. Try again.",
     "doneTitle": "Booking confirmed",
-    "manageLink": "View or cancel the booking"
+    "manageLink": "View or cancel the booking",
+    "heldTitle": "The court is held for you",
+    "payToHold": "Pay the {amount} deposit to confirm it. Otherwise it is released in a few minutes.",
+    "payNow": "Pay the deposit"
   },
   "rentals": {
     "title": "Agenda",
@@ -1522,7 +1525,15 @@
     "badDurations": "Check the lengths: in minutes, comma separated.",
     "badPrice": "Check the price.",
     "badHours": "Closing time has to be after opening time.",
-    "noDays": "Pick at least one day."
+    "noDays": "Pick at least one day.",
+    "deposit": "Deposit",
+    "depositHint": "Charged when booking online.",
+    "depositNone": "No deposit",
+    "depositPercent": "Percentage",
+    "depositFixed": "Fixed amount",
+    "depositValue": "Deposit amount",
+    "badDeposit": "Check the deposit amount.",
+    "depositShort": "{amount} deposit"
   },
   "venueHome": {
     "welcome": "Hi, {name}",
@@ -1535,5 +1546,35 @@
     "openAgenda": "Open the agenda",
     "coming": "Coming up",
     "nothingComing": "Nothing booked in the next few hours."
+  },
+  "manageRental": {
+    "subtitle": "Your booking",
+    "status": {
+      "CONFIRMED": "Confirmed",
+      "PENDING_PAYMENT": "Awaiting deposit",
+      "CANCELLED": "Cancelled",
+      "NO_SHOW": "No show",
+      "EXPIRED": "Expired"
+    },
+    "total": "Court total",
+    "deposit": "Deposit",
+    "depositPaid": "paid",
+    "expired": "The time to pay the deposit ran out and the court was released. You can book again.",
+    "checkingPayment": "We are confirming the payment. It may take a moment.",
+    "payTitle": "Pay the deposit",
+    "payBody": "{amount} is outstanding to confirm the court.",
+    "payOnline": "Pay with Mercado Pago",
+    "payTransfer": "Pay by transfer",
+    "emailLabel": "Your email (for the receipt)",
+    "yourCode": "Your code",
+    "copyCode": "Copy",
+    "copiedCode": "Copied",
+    "sendReceipt": "Send the receipt on WhatsApp",
+    "cancel": "Cancel the booking",
+    "confirmCancel": "Yes, cancel",
+    "tooLate": "The window to cancel online has passed ({hours} h before). Message us and we will sort it.",
+    "askOnWhatsapp": "Message the club",
+    "hello": "Hi {studio}, I have the {space} booking on {when}.",
+    "generic": "We could not complete that. Try again."
   }
 }

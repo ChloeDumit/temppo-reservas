@@ -14,6 +14,8 @@ export type SpaceValues = {
   pricePerHour: string;
   durations: string;
   bufferAfterMin: number;
+  depositType: string;
+  depositValue: string;
   weekdays: number[];
   openFrom: string;
   openTo: string;
@@ -71,6 +73,28 @@ export function SpaceForm({
           max={240}
           defaultValue={values.bufferAfterMin}
         />
+      </Field>
+
+      {/*
+        The seña is what makes an online court worth holding: without one a
+        club gives away its best hour to whoever clicks, and eats the loss
+        when nobody turns up.
+      */}
+      <Field label={copy.deposit} hint={copy.depositHint}>
+        <div className="flex gap-2">
+          <Select name="depositType" defaultValue={values.depositType} className="flex-1">
+            <option value="NONE">{copy.depositNone}</option>
+            <option value="PERCENT">{copy.depositPercent}</option>
+            <option value="FIXED">{copy.depositFixed}</option>
+          </Select>
+          <Input
+            name="depositValue"
+            defaultValue={values.depositValue}
+            inputMode="decimal"
+            className="w-28"
+            aria-label={copy.depositValue}
+          />
+        </div>
       </Field>
 
       {/* Monday first, matching every other day picker in the app. */}
