@@ -11,6 +11,7 @@ import { HoursForm, type DayShifts } from "./hours-form";
 import { TimeOffForm } from "./time-off-form";
 import { RulesForm } from "./rules-form";
 import { deleteTimeOffAction } from "./actions";
+import { formatStartTimes } from "@/lib/appointments/fixed-times";
 
 function hhmm(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
@@ -136,6 +137,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
                   minNoticeMinutes: studio.minNoticeMinutes,
                   bookingOpensDaysAhead: studio.bookingOpensDaysAhead,
                   slotStepMinutes: studio.slotStepMinutes,
+                  fixedStartTimes: formatStartTimes(studio.fixedStartTimes),
                   cancellationCutoffHours: studio.cancellationCutoffHours,
                   holdMinutes: studio.holdMinutes,
                   reminderHoursBefore: studio.reminderHoursBefore,

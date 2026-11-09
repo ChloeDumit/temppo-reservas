@@ -4,6 +4,7 @@
  */
 import { findSlots, isSlotOpen, pickStaff, type SlotQuery } from "../src/lib/appointments/slots";
 import { wallTimeToUtc, formatTime } from "../src/lib/dates";
+import { parseStartTimes, formatStartTimes } from "../src/lib/appointments/fixed-times";
 
 let passed = 0;
 let failed = 0;
@@ -174,6 +175,28 @@ const ny = findSlots({
   staff: [{ id: "ana", durationMin: 60, hours: [{ weekday: 0, startMin: 540, endMin: 660 }], busy: [] }],
 })[0].slots.map((s) => formatTime(s.start, "America/New_York", "es"));
 check("the shift stays at nine on the wall clock", ny, ["09:00", "09:30", "10:00"]);
+
+console.log("\nFixed start times");
+const FIXED = parseStartTimes("8:15, 10:00, 13:00, 15:00, 17:00, 19:00")!;
+const fixedDay = (durationMin: number, busy: { start: Date; end: Date }[] = []) =>
+  base({
+    fixedStartsMin: FIXED,
+    staff: [{ id: "ana", durationMin, hours: [{ weekday: 1, startMin: 8 * 60, endMin: 21 * 60 }], busy }],
+  });
+check("only those times, whatever the step", times(fixedDay(90)), ["08:15", "10:00", "13:00", "15:00", "17:00", "19:00"]);
+check("one that would run past the end of the day is left out", times(fixedDay(150)), ["08:15", "10:00", "13:00", "15:00", "17:00"]);
+check("a long one that would overlap the next booking is left out", times(fixedDay(120, [{ start: at(MON, "10:00"), end: at(MON, "11:30") }])), ["13:00", "15:00", "17:00", "19:00"]);
+check(
+  "outside her hours, nothing",
+  times(base({ fixedStartsMin: FIXED, staff: [{ id: "ana", durationMin: 60, hours: [{ weekday: 1, startMin: 9 * 60, endMin: 14 * 60 }], busy: [] }] })),
+  ["10:00", "13:00"],
+);
+check("a fixed time is accepted when booked", isSlotOpen(fixedDay(60), "ana", at(MON, "08:15")), true);
+check("and a time in between is not", isSlotOpen(fixedDay(60), "ana", at(MON, "08:30")), false);
+check("typed in any usual way", parseStartTimes("8.15 10 13hs, 15:00; 10:00"), [495, 600, 780, 900]);
+check("empty means none", parseStartTimes("  "), []);
+check("something that is not a time is refused", [parseStartTimes("8:75"), parseStartTimes("mañana")], [null, null]);
+check("shown back as typed", formatStartTimes(FIXED), "8:15, 10:00, 13:00, 15:00, 17:00, 19:00");
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exitCode = 1;

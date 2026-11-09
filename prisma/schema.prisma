@@ -82,6 +82,9 @@ model Studio {
   minNoticeMinutes  Int     @default(120)
   /// Granularity of offered start times.
   slotStepMinutes   Int     @default(15)
+  /// Fixed start times, in minutes from midnight (8:15 → 495). When set, a
+  /// client can only book at these times and the step above is not used.
+  fixedStartTimes   Int[]   @default([])
   /// Whether an in-time cancellation gives the deposit back. When false the
   /// deposit is kept as credit towards the next visit instead.
   depositRefundable Boolean @default(false)

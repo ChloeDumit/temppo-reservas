@@ -7,6 +7,7 @@ import { assertAdmin, assertStaff, ADMIN_ROLES } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { wallTimeToUtc } from "@/lib/dates";
 import { MAX_MP_FEE_BPS } from "@/lib/appointments/deposit";
+import { parseStartTimes } from "@/lib/appointments/fixed-times";
 
 export type ActionState = { error?: string; ok?: boolean; clashes?: number } | null;
 
@@ -158,11 +159,14 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
   const mpFeePassedOn = formData.get("mpFeePassedOn") === "on";
   if (!Number.isFinite(feePercent) || feePercent < 0 || feePercent * 100 > MAX_MP_FEE_BPS) return { error: "mpFee" };
   if (mpFeePassedOn && feePercent === 0) return { error: "mpFee" };
+  const fixedStartTimes = parseStartTimes(String(formData.get("fixedStartTimes") ?? ""));
+  if (!fixedStartTimes) return { error: "fixedStarts" };
 
   await db.studio.update({
     where: { id: user.studioId },
     data: {
       ...parsed.data,
+      fixedStartTimes,
       depositRefundable: formData.get("depositRefundable") === "on",
       acceptMercadoPago: formData.get("acceptMercadoPago") === "on",
       mpFeePassedOn,
@@ -179,7 +183,7 @@ export async function saveBookingRulesAction(_prev: ActionState, formData: FormD
     action: "studio.booking_rules",
     entityType: "Studio",
     entityId: user.studioId,
-    metadata: { ...parsed.data, mpFeePassedOn, mpFeeBps: Math.round(feePercent * 100) },
+    metadata: { ...parsed.data, fixedStartTimes, mpFeePassedOn, mpFeeBps: Math.round(feePercent * 100) },
   });
 
   revalidatePath(PAGE, "page");

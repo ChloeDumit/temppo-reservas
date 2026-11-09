@@ -12,6 +12,7 @@ export type AvailabilityStudio = {
   bookingOpensDaysAhead: number;
   minNoticeMinutes: number;
   slotStepMinutes: number;
+  fixedStartTimes?: number[];
 };
 
 const STAFF_ROLES = ["OWNER", "ADMIN", "INSTRUCTOR"] as const;
@@ -149,6 +150,7 @@ export async function availabilityQuery(
       minNoticeMin: studio.minNoticeMinutes,
       opensDaysAhead: studio.bookingOpensDaysAhead,
       stepMin: studio.slotStepMinutes,
+      fixedStartsMin: studio.fixedStartTimes ?? [],
       bufferBeforeMin: offer.service.bufferBeforeMin,
       bufferAfterMin: offer.service.bufferAfterMin,
       staff: staff.map((s) => ({

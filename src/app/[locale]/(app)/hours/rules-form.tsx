@@ -10,6 +10,8 @@ export type Rules = {
   minNoticeMinutes: number;
   bookingOpensDaysAhead: number;
   slotStepMinutes: number;
+  /** As typed: "8:15, 10:00, 13:00". Empty for every step. */
+  fixedStartTimes: string;
   cancellationCutoffHours: number;
   holdMinutes: number;
   reminderHoursBefore: number;
@@ -53,6 +55,9 @@ export function RulesForm({ rules }: { rules: Rules }) {
               </option>
             ))}
           </Select>
+        </Field>
+        <Field label={t("fixedStarts")} hint={t("fixedStartsHint")}>
+          <Input name="fixedStartTimes" placeholder="8:15, 10:00, 13:00, 15:00" defaultValue={rules.fixedStartTimes} />
         </Field>
         <Field label={t("cutoff")} hint={t("cutoffHint")}>
           <Input name="cancellationCutoffHours" type="number" min={0} max={336} defaultValue={rules.cancellationCutoffHours} />
@@ -124,7 +129,7 @@ export function RulesForm({ rules }: { rules: Rules }) {
           <span className="block text-xs text-muted">{t("refundableHint")}</span>
         </span>
       </label>
-      {state?.error && <p className="text-sm text-critical">{state.error === "mpFee" ? t("mpFeeInvalid") : te("generic")}</p>}
+      {state?.error && <p className="text-sm text-critical">{state.error === "mpFee" ? t("mpFeeInvalid") : state.error === "fixedStarts" ? t("fixedStartsInvalid") : te("generic")}</p>}
       {state?.ok && <p className="text-sm text-positive">{t("saved")}</p>}
       <SubmitButton pendingLabel={tc("saving")}>{tc("save")}</SubmitButton>
     </form>

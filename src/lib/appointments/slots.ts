@@ -12,7 +12,8 @@ import { addDays, dateKeyInZone, wallTimeToUtc } from "@/lib/dates";
  * - the service itself, [start, end), sits inside one of her shifts;
  * - the service plus its prep and cleanup, [start − before, end + after),
  *   touches nothing she is already busy with (appointments, blocks, closures);
- * - starts fall on the studio's step (every 15 minutes, say) in local time;
+ * - starts fall on the studio's step (every 15 minutes, say) in local time,
+ *   or only on its fixed start times (8:15, 10:00, 13:00…) when it has them;
  * - nothing sooner than the minimum notice, nothing beyond the booking window.
  *
  * Times are built from the wall clock one at a time, so a daylight-saving
@@ -40,6 +41,8 @@ export type SlotQuery = {
   minNoticeMin: number;
   opensDaysAhead: number;
   stepMin: number;
+  /** Fixed start times in minutes from midnight. When any, the step is not used. */
+  fixedStartsMin?: number[];
   bufferBeforeMin: number;
   bufferAfterMin: number;
   staff: StaffAvailability[];
@@ -77,6 +80,17 @@ function overlaps(a: Interval, b: Interval) {
   return a.start < b.end && b.start < a.end;
 }
 
+/** Minutes from midnight a start may fall on within a shift, in order. */
+function candidateStarts(q: SlotQuery, shift: Shift): number[] {
+  if (q.fixedStartsMin?.length) {
+    return [...q.fixedStartsMin].sort((a, b) => a - b).filter((m) => m >= shift.startMin && m < shift.endMin);
+  }
+  // Every start on the step grid at or after the shift opens.
+  const starts: number[] = [];
+  for (let m = Math.ceil(shift.startMin / q.stepMin) * q.stepMin; m < shift.endMin; m += q.stepMin) starts.push(m);
+  return starts;
+}
+
 /** The start times one professional can take on one day. */
 function startsFor(
   q: SlotQuery,
@@ -91,10 +105,8 @@ function startsFor(
     if (shift.weekday !== weekday) continue;
 
     const shiftEnd = wallTimeToUtc(dateKey, hhmm(shift.endMin), q.timeZone);
-    // First start on the step grid at or after the shift opens.
-    const first = Math.ceil(shift.startMin / q.stepMin) * q.stepMin;
-
-    for (let m = first; m + staff.durationMin <= shift.endMin; m += q.stepMin) {
+    for (const m of candidateStarts(q, shift)) {
+      if (m + staff.durationMin > shift.endMin) break;
       const start = wallTimeToUtc(dateKey, hhmm(m), q.timeZone);
       if (start < earliest) continue;
 

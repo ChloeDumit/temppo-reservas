@@ -1,0 +1,1 @@
+ALTER TABLE "Studio" ADD COLUMN "fixedStartTimes" INTEGER[] DEFAULT ARRAY[]::INTEGER[];
