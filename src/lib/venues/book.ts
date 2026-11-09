@@ -59,9 +59,17 @@ export async function rentSpace(
   const online = (opts.source ?? "STAFF") === "ONLINE";
   const manageToken = generateToken();
 
+  /*
+    The minimum notice is a rule for the public page: it stops an online
+    booking landing on a club with no warning. It is not a rule for the
+    counter, where someone is standing there asking for the next hour — so a
+    staff booking sees the courts as they actually are.
+  */
+  const asSeenBy = online ? studio : { ...studio, minNoticeMinutes: 0 };
+
   return db.$transaction(async (tx) => {
     const found = await venueAvailabilityQuery(
-      studio,
+      asSeenBy,
       {
         spaceIds: opts.spaceId ? [opts.spaceId] : undefined,
         kind: opts.spaceId ? null : opts.kind,

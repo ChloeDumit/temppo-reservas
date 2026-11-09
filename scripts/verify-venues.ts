@@ -260,6 +260,40 @@ async function main() {
   });
   check("and the slot can be let again", reused.ok, true);
 
+  console.log("\nThe minimum notice is a rule for the public, not the counter");
+
+  /*
+    Caught at the counter: the club asks for an hour's notice, someone walked
+    in at five past five wanting the six o'clock court, and the agenda refused
+    it as "already taken". The notice exists so an online booking does not land
+    on a club with no warning; it has nothing to say about the person standing
+    there.
+  */
+  const shortNotice = { ...settings, minNoticeMinutes: 120 };
+  // Half past three on the fixture day, asking for four: inside two hours'
+  // notice. The clock is passed in rather than read, so this holds whatever
+  // time the suite is run at.
+  const standingThere = at("15:30");
+
+  const online = await rentSpace(shortNotice, {
+    spaceId: three.id,
+    startsAt: at("16:00"),
+    durationMin: 60,
+    contactName: "Desde el celular",
+    source: "ONLINE",
+    now: standingThere,
+  });
+  check("online still honours the notice", online.ok === false && online.code, "UNAVAILABLE");
+
+  const counter = await rentSpace(shortNotice, {
+    spaceId: three.id,
+    startsAt: at("16:00"),
+    durationMin: 60,
+    contactName: "En el mostrador",
+    now: standingThere,
+  });
+  check("the counter takes it anyway", counter.ok, true);
+
   console.log("\nKinds do not bleed into each other");
 
   /*
