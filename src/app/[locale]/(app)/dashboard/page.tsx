@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BeautyDashboard } from "./beauty-dashboard";
+import { VenueDashboard } from "./venue-dashboard";
 import { Link } from "@/i18n/navigation";
 import { ADMIN_ROLES, requireStaff } from "@/lib/auth/guards";
 import { BILLING_UI_ENABLED, billingWarning, subscriptionFor } from "@/lib/billing";
@@ -25,6 +26,8 @@ export default async function DashboardPage({
   const studio = user.studio;
   // An appointment business gets its own home: today, and what needs a hand.
   if (studio.vertical === "APPOINTMENTS") return <BeautyDashboard user={user} locale={locale} />;
+  // A club reads its day as a grid of courts, not a list of classes.
+  if (studio.vertical === "VENUES") return <VenueDashboard user={user} locale={locale} />;
   const t = await getTranslations("dashboard");
   const ts = await getTranslations("schedule");
   const tb = await getTranslations("billing");

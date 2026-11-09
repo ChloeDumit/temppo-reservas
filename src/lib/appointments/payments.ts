@@ -5,6 +5,7 @@ import { paymentRef } from "@/lib/payments/reference";
 import { studioAccessToken } from "@/lib/payments/mercadopago-oauth";
 import type { ProviderPaymentStatus } from "@/lib/payments/types";
 import { generatePaymentCode } from "@/lib/payment-code";
+import { marketplaceFeeCents } from "@/lib/payments/fees";
 import { isOverlapError } from "./book";
 import { onlineSurchargeFor } from "./deposit";
 
@@ -15,12 +16,6 @@ import { onlineSurchargeFor } from "./deposit";
  * settles it. Transfers and cash go straight to the studio and are only
  * recorded here.
  */
-
-/** The platform's cut of a deposit paid into a studio's own account. 0 unless set. */
-function marketplaceFeeCents(amountCents: number) {
-  const percent = Number(process.env.MERCADOPAGO_MARKETPLACE_FEE_PERCENT || 0);
-  return percent > 0 ? Math.round((amountCents * percent) / 100) : 0;
-}
 
 /**
  * Opens a Mercado Pago checkout for an appointment's deposit, in the

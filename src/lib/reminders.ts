@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { notifyPreferred, notifyOwners } from "@/lib/notifications";
 import { sweepExpiredOffers } from "@/lib/waitlist";
 import { closePastAppointments, expireHolds, sendAppointmentReminders, sendRebookNudges } from "@/lib/appointments/cron";
+import { expireRentalHolds } from "@/lib/venues/payments";
 import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
 import { renewExpiringMercadoPagoTokens } from "@/lib/payments/mercadopago-oauth";
 import { publishDueContent } from "@/lib/content/instagram";
@@ -25,6 +26,7 @@ export async function sendDueReminders(now = new Date()) {
   let classes = 0;
   let birthdays = 0;
   const appointments = { expired: 0, reminded: 0, nudged: 0, completed: 0 };
+  const rentals = { expired: 0 };
 
   for (const studio of studios) {
     // Appointment businesses have no classes, waitlists or birthdays to keep.
@@ -33,6 +35,16 @@ export async function sendDueReminders(now = new Date()) {
       appointments.completed += await closePastAppointments(studio, now);
       appointments.reminded += await sendAppointmentReminders(studio, now);
       appointments.nudged += await sendRebookNudges(studio, now);
+      continue;
+    }
+
+    /*
+      A club has no classes or waitlists either. What it does have is courts
+      held for a seña nobody paid — those come back here, so the slot is free
+      and the club is not shown a booking that is not one.
+    */
+    if (studio.vertical === "VENUES") {
+      rentals.expired += await expireRentalHolds(studio.id, now);
       continue;
     }
 
@@ -132,7 +144,8 @@ export async function sendDueReminders(now = new Date()) {
     return 0;
   });
 
-  return { studios: studios.length, classes, sent, birthdays, appointments, mpRenewed, content, contentReminders, billingReminders };
+  return { studios: studios.length, classes, sent, birthdays, appointments, rentals, mpRenewed, content, contentReminders, billingReminders };
+
 }
 
 type BirthdayStudio = { id: string; name: string; timezone: string; locale: string };

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { forbidAppointmentStudios } from "@/lib/appointments/guards";
+import { forbidNonClassStudios } from "@/lib/appointments/guards";
 
 /*
   Billing still sells the class plans; Temppo Beauty's plans are not billed
@@ -7,6 +7,6 @@ import { forbidAppointmentStudios } from "@/lib/appointments/guards";
   business is sent home rather than offered the wrong product.
 */
 export default async function BillingLayout({ children }: { children: ReactNode }) {
-  await forbidAppointmentStudios();
+  await forbidNonClassStudios();
   return children;
 }

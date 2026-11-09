@@ -28,7 +28,7 @@ function check(label: string, actual: unknown, expected: unknown) {
 }
 
 async function main() {
-  const { bookClass, cancelBooking } = await import("../src/lib/booking");
+  const { bookClass, cancelBooking, creditsRemaining } = await import("../src/lib/booking");
   const { makeupBalance } = await import("../src/lib/makeups");
 
   await db.studio.deleteMany({ where: { slug: "makeup-scratch" } });
@@ -181,6 +181,29 @@ async function main() {
   const sb = await bookAsFixedSpot(fixed.id, s1.id);
   const sr = await cancelBooking({ studio: strict, bookingId: sb.id });
   check("no allowance means no make-up", sr.ok && sr.earnedMakeup, false);
+
+  console.log("\nWhat the booking page can offer her");
+
+  /*
+    The page counted pack credits alone, so a fixed-spot student who had
+    cancelled inside her allowance was told she had nothing left — and warned
+    off booking a class bookClass would happily have given her. These are the
+    two numbers it now adds together.
+  */
+  const owed = await mkStudent("owed");
+  const owedClass = await makeClass();
+  const owedBooking = await bookAsFixedSpot(owed.id, owedClass.id);
+  const handedBack = await cancelBooking({ studio, bookingId: owedBooking.id });
+  check("cancelling her fixed spot in time earns one", handedBack.ok && handedBack.earnedMakeup, true);
+
+  check("she has nothing in a pack", await creditsRemaining(owed.id), 0);
+  const owedBalance = await makeupBalance(owed.id, studio);
+  check("but a class is owed to her", owedBalance.available, 1);
+  check(
+    "so the page has something to offer rather than a warning",
+    ((await creditsRemaining(owed.id)) ?? 0) + owedBalance.available > 0,
+    true,
+  );
 
   await db.studio.delete({ where: { id: studio.id } });
   console.log(`\n${passed} passed, ${failed} failed\n`);

@@ -21,6 +21,12 @@ export function weekdayInZone(date: Date, timeZone: string) {
   return inZone(date, timeZone).getDay();
 }
 
+/** Minutes since local midnight, which is how shifts and price bands are stored. */
+export function minutesIntoDayInZone(date: Date, timeZone: string) {
+  const z = inZone(date, timeZone);
+  return z.getHours() * 60 + z.getMinutes();
+}
+
 /** "YYYY-MM-DD" for the given instant in the studio's zone. */
 export function dateKeyInZone(date: Date, timeZone: string) {
   const z = inZone(date, timeZone);

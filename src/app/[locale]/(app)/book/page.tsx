@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { currentLocationId, locationScope } from "@/lib/locations";
 import { ensureInstances } from "@/lib/classes";
 import { creditsRemaining } from "@/lib/booking";
+import { makeupBalance } from "@/lib/makeups";
 import { sweepExpiredOffers } from "@/lib/waitlist";
 import { addDays, dateKeyInZone, formatTime, startOfDayInZone, wallTimeToUtc } from "@/lib/dates";
 import { Card } from "@/components/ui/card";
@@ -35,7 +36,7 @@ export default async function BookPage({
   // Students switch sucursal with the same control staff use.
   const locationId = await currentLocationId(studio.id);
 
-  const [instances, myBookings, credits] = await Promise.all([
+  const [instances, myBookings, credits, makeups] = await Promise.all([
     db.classInstance.findMany({
       where: {
         studioId: studio.id,
@@ -56,6 +57,14 @@ export default async function BookPage({
       select: { classInstanceId: true },
     }),
     creditsRemaining(profile.id),
+    /*
+      A fixed-spot student who cancelled inside her allowance has a class to
+      use, and bookClass spends it before any pack credit. Counting only packs
+      told her she had nothing left and warned her off booking something she
+      was entitled to — the booking would have worked; she would never have
+      tried it.
+    */
+    makeupBalance(profile.id, studio, now),
   ]);
 
   const bookedIds = new Set(myBookings.map((b) => b.classInstanceId));
@@ -94,11 +103,12 @@ export default async function BookPage({
     <>
       <PageHeader
         title={t("title")}
-        description={
-          credits === null
-            ? t("creditsUnlimited")
-            : t("creditsLeft", { count: credits })
-        }
+        description={[
+          credits === null ? t("creditsUnlimited") : t("creditsLeft", { count: credits }),
+          makeups.available > 0 ? t("makeupsLeft", { count: makeups.available }) : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       />
 
       {profile.bookingBlocked && (
@@ -107,9 +117,23 @@ export default async function BookPage({
         </p>
       )}
 
-      {credits === 0 && (
+      {credits === 0 && makeups.available === 0 && (
         <p className="mb-4 rounded-lg bg-caution-soft px-4 py-2.5 text-sm text-caution">
           {t("noCredits")}
+        </p>
+      )}
+
+      {/* She has nothing in a pack, but a class owed to her — say which. */}
+      {credits === 0 && makeups.available > 0 && (
+        <p className="mb-4 rounded-lg bg-positive-soft px-4 py-2.5 text-sm text-positive">
+          {t("makeupOnly", {
+            count: makeups.available,
+            date: new Intl.DateTimeFormat(locale, {
+              day: "numeric",
+              month: "long",
+              timeZone: studio.timezone,
+            }).format(new Date(makeups.expiresAt.getTime() - 1)),
+          })}
         </p>
       )}
 

@@ -58,6 +58,24 @@ const BEAUTY_STAFF_NAV: NavItem[] = [
 
 const BEAUTY_INSTRUCTOR_ALLOWED = ["/dashboard", "/agenda", "/clients", "/hours"];
 
+/*
+  A club works from the day's grid: which court is free at eight. Its
+  equivalents of a timetable and a service list are the courts themselves, so
+  Canchas carries both what exists and what it costs.
+*/
+const VENUE_STAFF_NAV: NavItem[] = [
+  { href: "/dashboard", label: "home", icon: "grid" },
+  { href: "/rentals", label: "rentals", icon: "calendar" },
+  { href: "/spaces", label: "spaces", icon: "court" },
+  { href: "/payments", label: "payments", icon: "wallet" },
+  { href: "/reports", label: "reports", icon: "chart" },
+  { href: "/settings", label: "settings", icon: "settings" },
+  { href: "/billing", label: "billing", icon: "card" },
+];
+
+// Whoever is on the counter takes bookings; they do not set the prices.
+const VENUE_INSTRUCTOR_ALLOWED = ["/dashboard", "/rentals"];
+
 const BEAUTY_CLIENT_NAV: NavItem[] = [{ href: "/appointments", label: "myAppointments", icon: "calendar" }];
 
 /*
@@ -68,12 +86,20 @@ const HIDDEN = BILLING_UI_ENABLED ? [] : ["/billing"];
 
 export function navFor(role: Role, vertical: Vertical = "CLASSES"): NavItem[] {
   const beauty = vertical === "APPOINTMENTS";
-  if (role === "STUDENT") return beauty ? BEAUTY_CLIENT_NAV : STUDENT_NAV;
+  const venues = vertical === "VENUES";
 
-  const staff = (beauty ? BEAUTY_STAFF_NAV : STAFF_NAV).filter((i) => !HIDDEN.includes(i.href));
+  // A club has no client-facing app yet: people book from the public page.
+  if (role === "STUDENT") return beauty ? BEAUTY_CLIENT_NAV : venues ? [] : STUDENT_NAV;
+
+  const byVertical = venues ? VENUE_STAFF_NAV : beauty ? BEAUTY_STAFF_NAV : STAFF_NAV;
+  const staff = byVertical.filter((i) => !HIDDEN.includes(i.href));
 
   if (role === "INSTRUCTOR") {
-    const allowed = beauty ? BEAUTY_INSTRUCTOR_ALLOWED : INSTRUCTOR_ALLOWED;
+    const allowed = venues
+      ? VENUE_INSTRUCTOR_ALLOWED
+      : beauty
+        ? BEAUTY_INSTRUCTOR_ALLOWED
+        : INSTRUCTOR_ALLOWED;
     return staff.filter((i) => allowed.includes(i.href));
   }
   if (role === "ADMIN") return staff.filter((i) => !OWNER_ONLY.includes(i.href));

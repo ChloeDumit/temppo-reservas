@@ -21,13 +21,15 @@ export async function requireAppointmentAdmin() {
 }
 
 /**
- * The other way round: a class screen reached by an appointment business —
- * a typed URL, an old bookmark — sends it home. Clients go to their
- * appointments, staff to their dashboard. Used by the class routes' layouts.
+ * The other way round: a class screen reached by a business that does not run
+ * classes — a typed URL, an old bookmark — sends it home. Appointment clients
+ * go to their appointments, everyone else to their dashboard. Used by the
+ * class routes' layouts.
  */
-export async function forbidAppointmentStudios() {
+export async function forbidNonClassStudios() {
   const user = await getCurrentUser();
-  if (user?.studio.vertical === "APPOINTMENTS") redirect(user.role === "STUDENT" ? "/appointments" : "/dashboard");
+  if (!user || user.studio.vertical === "CLASSES") return;
+  redirect(user.studio.vertical === "APPOINTMENTS" && user.role === "STUDENT" ? "/appointments" : "/dashboard");
 }
 
 /** Minutes as "1 h 30 min" for a service card. */

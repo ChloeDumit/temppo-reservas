@@ -10,6 +10,7 @@ import {
 import { recordAudit } from "@/lib/audit";
 import { notifyPreferred } from "@/lib/notifications";
 import { parsePaymentRef } from "@/lib/payments/reference";
+import { settleRentalDeposit } from "@/lib/venues/payments";
 import { settleDeposit } from "@/lib/appointments/payments";
 import { afterDepositSettled } from "@/lib/appointments/notify";
 import { studioAccessToken } from "@/lib/payments/mercadopago-oauth";
@@ -98,7 +99,24 @@ export async function POST(request: NextRequest) {
   const ref = parsePaymentRef(resolved?.externalReference);
   if (!resolved || !ref) return NextResponse.json({ ok: true });
   // A studio's own account only ever carries its own deposits.
-  if (studioId && ref.kind !== "appt") return NextResponse.json({ ok: true });
+  if (studioId && ref.kind !== "appt" && ref.kind !== "rental") {
+    return NextResponse.json({ ok: true });
+  }
+
+  // A seña for a court.
+  if (ref.kind === "rental") {
+    if (studioId) {
+      const rental = await db.rental.findUnique({ where: { id: ref.id }, select: { studioId: true } });
+      if (rental?.studioId !== studioId) return NextResponse.json({ ok: true });
+    }
+    await settleRentalDeposit({
+      rentalId: ref.id,
+      providerPaymentId: resolved.providerPaymentId,
+      status: resolved.status,
+      amountCents: resolved.amountCents,
+    });
+    return NextResponse.json({ ok: true });
+  }
 
   // A studio paying the platform: its plan, or extra WhatsApp messages.
   if (ref.kind === "charge") {
