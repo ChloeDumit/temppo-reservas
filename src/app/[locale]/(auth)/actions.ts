@@ -73,8 +73,8 @@ export async function signInAction(_prev: AuthState, formData: FormData): Promis
 
   // The same handle can exist at several studios, each with its own hashes.
   const candidates = byEmail
-    ? await db.user.findMany({ where: { email: identifier.toLowerCase() }, include: { studio: { select: { suspendedAt: true } } } })
-    : await db.user.findMany({ where: { documentId: normalizeDocumentId(identifier) }, include: { studio: { select: { suspendedAt: true } } } });
+    ? await db.user.findMany({ where: { email: identifier.toLowerCase() }, include: { studio: { select: { suspendedAt: true, brand: true } } } })
+    : await db.user.findMany({ where: { documentId: normalizeDocumentId(identifier) }, include: { studio: { select: { suspendedAt: true, brand: true } } } });
 
   const verified = [];
   for (const candidate of candidates) {
@@ -92,8 +92,19 @@ export async function signInAction(_prev: AuthState, formData: FormData): Promis
 
   if (verified.length === 0) return { error: "invalidCredentials" };
 
-  const usable = preferOpenStudios(verified.filter((candidate) => candidate.isActive));
-  if (usable.length === 0) return { error: "accountInactive" };
+  const active = verified.filter((candidate) => candidate.isActive);
+  if (active.length === 0) return { error: "accountInactive" };
+
+  /*
+    Only accounts of the product this site is. The same email can own a
+    TEMPPO Reservas studio and a Temppo Beauty one; signed in here as the
+    other, the app would send her to the other domain, where this session
+    does not exist, and she would land on the login again.
+  */
+  const brand = await getBrand();
+  const here = active.filter((candidate) => candidate.studio.brand === brand.key);
+  if (here.length === 0) return { error: brand.key === "beauty" ? "accountOnTemppo" : "accountOnBeauty" };
+  const usable = preferOpenStudios(here);
 
   // Proven, but ambiguous — let them say which studio they meant.
   if (usable.length > 1) {
