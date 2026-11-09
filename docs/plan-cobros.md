@@ -98,20 +98,12 @@ Una página nueva, **Mi plan**. Se entra desde el menú **Más → Mi plan** y d
 7. *(Opcional)* WhatsApp con una plantilla nueva aprobada por Meta.
 8. **Pruebas** (`verify-billing-reminders.ts`) y una prueba manual en local, sin cobros reales en Mercado Pago.
 
-## Para decidir
+## Decidido
 
-1. **¿Cuál es el precio después de la prueba?**
-   - Que elijan plan antes de que termine.
-   - O pasar todas a "Equipo" ($890), que es el plan con el que prueban.
-2. **¿Mercado Pago?**
-   - Link de pago cada mes (paga cuando quiere).
-   - O ofrecer también débito automático (se olvida del tema).
-3. **¿Atrasos?**
-   - Solo avisos, y vos decidís si suspender.
-   - O suspensión automática a los X días.
-4. **¿Para quién?**
-   - Solo Temppo Beauty.
-   - O también los negocios de Temppo Reservas.
-5. **¿Precio de lanzamiento?** ¿Lo respetamos durante 12 meses para los primeros 50 negocios, como dice la landing?
-6. ✅ **Cambio de plan:** si sube, vale al instante y el precio nuevo se cobra en el próximo vencimiento. Si baja, vale desde el próximo mes.
-7. ✅ **Mensajes extra de WhatsApp:** se compran desde la app, $190 por 200 mensajes, con Mercado Pago. Cuando el pago se aprueba, se suman al cupo del mes solos.
+1. **Plan después de la prueba:** lo elige en "Mi plan". Si no elige, queda en **Equipo** cuando tiene más de una profesional cargada, y en **Individual** cuando tiene una sola.
+2. **Mercado Pago:** un link de pago cada mes, más la opción de activar el débito automático.
+3. **Atrasos:** solo avisos al negocio. A vos te llega un aviso y en la consola ves a quién seguir. La suspensión la decidís vos.
+4. **Para quién:** solo Temppo Beauty.
+5. **Precio de lanzamiento:** se respeta durante 12 meses para los primeros 50 negocios.
+6. **Cambio de plan:** si sube, vale al instante y el precio nuevo se cobra en el próximo vencimiento. Si baja, vale desde el próximo mes.
+7. **Mensajes extra de WhatsApp:** se compran desde la app, $190 por 200 mensajes, con Mercado Pago. Cuando el pago se aprueba, se suman al cupo del mes solos.
