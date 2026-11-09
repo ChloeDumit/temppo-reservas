@@ -126,7 +126,7 @@ export default async function RentalsPage({
         >
           <Icon name="chevronLeft" className="size-4" />
         </Link>
-        <span className="flex-1 text-center text-sm font-medium capitalize text-ink">
+        <span className="flex-1 text-center text-sm font-medium first-letter:uppercase text-ink">
           {dayLabel}
         </span>
         <Link

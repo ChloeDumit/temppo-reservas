@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { accentVars } from "@/lib/color";
 import { waLink } from "@/lib/appointments/whatsapp-text";
 import { priceRange } from "@/lib/venues/pricing";
+import { depositFor } from "@/lib/appointments/deposit";
 import { BrandFooter } from "@/components/brand-footer";
 import { RentalFlow, type FlowSpace } from "./rental-flow";
 
@@ -53,17 +54,40 @@ export default async function RentPage({
       kind: s.kind,
       durationsMin: s.durationsMin,
       fromCents: priceRange(s).minCents,
+      /*
+        Enough to say a seña applies, from the cheapest hour this court has.
+        Which court a booking lands on is only known once it is made, so the
+        flow says that one is coming rather than quoting a number it might
+        have to take back.
+      */
+      depositHintCents: depositFor(
+        s.depositType,
+        s.depositValue,
+        priceRange(s).minCents,
+      ),
     }));
 
   const contact = waLink(studio.whatsappNumber, t("hello", { studio: studio.name }));
 
   // Resolved here so the client component carries no translation machinery.
   const copy = {
-    kindLabel: t("kindLabel"),
-    durationLabel: t("durationLabel"),
-    spaceLabel: t("spaceLabel"),
+    askKind: t("askKind"),
+    askDuration: t("askDuration"),
+    askDay: t("askDay"),
+    askTime: t("askTime"),
+    askWho: t("askWho"),
+    from: t("from"),
+    today: t("today"),
+    freeCount: t.raw("freeCount"),
+    pickCourt: t("pickCourt"),
+    courtChosen: t.raw("courtChosen"),
     anySpace: t("anySpace"),
-    seeTimes: t("seeTimes"),
+    summaryWhen: t("summaryWhen"),
+    summaryWhat: t("summaryWhat"),
+    summaryTotal: t("summaryTotal"),
+    depositWarning: t("depositWarning"),
+    holdAndPay: t("holdAndPay"),
+    phoneHint: t("phoneHint"),
     back: t("back"),
     loading: t("loading"),
     noTimes: t("noTimes"),
