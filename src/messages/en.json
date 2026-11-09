@@ -1423,5 +1423,28 @@
     "banner": "Support mode: you're in {studio} as {name}. Everything you change is logged under your name.",
     "until": "Until {time}",
     "exit": "Exit"
+  },
+  "rentPublic": {
+    "subtitle": "Book a court online",
+    "askOnWhatsapp": "Ask on WhatsApp",
+    "hello": "Hi {studio}, I wanted to ask about a booking.",
+    "notReady": "This club has not published any courts yet.",
+    "kindLabel": "What would you like to book",
+    "durationLabel": "For how long",
+    "spaceLabel": "Court",
+    "anySpace": "Any",
+    "seeTimes": "See times",
+    "back": "Back",
+    "loading": "Looking for times…",
+    "noTimes": "No times free over the next few days.",
+    "name": "Your name",
+    "phone": "Phone",
+    "notes": "Note",
+    "confirm": "Confirm booking",
+    "booking": "Booking…",
+    "taken": "Someone took that time. Pick another.",
+    "generic": "We could not take the booking. Try again.",
+    "doneTitle": "Booking confirmed",
+    "manageLink": "View or cancel the booking"
   }
 }

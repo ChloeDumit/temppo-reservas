@@ -1423,5 +1423,28 @@
     "banner": "Modo soporte: estás en {studio} como {name}. Todo lo que cambies queda registrado a tu nombre.",
     "until": "Hasta las {time}",
     "exit": "Salir"
+  },
+  "rentPublic": {
+    "subtitle": "Reservá tu cancha online",
+    "askOnWhatsapp": "Consultar por WhatsApp",
+    "hello": "Hola {studio}, quería consultar por una reserva.",
+    "notReady": "Este club todavía no tiene canchas publicadas.",
+    "kindLabel": "Qué querés reservar",
+    "durationLabel": "Por cuánto tiempo",
+    "spaceLabel": "Cancha",
+    "anySpace": "Cualquiera",
+    "seeTimes": "Ver horarios",
+    "back": "Volver",
+    "loading": "Buscando horarios…",
+    "noTimes": "No hay horarios libres en los próximos días.",
+    "name": "Tu nombre",
+    "phone": "Teléfono",
+    "notes": "Comentario",
+    "confirm": "Confirmar reserva",
+    "booking": "Reservando…",
+    "taken": "Alguien tomó ese horario. Elegí otro.",
+    "generic": "No pudimos tomar la reserva. Probá de nuevo.",
+    "doneTitle": "¡Reserva confirmada!",
+    "manageLink": "Ver o cancelar la reserva"
   }
 }

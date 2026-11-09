@@ -19,6 +19,8 @@ datasource db {
 enum Vertical {
   CLASSES
   APPOINTMENTS
+  /// Spaces let by the hour: courts, pitches, halls.
+  VENUES
 }
 
 enum Plan {
@@ -143,6 +145,8 @@ model Studio {
   auditLogs         AuditLog[]
   leads             Lead[]
   recurringBookings RecurringBooking[]
+  spaces            Space[]
+  rentals           Rental[]
   subscription      Subscription?
 
   @@index([slug])
@@ -165,6 +169,7 @@ model Location {
   /// Which students train here. A person can belong to several sucursales —
   /// reformer at one, mat at another — so this is a plain many-to-many.
   students       StudentProfile[]
+  spaces         Space[]
 
   @@index([studioId])
 }
@@ -278,6 +283,7 @@ model StudentProfile {
   leads             Lead[]
   recurringBookings RecurringBooking[]
   appointments      Appointment[]
+  rentals           Rental[]
 }
 
 model InstructorProfile {
@@ -592,6 +598,10 @@ model Payment {
   appointmentId String?
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
 
+  /// Or for a space let by the hour.
+  rentalId String?
+  rental   Rental? @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+
   /// Set once the platform has passed this money on to the studio. Only
   /// online deposits are collected by the platform; transfers and cash go
   /// straight to the studio and never appear in a payout.
@@ -632,6 +642,7 @@ model Payment {
   @@index([studentId])
   @@index([studioId, shortCode])
   @@index([appointmentId])
+  @@index([rentalId])
   @@index([studioId, payoutId])
 }
 
@@ -1041,6 +1052,10 @@ model TimeOff {
   studio   Studio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
   staffId  String?
   staff    User?   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  /// Closes one space — maintenance, a tournament. Null with no staffId
+  /// closes the whole business, which is what it meant before spaces existed.
+  spaceId  String?
+  space    Space?  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
 
   startsAt DateTime
   endsAt   DateTime
@@ -1050,6 +1065,7 @@ model TimeOff {
 
   @@index([studioId, startsAt])
   @@index([staffId, startsAt])
+  @@index([spaceId, startsAt])
 }
 
 enum AppointmentStatus {
@@ -1319,4 +1335,152 @@ model ContentMedia {
   createdAt DateTime @default(now())
 
   @@index([postId, position])
+}
+
+// ------------------------------------------------------------------ espacios
+//
+// The third vertical: things rented by the hour rather than people booked by
+// the hour — a padel court, a five-a-side pitch, a hall. It shares the slot
+// engine with appointments, which never cared whether the resource it was
+// filling was a person; what differs is that a court has no login, no payroll
+// and no shift of its own, so it is its own model rather than a User.
+
+/// One rentable thing. The studio names the kind, because a club with padel
+/// courts and a quincho should not have to pick from a list we wrote.
+model Space {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  name String
+  /// Free text: "Pádel", "Fútbol 5", "Salón". Groups the booking page.
+  kind String?
+  description String?
+  /// People it holds. Null where it does not matter, as on a padel court.
+  capacity Int?
+
+  /// What an hour costs when no band applies.
+  priceCentsPerHour Int
+
+  /// The lengths this space is let for, in minutes — [60, 90] on a court,
+  /// [240] on a hall. The client picks one before seeing times.
+  durationsMin Int[] @default([60, 90])
+
+  /// Turnaround between one booking and the next.
+  bufferAfterMin Int @default(0)
+
+  colorHex String?
+  position Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hours   SpaceHours[]
+  bands   SpacePriceBand[]
+  rentals Rental[]
+  blocks  TimeOff[]
+
+  @@index([studioId, isActive])
+}
+
+/// When one space is open on one weekday. Two rows on a day make a break.
+model SpaceHours {
+  id      String @id @default(cuid())
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  weekday  Int // 0=Sunday..6=Saturday, studio time
+  startMin Int // minutes since local midnight
+  endMin   Int
+
+  @@index([spaceId, weekday])
+}
+
+/// Peak pricing. Friday evening is not Tuesday morning, and a club that cannot
+/// say so prices its best hours like its worst ones.
+model SpacePriceBand {
+  id      String @id @default(cuid())
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  label    String?
+  weekdays Int[]
+  startMin Int
+  endMin   Int
+
+  priceCentsPerHour Int
+
+  @@index([spaceId])
+}
+
+enum RentalStatus {
+  /// Held while the client pays. Expires on its own.
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  /// Nobody turned up. Kept apart from CANCELLED so it can be counted.
+  NO_SHOW
+}
+
+enum RentalSource {
+  STAFF
+  ONLINE
+}
+
+/// One booking of one space.
+model Rental {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// Set when the booker has an account. A club takes walk-ins who never will,
+  /// so the name and phone below stand on their own.
+  clientId String?
+  client   StudentProfile? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  contactName  String
+  contactPhone String?
+  contactEmail String?
+
+  /// Snapshot, so renaming or repricing the space leaves history alone.
+  spaceName String
+
+  startsAt     DateTime
+  endsAt       DateTime
+  /// endsAt plus turnaround: when the space is actually free again.
+  blockedUntil DateTime
+
+  status RentalStatus @default(CONFIRMED)
+  source RentalSource @default(STAFF)
+
+  priceCents    Int
+  depositCents  Int           @default(0)
+  depositStatus DepositStatus @default(NONE)
+  holdExpiresAt DateTime?
+
+  /// sha256 of the token in the client's manage link.
+  manageTokenHash String @unique
+
+  notes        String?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  remindersSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([studioId, startsAt])
+  @@index([spaceId, startsAt])
+  @@index([clientId, startsAt])
+  @@index([status, holdExpiresAt])
 }
