@@ -15,25 +15,15 @@ import { join } from "node:path";
 
 const OUT = "demo";
 /*
-  One encoder, two films. The padel promo shoots the same app with a different
-  story, so it passes its own stills in rather than owning a second copy of the
-  push-in, the cross-fade and the caption pills.
+  One encoder, several films. Each cut names the stills it draws from, its own
+  beats and its own opening and closing card; the push-in, the cross-fade, the
+  caption pills and the tap rings are shared. Adding a reel is adding an entry
+  to EDITS, not another copy of this pipeline.
 */
 const EDIT = process.env.EDIT || "classes";
-const STILLS = join(OUT, EDIT === "padel" ? "padel-stills" : "stills");
-const WORK = join(OUT, `work-${EDIT}`);
 const W = 1080;
 const H = 1920;
 const FPS = 30;
-
-if (!existsSync(STILLS)) {
-  console.error("No stills found. Run `npm run demo:video` first.");
-  process.exit(1);
-}
-
-rmSync(WORK, { recursive: true, force: true });
-mkdirSync(WORK, { recursive: true });
-mkdirSync(join(OUT, "cards"), { recursive: true });
 
 const MASCOT = `
   <ellipse cx="50" cy="90" rx="22" ry="5" fill="#C85C35" opacity="0.3"/>
@@ -50,12 +40,12 @@ const MASCOT = `
 `;
 
 /** The first frame of the reel: big, two lines, no branding to decode. */
-function hook({ line1, line2 }) {
+function hook({ line1, line2, sub }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <rect width="${W}" height="${H}" fill="#1C1917"/>
     <text x="${W / 2}" y="${H / 2 - 40}" text-anchor="middle" font-family="Helvetica,Arial" font-size="96" font-weight="bold" fill="#FFFFFF">${line1}</text>
     <text x="${W / 2}" y="${H / 2 + 80}" text-anchor="middle" font-family="Helvetica,Arial" font-size="96" font-weight="bold" fill="#E07A5F">${line2}</text>
-    <text x="${W / 2}" y="${H / 2 + 230}" text-anchor="middle" font-family="Helvetica,Arial" font-size="40" fill="#A8A29E">Reservan, no vienen, y no pagaron nada</text>
+    <text x="${W / 2}" y="${H / 2 + 230}" text-anchor="middle" font-family="Helvetica,Arial" font-size="40" fill="#A8A29E">${sub}</text>
   </svg>`;
 }
 
@@ -72,45 +62,145 @@ function card({ eyebrow, title, subtitle, cta }) {
   </svg>`;
 }
 
-/**
- * The story. Each beat is one captured screen plus the line that explains it.
- * `hold` is seconds on screen, before the cross-fade into the next beat.
- */
-const PADEL_BEATS = [
-  { still: "01-what", caption: "Elige qué quiere jugar", hold: 2.0 },
-  { still: "02-duration", caption: "Y por cuánto tiempo", hold: 1.8 },
-  { still: "03-day", caption: "Ve qué día hay lugar", hold: 2.0 },
-  { still: "04-time", caption: "Cada horario con su precio", hold: 2.4 },
-  { still: "05-confirm", caption: "Todo a la vista antes de confirmar", hold: 2.4 },
-  { still: "06-details", caption: "Sin crear una cuenta", hold: 2.0 },
-  { still: "07-booked", caption: "Reservada", hold: 1.8 },
-  { still: "08-dashboard", caption: "Y en el club entra sola", hold: 2.6 },
-  { still: "10-agenda-evening", caption: "Tu noche, cancha por cancha", hold: 2.6 },
-  { still: "11-courts", caption: "Tus precios y tus horarios", hold: 2.4 },
-];
+/*
+  The cuts. `hold` is seconds on screen before the cross-fade into the next
+  beat, and the captions are the voice of the film — a screen on its own does
+  not say what it is looking at.
+*/
+const EDITS = {
+  /** The long demo of the classes product: every screen, slower, no hook. */
+  classes: {
+    stills: "stills",
+    name: "temppo-reservas-demo",
+    reel: false,
+    intro: () => card({ eyebrow: "TEMPPO", title: "Reservas", subtitle: "Gestión para estudios de pilates y yoga" }),
+    outro: () => card({ title: "Probalo gratis", subtitle: "Un mes sin costo. Sin tarjeta.", cta: "temppo.uy" }),
+    beats: [
+      { still: "01-dashboard", caption: "Tu estudio, de un vistazo", hold: 3.4 },
+      { still: "02-schedule", caption: "La agenda de la semana", hold: 3.4 },
+      { still: "03-standing-spots", caption: "Cupos fijos, sin planillas", hold: 3.6 },
+      { still: "04-standing-spots-open", caption: "Quién viene siempre, y qué queda libre", hold: 3.8 },
+      { still: "05-checkin", caption: "Ingreso con código QR", hold: 3.2 },
+      { still: "07-payments", caption: "Pagos y comprobantes al día", hold: 3.4 },
+      { still: "08-student-classes", caption: "Tus alumnos, desde el celular", hold: 3.4 },
+      { still: "09-student-book", caption: "Reservan solos. Y hay lista de espera", hold: 3.6 },
+      { still: "10-student-buy", caption: "Compran packs sin que muevas un dedo", hold: 3.4 },
+    ],
+  },
 
-const CLASS_BEATS = [
-  { still: "01-dashboard", caption: "Tu estudio, de un vistazo", hold: 3.4 },
-  { still: "02-schedule", caption: "La agenda de la semana", hold: 3.4 },
-  { still: "03-standing-spots", caption: "Cupos fijos, sin planillas", hold: 3.6 },
-  { still: "04-standing-spots-open", caption: "Quién viene siempre, y qué queda libre", hold: 3.8 },
-  { still: "05-checkin", caption: "Ingreso con código QR", hold: 3.2 },
-  { still: "07-payments", caption: "Pagos y comprobantes al día", hold: 3.4 },
-  { still: "08-student-classes", caption: "Tus alumnos, desde el celular", hold: 3.4 },
-  { still: "09-student-book", caption: "Reservan solos. Y hay lista de espera", hold: 3.6 },
-  { still: "10-student-buy", caption: "Compran packs sin que muevas un dedo", hold: 3.4 },
-];
+  /** The club promo: the player books, the club watches it land. */
+  padel: {
+    stills: "padel-stills",
+    name: "temppo-canchas",
+    reel: true,
+    intro: () => hook({ line1: "¿Cuántas canchas", line2: "perdés por semana?", sub: "Reservan, no vienen, y no pagaron nada" }),
+    outro: () => card({ title: "Que reserven solos", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }),
+    beats: [
+      { still: "01-what", caption: "Elige qué quiere jugar", hold: 2.0 },
+      { still: "02-duration", caption: "Y por cuánto tiempo", hold: 1.8 },
+      { still: "03-day", caption: "Ve qué día hay lugar", hold: 2.0 },
+      { still: "04-time", caption: "Cada horario con su precio", hold: 2.4 },
+      { still: "05-confirm", caption: "Todo a la vista antes de confirmar", hold: 2.4, lift: 470 },
+      { still: "06-details", caption: "Sin crear una cuenta", hold: 2.0 },
+      { still: "07-booked", caption: "La cancha queda retenida", hold: 2.0 },
+      { still: "12-sena-pay", caption: "Hasta que pague la seña", hold: 2.6 },
+      { still: "08-dashboard", caption: "Y en el club entra sola", hold: 2.6 },
+      { still: "10-agenda-evening", caption: "Tu noche, cancha por cancha", hold: 2.6 },
+      { still: "11-courts", caption: "Tus precios y tus horarios", hold: 2.4 },
+    ],
+  },
 
-const beats = EDIT === "padel" ? PADEL_BEATS : CLASS_BEATS;
+  /*
+    «Mientras dormís». The same booking, told as something that happened at
+    23:40 — the point is not the screens but the hour on the clock.
+  */
+  dormis: {
+    stills: "padel-stills",
+    name: "temppo-mientras-dormis",
+    reel: true,
+    intro: () => hook({ line1: "Mientras dormís,", line2: "reservan igual", sub: "Tu agenda no cierra a las 20:00" }),
+    outro: () => card({ title: "Que reserven solos", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }),
+    beats: [
+      { still: "01-what", caption: "23:40, un martes", hold: 2.2 },
+      { still: "02-duration", caption: "Elige cuánto quiere jugar", hold: 1.8 },
+      { still: "03-day", caption: "El día que hay lugar", hold: 2.0 },
+      { still: "04-time", caption: "El horario, con su precio", hold: 2.4 },
+      { still: "06-details", caption: "Sin crear una cuenta", hold: 2.0 },
+      { still: "07-booked", caption: "Queda retenida", hold: 2.0 },
+      { still: "12-sena-pay", caption: "Paga la seña a las 23:43", hold: 2.6 },
+      { still: "08-dashboard", caption: "A la mañana ya está cargado", hold: 3.0 },
+    ],
+  },
+
+  /*
+    «La seña». Opens on the cost of a no-show and spends its middle on the one
+    screen that answers it, instead of touring the booking again.
+  */
+  sena: {
+    stills: "padel-stills",
+    name: "temppo-sena",
+    reel: true,
+    intro: () => hook({ line1: "El que no viene", line2: "te costó la cancha", sub: "Con la seña, no" }),
+    outro: () => card({ title: "Cobrá la seña", subtitle: "Si no la pagan, se libera sola.", cta: "temppo.uy" }),
+    beats: [
+      { still: "04-time", caption: "Elige su horario", hold: 2.0 },
+      { still: "05-confirm", caption: "Y ve lo que sale", hold: 2.2, lift: 470 },
+      { still: "06-details", caption: "Deja su nombre y su teléfono", hold: 2.0 },
+      { still: "07-booked", caption: "La cancha queda retenida, no tomada", hold: 2.6 },
+      { still: "12-sena-pay", caption: "Mercado Pago o transferencia", hold: 3.0 },
+      { still: "10-agenda-evening", caption: "Pagada, queda confirmada en tu agenda", hold: 3.0 },
+    ],
+  },
+
+  /*
+    «De Instagram a tu agenda». The whole path in one cut, for the profile it
+    is published on: there is no shot of Instagram itself, because mocking up
+    somebody else's app to advertise your own is a worse film than saying it.
+  */
+  instagram: {
+    stills: "padel-stills",
+    name: "temppo-de-instagram",
+    reel: true,
+    intro: () => hook({ line1: "Te encuentran", line2: "en Instagram", sub: "y reservan desde el link de tu bio" }),
+    outro: () => card({ title: "Tu link de reservas", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }),
+    beats: [
+      { still: "01-what", caption: "Tocan tu link", hold: 2.0 },
+      { still: "03-day", caption: "Ven qué día hay lugar", hold: 2.0 },
+      { still: "04-time", caption: "Y a qué hora, con su precio", hold: 2.4 },
+      { still: "06-details", caption: "Reservan sin crear una cuenta", hold: 2.2 },
+      { still: "12-sena-pay", caption: "Pagan la seña", hold: 2.4 },
+      { still: "09-agenda", caption: "Y aparece en tu agenda", hold: 3.0 },
+    ],
+  },
+};
+
+const cut = EDITS[EDIT];
+if (!cut) {
+  console.error(`No existe el corte «${EDIT}». Hay: ${Object.keys(EDITS).join(", ")}`);
+  process.exit(1);
+}
+
+const STILLS = join(OUT, cut.stills);
+const WORK = join(OUT, `work-${EDIT}`);
+const beats = cut.beats;
 
 /*
-  A Reel is not a corporate demo. The padel cut is quicker, the screens slide
+  A Reel is not a corporate demo. The reels are quicker, the screens slide
   rather than dissolve, and where the capture recorded a tap the edit draws
   the ring — watching somebody press the thing is what sells a booking page.
 */
-const REEL = EDIT === "padel";
+const REEL = cut.reel;
 const FADE = REEL ? 0.25 : 0.6;
 const TRANSITION = REEL ? "slideup" : "fade";
+
+if (!existsSync(STILLS)) {
+  console.error(`No hay capturas en ${STILLS}. Corré primero el script que las saca.`);
+  process.exit(1);
+}
+
+rmSync(WORK, { recursive: true, force: true });
+mkdirSync(WORK, { recursive: true });
+mkdirSync(join(OUT, "cards"), { recursive: true });
 
 const TAPS = (() => {
   const file = join(STILLS, "taps.json");
@@ -161,24 +251,15 @@ async function captionPng(text, index) {
 
 console.log("Preparing frames…");
 
-const intro = join(OUT, "cards", "intro.png");
-const outro = join(OUT, "cards", "outro.png");
+const intro = join(OUT, "cards", `${EDIT}-intro.png`);
+const outro = join(OUT, "cards", `${EDIT}-outro.png`);
 
 /*
   A Reel is scrolled past in a second, so the first frame asks the question
   the club already has instead of showing it a logo it does not know yet.
 */
-await sharp(Buffer.from(
-  REEL
-    ? hook({ line1: "¿Cuántas canchas", line2: "perdés por semana?" })
-    : card({ eyebrow: "TEMPPO", title: "Reservas", subtitle: "Gestión para estudios de pilates y yoga" }),
-)).png().toFile(intro);
-
-await sharp(Buffer.from(card(
-  EDIT === "padel"
-    ? { title: "Que reserven solos", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }
-    : { title: "Probalo gratis", subtitle: "Un mes sin costo. Sin tarjeta.", cta: "temppo.uy" },
-))).png().toFile(outro);
+await sharp(Buffer.from(cut.intro())).png().toFile(intro);
+await sharp(Buffer.from(cut.outro())).png().toFile(outro);
 
 /**
  * Renders one beat as its own clip: the screen on a brand-coloured field,
@@ -223,7 +304,13 @@ async function renderBeat(beat, i) {
     label = "tapped";
   }
 
-  filters.push(`[${label}][1:v]overlay=x=0:y=H-268[v]`);
+  /*
+    The pill sits near the bottom, where a phone screen usually has its footer.
+    `lift` raises it on the shots whose call to action lives down there — a
+    caption that covers «Reservar y pagar la seña» hides the line the film is
+    about.
+  */
+  filters.push(`[${label}][1:v]overlay=x=0:y=H-${beat.lift ?? 268}[v]`);
 
   execFileSync(
     "ffmpeg",
@@ -297,7 +384,7 @@ for (let i = 1; i < timeline.length; i++) {
   elapsed += timeline[i].hold - FADE;
 }
 
-const NAME = EDIT === "padel" ? "temppo-canchas" : "temppo-reservas-demo";
+const NAME = cut.name;
 const master = join(OUT, `${NAME}.mp4`);
 
 execFileSync(
@@ -332,6 +419,6 @@ execFileSync("ffmpeg", [
 console.log(`
   demo/${NAME}.mp4   1080x1920, ~${elapsed.toFixed(0)}s
   demo/${NAME}-web.mp4   720x1280, lighter for embedding
-  demo/temppo-reservas-poster.jpg     poster frame
-  demo/stills/*.png                   individual screens
+  demo/${NAME}-poster.jpg   poster frame
+  ${STILLS}/*.png   las capturas sueltas
 `);

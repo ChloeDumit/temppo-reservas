@@ -58,6 +58,9 @@ let lastShot = null;
 async function shot(name) {
   currentStep = name;
   lastShot = name;
+  // `next dev` floats its own badge over the corner. Taken out rather than
+  // styled away: the overlay lives in a shadow root and ignored the stylesheet.
+  await page.evaluate(() => document.querySelector("nextjs-portal")?.remove());
   await page.screenshot({ path: join(STILLS, `${name}.png`) });
   console.log(`  · ${name}`);
 }
@@ -143,6 +146,28 @@ currentStep = "confirm";
 await tap(page.locator("section button").last());
 await page.waitForTimeout(2200);
 await shot("07-booked");
+
+/*
+  The seña. The club asks for a share of the price, so confirming holds the
+  court instead of taking it, and the screen says what is owed and until when.
+  This is the half of the product a club actually pays for, so it is shot
+  rather than described.
+*/
+currentStep = "sena";
+const payLink = page.locator('a[href*="/m/"]').first();
+if (await payLink.count()) {
+  await tap(payLink);
+  await page.waitForLoadState("networkidle");
+  await beat(1800);
+  await shot("12-sena-pay");
+
+  const transfer = page.locator("button", { hasText: /transferencia/i }).first();
+  if (await transfer.count()) {
+    await tap(transfer);
+    await beat(1600);
+    await shot("13-sena-code");
+  }
+}
 
 // ── The club, seeing it land ────────────────────────────────────
 currentStep = "sign in";

@@ -28,7 +28,10 @@
     "seed:padel": "tsx prisma/seed-padel.ts",
     "padel:video": "node scripts/padel-video.mjs",
     "padel:encode": "EDIT=padel node scripts/demo-encode.mjs",
-    "temppo:cards": "node scripts/temppo-cards.mjs"
+    "temppo:cards": "node scripts/temppo-cards.mjs",
+    "reel:dormis": "EDIT=dormis node scripts/demo-encode.mjs",
+    "reel:sena": "EDIT=sena node scripts/demo-encode.mjs",
+    "reel:instagram": "EDIT=instagram node scripts/demo-encode.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

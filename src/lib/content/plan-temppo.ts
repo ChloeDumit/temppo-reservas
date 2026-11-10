@@ -54,7 +54,7 @@ export const PLAN_TEMPPO_1: PlanItem[] = [
     time: "19:30",
     caption: `Mientras dormís, tu agenda sigue abierta 🌙\n\nReservan a la hora que quieren, pagan, y quedan confirmados. A la mañana lo ves todo cargado.\n\nClases, canchas o turnos. Elegís tu rubro al crear la cuenta.\n\nUn mes gratis 👉 link en la bio\n\n${TAGS_AMBOS}`,
     notes:
-      "Cortar de demo/temppo-canchas.mp4 las tomas 01-07 (la reserva) y cerrar con 08-dashboard. Subir a mano si le ponés audio de Instagram.",
+      "Archivo: demo/temppo-mientras-dormis.mp4 (npm run reel:dormis). Va a mano para ponerle un audio de Instagram.",
     channel: "MANUAL",
   },
   {
@@ -102,8 +102,7 @@ export const PLAN_TEMPPO_2: PlanItem[] = [
     date: "2026-11-27",
     time: "19:30",
     caption: `El que reserva y no viene te costó la cancha entera 🎾\n\nCon la seña, el horario queda retenido mientras la pagan. Si no pagan, vuelve a estar libre solo. Vos no perseguís a nadie.\n\nPor Mercado Pago o por transferencia con un código, para que sepas de quién es.\n\n${TAGS_CLUB}`,
-    notes:
-      "Cortar de demo/temppo-canchas.mp4 las tomas 05-confirm, 06-details y 07-booked. Agregar la pantalla de la seña (/m/<token>).",
+    notes: "Archivo: demo/temppo-sena.mp4 (npm run reel:sena).",
   },
   {
     title: "Post · Elegís tu rubro al crear la cuenta",
@@ -127,8 +126,7 @@ export const PLAN_TEMPPO_2: PlanItem[] = [
     date: null,
     time: "19:30",
     caption: `El camino completo: te encuentran en Instagram, tocan tu link, reservan, y aparece en tu agenda ✨\n\nSin llamadas, sin cuenta, sin que vos muevas un dedo.\n\n${TAGS_AMBOS}`,
-    notes:
-      "De respaldo, sin fecha. Grabar la pantalla pasando de la bio al link y a la agenda del club.",
+    notes: "De respaldo, sin fecha. Archivo: demo/temppo-de-instagram.mp4 (npm run reel:instagram).",
     channel: "MANUAL",
   },
 ];

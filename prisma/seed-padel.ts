@@ -24,10 +24,20 @@ const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
 const WEEKNIGHTS = [1, 2, 3, 4, 5];
 const WEEKEND = [0, 6];
 
+/*
+  The seña, on the demo club too. A club that holds a court for nothing is the
+  problem the product is sold on, so a demo that confirms straight away shows
+  the one screen a club does not care about. Courts ask a share of the price;
+  the hall asks a flat figure, because 30% of a Saturday night is not a number
+  anybody puts on a form.
+*/
+const COURT_DEPOSIT = { type: "PERCENT", value: 30 } as const;
+
 const SPACES = [
   {
     name: "Cancha 1",
     kind: "Pádel",
+    deposit: COURT_DEPOSIT,
     pricePerHour: 800,
     durations: [60, 90],
     bufferAfterMin: 0,
@@ -41,6 +51,7 @@ const SPACES = [
   {
     name: "Cancha 2",
     kind: "Pádel",
+    deposit: COURT_DEPOSIT,
     pricePerHour: 800,
     durations: [60, 90],
     bufferAfterMin: 0,
@@ -54,6 +65,7 @@ const SPACES = [
     // Blaugrana is indoor, so it costs more and sweeps between bookings.
     name: "Cancha 3 (techada)",
     kind: "Pádel",
+    deposit: COURT_DEPOSIT,
     pricePerHour: 1000,
     durations: [60, 90],
     bufferAfterMin: 15,
@@ -63,6 +75,7 @@ const SPACES = [
   {
     name: "Fútbol 5",
     kind: "Fútbol 5",
+    deposit: COURT_DEPOSIT,
     pricePerHour: 1600,
     durations: [60, 90],
     bufferAfterMin: 10,
@@ -75,6 +88,7 @@ const SPACES = [
     // lengths, which is the point of keeping durations on the space.
     name: "Salón de eventos",
     kind: "Salón",
+    deposit: { type: "FIXED", value: 300_000 } as const,
     pricePerHour: 1500,
     durations: [240, 300],
     bufferAfterMin: 60,
@@ -127,6 +141,8 @@ async function main() {
         kind: s.kind,
         capacity: s.capacity ?? null,
         priceCentsPerHour: s.pricePerHour * 100,
+        depositType: s.deposit?.type ?? "NONE",
+        depositValue: s.deposit?.value ?? 0,
         durationsMin: s.durations,
         bufferAfterMin: s.bufferAfterMin,
         position,

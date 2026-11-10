@@ -81,7 +81,7 @@ export async function RentalManage({
         <section className="rounded-[var(--radius-lg)] bg-surface p-5 shadow-[var(--shadow-soft)]">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-display text-xl capitalize text-ink">{when}</p>
+              <p className="font-display text-xl text-ink first-letter:uppercase">{when}</p>
               <p className="mt-1 text-sm text-ink-soft">
                 {rental.spaceName}
                 {rental.space.kind ? ` · ${rental.space.kind}` : ""}
