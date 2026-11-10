@@ -29,7 +29,12 @@ const option = (name: string) => {
 };
 
 const BASE = (option("base") ?? process.env.CONTENT_API_BASE ?? "https://beauty.temppo.uy").replace(/\/$/, "");
-const ROOT = path.resolve(option("root") ?? "marketing");
+/*
+  Each brand keeps its files somewhere else: the beauty plans under marketing/,
+  the Reservas ones under demo/, beside the stills the app's own capture wrote.
+  Resolved once the plan is known, so neither has to pass --root by hand.
+*/
+const ROOTS: Record<string, string> = { beauty: "marketing", temppo: "demo" };
 const TOKEN = process.env.CONTENT_API_TOKEN ?? "";
 const TZ = "America/Montevideo";
 const PART = 4 * 1024 * 1024;
@@ -51,6 +56,33 @@ const FILES: Record<string, string[]> = {
   "Carrusel · ¿Cuánto te cuesta una clienta que no viene?": [1, 2, 3, 4, 5].map((i) => `instagram/noviembre-2/carrusel-cuenta-${i}.png`),
   "Reel · La seña, explicada en 15 segundos": ["video/out/temppo-beauty-sena-15-musica.mp4"],
   "Post · Diciembre se acerca": ["instagram/noviembre-2/post-diciembre.png"],
+
+  /*
+    TEMPPO Reservas, under demo/. The screens come from the app's own capture
+    (`npm run padel:video`, `npm run demo:video`), the dark cards from
+    `npm run temppo:cards`. An empty list is deliberate: that post needs a cut
+    of the film that does not exist yet, so it is created without files and
+    the console shows it as «sin archivos» rather than the script inventing
+    something to upload.
+  */
+  "Reel · ¿Cuántas canchas perdés por semana?": ["temppo-canchas.mp4"],
+  "Carrusel · Lo que ve tu cliente al reservar": [
+    "padel-stills/01-what.png",
+    "padel-stills/02-duration.png",
+    "padel-stills/03-day.png",
+    "padel-stills/04-time.png",
+    "padel-stills/05-confirm.png",
+  ],
+  "Post · El cupo fijo, sin planilla": ["stills/03-standing-spots.png"],
+  "Reel · Mientras dormís": [],
+  "Post · Se liberó un lugar y se llenó solo": ["stills/09-student-book.png"],
+  "Story · ¿Cuántas veces por día respondés 'hay lugar'?": ["temppo-cards/story-hay-lugar.png"],
+  "Carrusel · Cuánto sale": [0, 1, 2, 3, 4].map((i) => `temppo-cards/precios-${i}.png`),
+  "Post · Tu noche, cancha por cancha": ["padel-stills/10-agenda-evening.png"],
+  "Reel · La seña": [],
+  "Post · Elegís tu rubro al crear la cuenta": ["temppo-cards/rubros.png"],
+  "Carrusel · Lo que deja de ser tarea tuya": [0, 1, 2, 3, 4, 5, 6].map((i) => `temppo-cards/tareas-${i}.png`),
+  "Reel · De Instagram a tu agenda": [],
 };
 
 const MIME: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".mp4": "video/mp4", ".mov": "video/quicktime" };
@@ -78,6 +110,7 @@ async function main() {
   const plan = CONTENT_PLANS.find((p) => p.id === option("plan"));
   if (!plan) throw new Error(`Elegí un plan con --plan: ${CONTENT_PLANS.map((p) => p.id).join(", ")}`);
   if (TOKEN.length < 32 && !flag("dry-run")) throw new Error("Falta CONTENT_API_TOKEN en .env (el mismo valor que en Netlify).");
+  const ROOT = path.resolve(option("root") ?? ROOTS[plan.brand] ?? "marketing");
 
   const only = option("only");
   const items = only ? plan.items.filter((i) => i.title === only) : plan.items;
@@ -85,13 +118,13 @@ async function main() {
 
   // Every file must be there before anything is sent.
   for (const item of items) {
-    for (const f of FILES[item.title] ?? []) if (!existsSync(path.join(ROOT, f))) throw new Error(`No encuentro ${f} en ${ROOT}`);
     if (!FILES[item.title]) throw new Error(`Sin archivos definidos para «${item.title}»`);
+    for (const f of FILES[item.title]) if (!existsSync(path.join(ROOT, f))) throw new Error(`No encuentro ${f} en ${ROOT}`);
   }
   console.log(`${plan.label} → ${BASE}${flag("dry-run") ? " (prueba: no se envía nada)" : ""}\n`);
 
   const now = Date.now();
-  const existing = flag("dry-run") ? { posts: [] } : await api("GET", "/posts?brand=beauty");
+  const existing = flag("dry-run") ? { posts: [] } : await api("GET", `/posts?brand=${plan.brand}`);
   const byTitle = new Map((existing.posts as { id: string; title: string; media: number; status: string }[]).map((p) => [p.title, p]));
 
   for (const item of items) {
@@ -118,7 +151,7 @@ async function main() {
       continue;
     }
     const { post } = (await api("POST", "/posts", {
-      brand: "beauty",
+      brand: plan.brand,
       title: item.title,
       kind: item.kind,
       caption: item.caption,
@@ -128,6 +161,10 @@ async function main() {
     })) as { post: { id: string } };
 
     let uploaded = 0;
+    if (files.length === 0) {
+      console.log(`· ${label}: creada sin archivos (falta el corte o la placa)`);
+      continue;
+    }
     if (!known?.media || flag("replace")) {
       if (known?.media) await api("POST", `/posts/${post.id}/clear-media`);
       for (const f of files) {
