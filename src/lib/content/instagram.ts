@@ -310,3 +310,155 @@ export async function resetPost(postId: string): Promise<{ status: "PUBLISHED" |
   await db.contentPost.update({ where: { id: post.id }, data: { status: "READY", igContainerId: null, attempts: 0, error: null } });
   return { status: "READY" };
 }
+
+/**
+ * What publishing needs. Missing any of these is what Graph reports as
+ * "Application does not have permission for this action" — a sentence that
+ * names neither the permission nor the app.
+ */
+const REQUIRED_SCOPES = [
+  "instagram_basic",
+  "instagram_content_publish",
+  "pages_show_list",
+  "pages_read_engagement",
+];
+
+export type InstagramDiagnosis = {
+  /** What the configured id is, if anything. */
+  configuredId: string | null;
+  /** Permissions the token carries, when they can be read. */
+  scopes: string[] | null;
+  /** Of the required ones, those the token does not have. */
+  missingScopes: string[];
+  /** When the token runs out. Null for one that does not expire. */
+  expiresAt: Date | null;
+  /** Instagram business accounts this token can actually reach. */
+  reachable: { pageName: string; igId: string; username: string }[];
+  /** What to do, in the order worth trying. */
+  findings: string[];
+};
+
+/**
+ * Turns "Object with ID does not exist" into something actionable.
+ *
+ * Graph answers that for every reason at once — a wrong id, an account the
+ * token was never granted, an Instagram profile that is still personal — so
+ * the message alone cannot be acted on. This asks the token what it can
+ * reach and compares that with what is configured.
+ *
+ * Every failure is reported rather than thrown: this runs precisely when
+ * something is already broken.
+ */
+export async function diagnoseInstagram(brand: string): Promise<InstagramDiagnosis> {
+  const configuredId =
+    (brand === "temppo" ? process.env.INSTAGRAM_USER_ID_TEMPPO : process.env.INSTAGRAM_USER_ID_BEAUTY) ??
+    null;
+  const findings: string[] = [];
+  const reachable: InstagramDiagnosis["reachable"] = [];
+  let scopes: string[] | null = null;
+  let missingScopes: string[] = [];
+  let expiresAt: Date | null = null;
+
+  const token = process.env.INSTAGRAM_TOKEN;
+  if (!token) {
+    findings.push("Falta INSTAGRAM_TOKEN.");
+    return { configuredId, reachable, findings, scopes, missingScopes, expiresAt };
+  }
+
+  /*
+    What the token is actually allowed to do. Checked first because a missing
+    scope explains both failures people hit here: publishing is refused for
+    lack of permission, and an account the token cannot see reads back as an
+    object that does not exist.
+  */
+  try {
+    const debug = (await graph("debug_token", { input_token: token })) as {
+      data?: { scopes?: string[]; expires_at?: number; is_valid?: boolean; app_id?: string };
+    };
+    const info = debug.data ?? {};
+    scopes = info.scopes ?? null;
+    if (info.is_valid === false) findings.push("El token ya no es válido. Generá uno nuevo.");
+    if (info.expires_at) expiresAt = new Date(info.expires_at * 1000);
+    if (expiresAt && expiresAt.getTime() < Date.now()) {
+      findings.push(`El token venció el ${expiresAt.toLocaleDateString("es-UY")}.`);
+    }
+    if (scopes) {
+      missingScopes = REQUIRED_SCOPES.filter((scope) => !scopes!.includes(scope));
+      if (missingScopes.length > 0) {
+        findings.push(
+          `Al token le faltan permisos: ${missingScopes.join(", ")}. Volvé a generarlo pidiéndolos.`,
+        );
+      }
+    }
+  } catch (error) {
+    findings.push(`No se pudieron leer los permisos del token: ${(error as Error).message}`);
+  }
+
+  if (!configuredId) {
+    findings.push(
+      `Falta INSTAGRAM_USER_ID_${brand === "temppo" ? "TEMPPO" : "BEAUTY"}.`,
+    );
+  }
+
+  /*
+    The pages the token administers, with the Instagram business account
+    linked to each. This is where the right id comes from: an Instagram
+    profile that is still personal, or not linked to a page, simply does not
+    appear — which is the answer to half the cases.
+  */
+  try {
+    const pages = (await graph("me/accounts", {
+      fields: "name,instagram_business_account{id,username}",
+      limit: "50",
+    })) as { data?: { name?: string; instagram_business_account?: { id?: string; username?: string } }[] };
+
+    for (const page of pages.data ?? []) {
+      const ig = page.instagram_business_account;
+      if (ig?.id) {
+        reachable.push({
+          pageName: String(page.name ?? ""),
+          igId: String(ig.id),
+          username: String(ig.username ?? ""),
+        });
+      }
+    }
+
+    if ((pages.data ?? []).length === 0) {
+      findings.push(
+        "El token no administra ninguna página. Si es un System User, asignale la página en Business Manager con permiso de contenido.",
+      );
+    } else if (reachable.length === 0) {
+      findings.push(
+        "El token ve páginas, pero ninguna tiene una cuenta de Instagram vinculada. La cuenta tiene que ser Empresa o Creador y estar vinculada a una página de Facebook.",
+      );
+    }
+  } catch (error) {
+    findings.push(`No se pudieron listar las páginas: ${(error as Error).message}`);
+  }
+
+  if (configuredId && reachable.length > 0) {
+    const match = reachable.find((r) => r.igId === configuredId);
+    if (match) {
+      findings.push(
+        `El id configurado corresponde a @${match.username}. Si igual falla, el token no tiene permiso de publicar en esa cuenta.`,
+      );
+    } else {
+      findings.push(
+        `El id configurado (${configuredId}) no está entre las cuentas que este token alcanza. Usá uno de los de abajo.`,
+      );
+    }
+  }
+
+  /*
+    Advanced Access is the other half of a permission error: an app still in
+    development can only post to accounts whose owner has a role in it, and
+    Graph reports that the same way as a missing scope.
+  */
+  if (missingScopes.length === 0 && findings.some((f) => f.includes("permiso"))) {
+    findings.push(
+      "Si los permisos están y igual falla, revisá que la app tenga Acceso avanzado a instagram_content_publish, o que la cuenta tenga un rol en la app.",
+    );
+  }
+
+  return { configuredId, reachable, findings, scopes, missingScopes, expiresAt };
+}

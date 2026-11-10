@@ -7,6 +7,7 @@ import { getAdminProduct, PRODUCT_LABEL } from "@/lib/admin/product";
 import { instagramProfile } from "@/lib/content/instagram";
 import { createContentPostAction, loadPlanAction } from "./actions";
 import { CONTENT_PLANS } from "@/lib/content/plan-noviembre";
+import { diagnoseInstagram } from "@/lib/content/instagram";
 import { KIND_LABEL, STATUS, TZ } from "./labels";
 
 /**
@@ -93,6 +94,15 @@ export default async function AdminContentPage({
       </div>
 
       {flash && <p className="mt-4 rounded-[var(--radius-md)] bg-white/10 px-4 py-2.5 text-sm">{flash}</p>}
+
+      {/*
+        Asked for only when something is wrong. Graph answers "Object with ID
+        does not exist" for a wrong id, a token that was never granted the
+        account, and an Instagram profile that is still personal — all three
+        at once — so the console works out which it is rather than repeating
+        the sentence.
+      */}
+      {(!profile || "error" in profile) && <ConnectionHelp brand={brand} />}
 
       <div className={`mt-5 rounded-[var(--radius-lg)] px-4 py-3 text-sm ${profile && !("error" in profile) ? "bg-emerald-500/10 text-emerald-100" : "bg-amber-500/10 text-amber-100"}`}>
         {profile && !("error" in profile) ? (
@@ -225,5 +235,70 @@ export default async function AdminContentPage({
         </section>
       )}
     </>
+  );
+}
+
+/** What is actually wrong with the Instagram connection, and the ids to use. */
+async function ConnectionHelp({ brand }: { brand: string }) {
+  const diagnosis = await diagnoseInstagram(brand);
+  if (diagnosis.findings.length === 0 && diagnosis.reachable.length === 0) return null;
+
+  return (
+    <div className="mt-5 rounded-[var(--radius-lg)] border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-100">
+      <p className="font-medium">Diagnóstico de la conexión</p>
+
+      {diagnosis.findings.length > 0 && (
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-100/90">
+          {diagnosis.findings.map((finding) => (
+            <li key={finding}>{finding}</li>
+          ))}
+        </ul>
+      )}
+
+      {diagnosis.scopes && (
+        <div className="mt-3">
+          <p className="text-xs uppercase tracking-wider text-amber-100/60">Permisos del token</p>
+          <p className="mt-1 flex flex-wrap gap-1.5">
+            {[...new Set([...diagnosis.scopes, ...diagnosis.missingScopes])].sort().map((scope) => {
+              const missing = diagnosis.missingScopes.includes(scope);
+              return (
+                <code
+                  key={scope}
+                  className={
+                    missing
+                      ? "rounded bg-red-500/25 px-1.5 py-0.5 text-[13px] text-red-100 line-through"
+                      : "rounded bg-black/30 px-1.5 py-0.5 text-[13px]"
+                  }
+                >
+                  {scope}
+                </code>
+              );
+            })}
+          </p>
+          {diagnosis.expiresAt && (
+            <p className="mt-1.5 text-xs text-amber-100/60">
+              Vence el {diagnosis.expiresAt.toLocaleDateString("es-UY")}.
+            </p>
+          )}
+        </div>
+      )}
+
+      {diagnosis.reachable.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs uppercase tracking-wider text-amber-100/60">
+            Cuentas que alcanza este token
+          </p>
+          <ul className="mt-1 space-y-1">
+            {diagnosis.reachable.map((account) => (
+              <li key={account.igId} className="flex flex-wrap items-baseline gap-x-2">
+                <code className="rounded bg-black/30 px-1.5 py-0.5 text-[13px]">{account.igId}</code>
+                <span>@{account.username}</span>
+                <span className="text-amber-100/60">· {account.pageName}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
