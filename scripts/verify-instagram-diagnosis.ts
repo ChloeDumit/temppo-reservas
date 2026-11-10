@@ -72,6 +72,37 @@ async function main() {
   );
 
 
+  console.log("\nTwo products share the token");
+
+  /*
+    The token reaches @temppo.beauty and the console is showing Reservas: the
+    one id it could offer is the wrong account. Pointing there would publish
+    Reservas posts on the beauty account, which is how a broken setup passes
+    for a working one.
+  */
+  check(
+    "it refuses to offer the other brand's account",
+    /la de la otra marca/.test(source),
+    true,
+  );
+  check(
+    "comparing against the other brand's configured id",
+    /INSTAGRAM_USER_ID_BEAUTY : process\.env\.INSTAGRAM_USER_ID_TEMPPO/.test(
+      source.slice(source.indexOf("no está entre las cuentas")),
+    ),
+    true,
+  );
+  check(
+    "and still offers the list when the token simply misses a page",
+    /Usá uno de los de abajo, o generá el token de nuevo/.test(source),
+    true,
+  );
+  check(
+    "it says the account must be a business one linked to a page",
+    /Empresa y estar vinculada/.test(source),
+    true,
+  );
+
   console.log("\nWhen it used to work");
 
   const reminders = readFileSync("src/lib/content/reminders.ts", "utf8");

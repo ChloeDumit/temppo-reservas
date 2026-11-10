@@ -462,8 +462,26 @@ export async function diagnoseInstagram(brand: string): Promise<InstagramDiagnos
       );
     } else {
       findings.push(
-        `El id configurado (${configuredId}) no está entre las cuentas que este token alcanza. Usá uno de los de abajo.`,
+        `El id configurado (${configuredId}) no está entre las cuentas que este token alcanza.`,
       );
+
+      /*
+        Two products, one token: the case worth naming is that the only
+        account it reaches belongs to the other one. "Usá uno de los de
+        abajo" would then be an instruction to publish this product's posts
+        on the other product's account — the mix-up that looks like it works.
+      */
+      const otherId =
+        brand === "temppo" ? process.env.INSTAGRAM_USER_ID_BEAUTY : process.env.INSTAGRAM_USER_ID_TEMPPO;
+      if (otherId && reachable.every((r) => r.igId === otherId)) {
+        findings.push(
+          `La única que alcanza es @${reachable[0].username}, la de la otra marca: no la pongas acá o este contenido sale en esa cuenta. Generá el token de nuevo eligiendo también la página de esta marca — la cuenta de Instagram tiene que ser Empresa y estar vinculada a esa página.`,
+        );
+      } else {
+        findings.push(
+          "Usá uno de los de abajo, o generá el token de nuevo eligiendo también esa página.",
+        );
+      }
     }
   }
 
