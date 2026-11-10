@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { brandByKey } from "@/lib/brand/registry";
 import { appUrlFor } from "@/lib/brand/url";
 import { emailTransport } from "@/lib/notifications/email";
-import { contentPush } from "./notify";
+import { contentPush, notifyTokenExpiring } from "./notify";
 
 /*
   Reminders for the posts that go up by hand — a reel that wants a voice-over
@@ -106,4 +106,45 @@ export async function remindManualContent(now = new Date()) {
     sent++;
   }
   return sent;
+}
+
+/** Below this, the token is worth a warning rather than a diary note. */
+const TOKEN_WARN_DAYS = 10;
+
+/**
+ * Watches the Instagram token so it does not expire in silence.
+ *
+ * The failure it prevents is the confusing one: nothing changed, nothing was
+ * touched, and publishing stopped. Checked once a day rather than on every
+ * cron pass — the answer moves by a day at a time, and debug_token is a
+ * network call on somebody else's rate limit.
+ */
+export async function watchInstagramToken(now = new Date()) {
+  if (!process.env.INSTAGRAM_TOKEN) return 0;
+
+  const { diagnoseInstagram } = await import("./instagram");
+  let warned = 0;
+
+  for (const brandKey of ["temppo", "beauty"] as const) {
+    const id =
+      brandKey === "temppo" ? process.env.INSTAGRAM_USER_ID_TEMPPO : process.env.INSTAGRAM_USER_ID_BEAUTY;
+    // Nothing to watch for a product that does not publish.
+    if (!id) continue;
+
+    const diagnosis = await diagnoseInstagram(brandKey).catch(() => null);
+    if (!diagnosis) continue;
+
+    const expiresAt = diagnosis.expiresAt;
+    const invalid = diagnosis.findings.some((f) => f.includes("no es válido"));
+    const days = expiresAt ? Math.round((expiresAt.getTime() - now.getTime()) / 86_400_000) : null;
+
+    if (invalid || (days !== null && days <= TOKEN_WARN_DAYS)) {
+      await notifyTokenExpiring(brandKey, invalid ? null : days).catch((error) =>
+        console.error("[content] token warning failed", error),
+      );
+      warned++;
+    }
+  }
+
+  return warned;
 }

@@ -41,3 +41,23 @@ export async function notifyContentFailed(post: { id: string; title: string; bra
     tag: `content-${post.id}`,
   });
 }
+
+/**
+ * The token is about to run out, or already has.
+ *
+ * A Meta long-lived token lasts about sixty days, so publishing stops dead on
+ * a date nobody wrote down — it simply worked last week and does not today.
+ * Told once per day at most, by the tag, so a fortnight of warnings is a
+ * fortnight of one notification rather than fourteen.
+ */
+export async function notifyTokenExpiring(brandKey: string, days: number | null) {
+  const expired = days === null || days < 0;
+  await pushAdmins(brandKey, {
+    title: expired ? "Instagram dejó de publicar" : "El token de Instagram está por vencer",
+    body: expired
+      ? "El token venció o fue revocado. Hasta que lo renueves no se publica nada."
+      : `Vence en ${days} días. Renovalo antes de que corte las publicaciones.`,
+    url: "/admin/content",
+    tag: `ig-token-${new Date().toISOString().slice(0, 10)}`,
+  });
+}

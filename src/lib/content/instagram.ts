@@ -377,10 +377,28 @@ export async function diagnoseInstagram(brand: string): Promise<InstagramDiagnos
     };
     const info = debug.data ?? {};
     scopes = info.scopes ?? null;
-    if (info.is_valid === false) findings.push("El token ya no es válido. Generá uno nuevo.");
+
+    /*
+      The first thing to check when this used to work. A long-lived Meta
+      token lasts about sixty days, and it also dies early if the password
+      changes or the access is revoked — so a setup that published last week
+      and refuses today is almost always this, not the configuration.
+    */
+    if (info.is_valid === false) {
+      findings.push(
+        "El token ya no es válido. Suele pasar al vencer, al cambiar la contraseña de Facebook o al revocar el acceso. Generá uno nuevo.",
+      );
+    }
     if (info.expires_at) expiresAt = new Date(info.expires_at * 1000);
-    if (expiresAt && expiresAt.getTime() < Date.now()) {
-      findings.push(`El token venció el ${expiresAt.toLocaleDateString("es-UY")}.`);
+    if (expiresAt) {
+      const days = Math.round((expiresAt.getTime() - Date.now()) / 86_400_000);
+      if (days < 0) {
+        findings.push(
+          `El token venció el ${expiresAt.toLocaleDateString("es-UY")}, hace ${Math.abs(days)} días. Es la causa más común de que deje de funcionar algo que andaba.`,
+        );
+      } else if (days <= 10) {
+        findings.push(`El token vence en ${days} días. Renovalo antes de que corte las publicaciones.`);
+      }
     }
     if (scopes) {
       missingScopes = REQUIRED_SCOPES.filter((scope) => !scopes!.includes(scope));

@@ -240,7 +240,24 @@ export default async function AdminContentPage({
 
 /** What is actually wrong with the Instagram connection, and the ids to use. */
 async function ConnectionHelp({ brand }: { brand: string }) {
-  const diagnosis = await diagnoseInstagram(brand);
+  /*
+    When this used to work, the date it stopped is the diagnosis. Shown beside
+    the findings so a token that expired lines up with the last post that
+    went out, instead of leaving "pero la semana pasada andaba" unanswered.
+  */
+  const [diagnosis, lastPublished, lastFailure] = await Promise.all([
+    diagnoseInstagram(brand),
+    db.contentPost.findFirst({
+      where: { brand, status: "PUBLISHED", publishedAt: { not: null } },
+      orderBy: { publishedAt: "desc" },
+      select: { title: true, publishedAt: true },
+    }),
+    db.contentPost.findFirst({
+      where: { brand, error: { not: null } },
+      orderBy: { updatedAt: "desc" },
+      select: { title: true, error: true, updatedAt: true },
+    }),
+  ]);
   if (diagnosis.findings.length === 0 && diagnosis.reachable.length === 0) return null;
 
   return (
@@ -253,6 +270,32 @@ async function ConnectionHelp({ brand }: { brand: string }) {
             <li key={finding}>{finding}</li>
           ))}
         </ul>
+      )}
+
+      {(lastPublished || lastFailure) && (
+        <dl className="mt-3 space-y-1 text-amber-100/90">
+          {lastPublished?.publishedAt && (
+            <div className="flex flex-wrap gap-x-2">
+              <dt className="text-amber-100/60">Última publicada:</dt>
+              <dd>
+                {lastPublished.title} ·{" "}
+                {lastPublished.publishedAt.toLocaleDateString("es-UY", {
+                  day: "numeric",
+                  month: "long",
+                })}
+              </dd>
+            </div>
+          )}
+          {lastFailure?.error && (
+            <div className="flex flex-wrap gap-x-2">
+              <dt className="text-amber-100/60">Último error:</dt>
+              <dd>
+                {lastFailure.updatedAt.toLocaleDateString("es-UY", { day: "numeric", month: "long" })} ·{" "}
+                {lastFailure.error}
+              </dd>
+            </div>
+          )}
+        </dl>
       )}
 
       {diagnosis.scopes && (

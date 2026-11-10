@@ -71,6 +71,29 @@ async function main() {
     true,
   );
 
+
+  console.log("\nWhen it used to work");
+
+  const reminders = readFileSync("src/lib/content/reminders.ts", "utf8");
+  const page = readFileSync("src/app/[locale]/(admin)/admin/content/page.tsx", "utf8");
+  const cron = readFileSync("src/lib/reminders.ts", "utf8");
+
+  /*
+    A token that expires takes publishing down on a date nobody wrote down.
+    The date it stopped is the diagnosis, so the console shows it — and the
+    cron warns before it happens, so it stops being a surprise every sixty
+    days.
+  */
+  check("the console shows the last post that went out", /status: "PUBLISHED"/.test(page), true);
+  check("and the last error, with its date", /error: \{ not: null \}/.test(page), true);
+  check("expiry is reported in days, not just a date", /vence en \$\{days\}/.test(source), true);
+  check("naming what kills a token early", /contraseña|revocar/.test(source), true);
+
+  check("the cron watches the token", /watchInstagramToken/.test(cron), true);
+  check("warning before it runs out", /TOKEN_WARN_DAYS/.test(reminders), true);
+  check("once a day rather than every pass", /getUTCHours\(\) === /.test(cron), true);
+  check("and only for a product that publishes", /if \(!id\) continue;/.test(reminders), true);
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exitCode = 1;
 }

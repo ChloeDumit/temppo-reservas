@@ -8,7 +8,7 @@ import { expireRentalHolds } from "@/lib/venues/payments";
 import { isBirthdayToday, startOfDayInZone, ageFrom } from "@/lib/dates";
 import { renewExpiringMercadoPagoTokens } from "@/lib/payments/mercadopago-oauth";
 import { publishDueContent } from "@/lib/content/instagram";
-import { remindManualContent } from "@/lib/content/reminders";
+import { remindManualContent, watchInstagramToken } from "@/lib/content/reminders";
 import { sendBillingReminders } from "@/lib/billing/beauty-server";
 
 /**
@@ -133,6 +133,18 @@ export async function sendDueReminders(now = new Date()) {
   });
 
   // And a heads-up for the ones that go up by hand.
+  /*
+    Once a day, near noon: the number only moves by a day at a time, and
+    debug_token spends somebody else's rate limit.
+  */
+  const tokenWarnings =
+    now.getUTCHours() === 15
+      ? await watchInstagramToken(now).catch((error) => {
+          console.error("[reminders] instagram token watch failed", error);
+          return 0;
+        })
+      : 0;
+
   const contentReminders = await remindManualContent(now).catch((error) => {
     console.error("[reminders] content reminders failed", error);
     return 0;
@@ -144,7 +156,7 @@ export async function sendDueReminders(now = new Date()) {
     return 0;
   });
 
-  return { studios: studios.length, classes, sent, birthdays, appointments, rentals, mpRenewed, content, contentReminders, billingReminders };
+  return { studios: studios.length, classes, sent, birthdays, appointments, rentals, mpRenewed, content, contentReminders, tokenWarnings, billingReminders };
 
 }
 
