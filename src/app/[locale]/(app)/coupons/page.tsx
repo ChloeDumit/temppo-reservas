@@ -4,10 +4,9 @@ import { db } from "@/lib/db";
 import { dateKeyInZone, formatDate } from "@/lib/dates";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Field, Input } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
-import { SubmitButton } from "@/components/ui/submit-button";
-import { createCouponAction, toggleCouponAction } from "./actions";
+import { toggleCouponAction } from "./actions";
+import { CouponForm } from "./coupon-form";
 import { ConfirmDelete } from "./confirm-delete";
 
 /**
@@ -61,37 +60,7 @@ export default async function CouponsPage({
         <Card>
           <CardHeader title="Nuevo cupón" />
           <CardBody>
-            <form action={createCouponAction} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Código" hint="Lo que escribe tu clienta, por ejemplo VERANO20.">
-                  <Input name="code" required minLength={3} maxLength={20} autoCapitalize="characters" autoComplete="off" className="uppercase" placeholder="VERANO20" />
-                </Field>
-                <Field label="Descuento (%)">
-                  <Input name="percentOff" type="number" required min={1} max={100} placeholder="20" />
-                </Field>
-                <Field label="Desde (opcional)">
-                  <Input name="from" type="date" min={today} />
-                </Field>
-                <Field label="Hasta (opcional)" hint="Vale hasta el final de ese día.">
-                  <Input name="until" type="date" min={today} />
-                </Field>
-              </div>
-              {targets.length > 0 && (
-                <fieldset className="space-y-2 rounded-[var(--radius-md)] bg-sunken p-3">
-                  <legend className="mb-1 text-sm font-medium text-ink-soft">Vale para</legend>
-                  <p className="text-xs text-muted">Si no marcás ninguno, vale para todos los {what}.</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {targets.map((t) => (
-                      <label key={t.id} className="flex items-center gap-2.5 text-sm text-ink">
-                        <input type="checkbox" name="targets" value={t.id} className="size-4 accent-[var(--color-accent)]" />
-                        {t.name}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              )}
-              <SubmitButton pendingLabel="Creando…">Crear cupón</SubmitButton>
-            </form>
+            <CouponForm targets={targets} what={what} today={today} />
           </CardBody>
         </Card>
 
