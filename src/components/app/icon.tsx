@@ -3,6 +3,7 @@ const PATHS: Record<string, string> = {
   calendar: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",
   repeat: "M4 9V7a3 3 0 0 1 3-3h10l-3-3m3 11v2a3 3 0 0 1-3 3H4l3 3",
   users: "M3 20a6 6 0 0 1 12 0M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8M17 20a5 5 0 0 0-3-4.6M16 5a3.5 3.5 0 0 1 0 7",
+  tag: "M3 12V4h8l10 10-8 8L3 12zM7.5 7.5h.01",
   ticket: "M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1 0 4H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4z",
   wallet: "M3 7h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7a2 2 0 0 1 2-2h11M17 13h.01",
   card: "M3 6h18v12H3zM3 10h18M7 15h4",

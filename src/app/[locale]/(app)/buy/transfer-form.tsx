@@ -15,8 +15,11 @@ export function TransferForm({
   studentName,
   currency,
   locale,
+  couponCode = null,
 }: {
   packId: string;
+  /** A discount code already checked for this pack. */
+  couponCode?: string | null;
   studioWhatsapp: string | null;
   studentName: string;
   currency: string;
@@ -83,12 +86,15 @@ export function TransferForm({
   const message = state?.error
     ? state.error === "proofUrl"
       ? t("invalidProof")
-      : te("generic")
+      : state.error === "coupon"
+        ? t("couponLapsed")
+        : te("generic")
     : undefined;
 
   return (
     <form action={submit} className="space-y-3">
       <input type="hidden" name="packId" value={packId} />
+      {couponCode && <input type="hidden" name="coupon" value={couponCode} />}
       <Field label={t("reference")}>
         <Input name="reference" maxLength={160} placeholder="BROU 8842" />
       </Field>

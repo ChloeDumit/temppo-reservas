@@ -14,6 +14,7 @@ import { findOrCreateClient } from "@/lib/appointments/clients";
 import { startDepositCheckout, submitDepositTransfer } from "@/lib/appointments/payments";
 import { manageUrlFor, notifyBooked } from "@/lib/appointments/notify";
 import { bookingLocation } from "@/lib/locations";
+import { checkCoupon, couponProblemText } from "@/lib/coupons";
 
 async function bookableStudio(slug: string) {
   const studio = await db.studio.findUnique({ where: { slug } });
@@ -53,11 +54,23 @@ export async function getSlotsAction(input: z.input<typeof slotsSchema>): Promis
   }));
 }
 
+/** Whether a discount code applies to this service, for the booking page to show the new price. */
+export async function checkCouponAction(input: { slug: string; code: string; serviceId: string }): Promise<
+  { ok: true; code: string; percentOff: number } | { ok: false; error: string }
+> {
+  const studio = await bookableStudio(String(input.slug ?? ""));
+  if (!studio) return { ok: false, error: couponProblemText("notFound", false) };
+  const result = await checkCoupon(studio.id, String(input.code ?? "").slice(0, 40), { serviceId: String(input.serviceId ?? "") });
+  if ("problem" in result) return { ok: false, error: couponProblemText(result.problem, studio.locale === "en") };
+  return { ok: true, code: result.coupon.code, percentOff: result.coupon.percentOff };
+}
+
 const bookSchema = z.object({
   slug: z.string().min(1),
   serviceId: z.string().min(1),
   staffId: z.string().optional(),
   locationId: z.string().optional(),
+  coupon: z.string().trim().max(40).optional(),
   startsAt: z.string().datetime(),
   name: z.string().trim().min(2).max(80),
   phone: z
@@ -98,6 +111,14 @@ export async function bookPublicAction(_prev: BookState, formData: FormData): Pr
   const locationId = await bookingLocation(studio.id, v.locationId);
   if (locationId === undefined) return { error: "location" };
 
+  // Checked again: a code can lapse between typing it and booking.
+  let coupon: { code: string; percentOff: number } | null = null;
+  if (v.coupon) {
+    const checked = await checkCoupon(studio.id, v.coupon, { serviceId: v.serviceId });
+    if ("problem" in checked) return { error: "coupon" };
+    coupon = checked.coupon;
+  }
+
   // Which ways to pay exist decides whether a deposit can be asked for at all.
   const { mp: canMp, transfer: canTransfer } = depositMethods(studio);
   const pay = v.pay === "mp" && canMp ? "mp" : v.pay === "transfer" && canTransfer ? "transfer" : null;
@@ -118,6 +139,7 @@ export async function bookPublicAction(_prev: BookState, formData: FormData): Pr
     addOnIds,
     staffId: v.staffId || null,
     locationId,
+    coupon,
     startsAt: new Date(v.startsAt),
     source: "CLIENT_PUBLIC",
     collectDeposit: canMp || canTransfer,

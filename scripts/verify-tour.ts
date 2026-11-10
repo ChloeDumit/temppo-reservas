@@ -212,7 +212,7 @@ const overflowLabels = staffNav
   .slice(TAB_SLOTS)
   .filter((h) => !ownerOnly.includes(h))
   .map((h) => h.replace("/", ""));
-const namedInMore = ["Alumnos", "Clases", "Interesados", "Packs", "Pagos", "Reportes", "Ajustes"];
+const namedInMore = ["Alumnos", "Clases", "Interesados", "Packs", "Cupones", "Pagos", "Reportes", "Ajustes"];
 check("the Más step names what is inside", overflowLabels.length, namedInMore.length);
 check(
   "and each of those words appears in the copy",

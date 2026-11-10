@@ -61,7 +61,8 @@
     "home": "Home",
     "myPlan": "My plan",
     "rentals": "Agenda",
-    "spaces": "Courts"
+    "spaces": "Courts",
+    "coupons": "Coupons"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -621,7 +622,11 @@
     "pendingNotice": "You have a payment awaiting approval.",
     "onlineUnavailable": "Online payment isn't set up. Use a bank transfer.",
     "empty": "The studio hasn't published any packs yet.",
-    "invalidProof": "Enter a valid link (https://…)."
+    "invalidProof": "Enter a valid link (https://…).",
+    "couponLabel": "Have a discount coupon?",
+    "couponApply": "Apply",
+    "couponApplied": "Coupon {code}: {percent}% off the packs shown.",
+    "couponLapsed": "The coupon is no longer valid: reload the page."
   },
   "trial": {
     "title": "Free trial class",
@@ -840,7 +845,7 @@
     },
     "more": {
       "title": "Everything else",
-      "body": "In here you will find Students, Classes, Leads, Packs, Payments, Reports and Settings. You also sign out from this menu."
+      "body": "In here you will find Students, Classes, Leads, Packs, Coupons, Payments, Reports and Settings. You also sign out from this menu."
     },
     "payments": {
       "title": "Payments",
@@ -1137,7 +1142,13 @@
     "mpSurcharge": "Mercado Pago adds a {fee} fee: you pay {total}.",
     "whereLocation": "Which location?",
     "errLocation": "Choose the location again.",
-    "change": "Change"
+    "change": "Change",
+    "couponLabel": "Have a discount coupon?",
+    "couponApply": "Apply",
+    "couponApplied": "Coupon {code}: {percent}% off",
+    "couponNewTotal": "Total {amount} (you save {saved})",
+    "couponRemove": "Remove",
+    "errCoupon": "That coupon is no longer valid. Remove it or try another."
   },
   "manage": {
     "title": "Your appointment",

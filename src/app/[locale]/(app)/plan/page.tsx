@@ -13,6 +13,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { autoDebitAction, choosePlanAction, payAction } from "./actions";
+import { ActionForm } from "./action-form";
 
 const pesos = (cents: number) => `$${(cents / 100).toLocaleString("es-UY")}`;
 
@@ -94,7 +95,7 @@ export default async function MyPlanPage({
               )}
               {s.studio.nextPlan && s.studio.nextPlan !== "TRIAL" && (
                 <p className="text-muted">
-                  {trial ? "Elegiste" : "Pasás a"} el plan {beautyPlan(s.studio.nextPlan).name} {trial ? "para cuando termine la prueba" : "desde tu próximo pago"}.
+                  {trial ? "Elegiste el" : "Pasás al"} plan {beautyPlan(s.studio.nextPlan).name} {trial ? "para cuando termine la prueba" : "desde tu próximo pago"}.
                 </p>
               )}
               {trial && !s.studio.nextPlan && (
@@ -107,10 +108,10 @@ export default async function MyPlanPage({
                 <div className="space-y-3 rounded-[var(--radius-md)] bg-sunken p-3">
                   <p className="font-medium">Cómo pagar</p>
                   {canPayOnline && (
-                    <form action={payAction}>
+                    <ActionForm action={payAction}>
                       <input type="hidden" name="purpose" value="PLAN" />
                       <SubmitButton pendingLabel="Abriendo Mercado Pago…">Pagar {pesos(s.amountCents)} con Mercado Pago</SubmitButton>
-                    </form>
+                    </ActionForm>
                   )}
                   {transfer ? (
                     <div className="space-y-1">
@@ -130,12 +131,12 @@ export default async function MyPlanPage({
                     !canPayOnline && <p className="text-muted">Escribinos y te pasamos los datos para pagar.</p>
                   )}
                   {canPayOnline && isSubscriptionBillingConfigured() && (
-                    <form action={autoDebitAction} className="border-t border-line pt-3">
+                    <ActionForm action={autoDebitAction} className="border-t border-line pt-3">
                       <p className="mb-2 text-xs text-muted">¿No querés acordarte cada mes? Con el débito automático se cobra solo con tu tarjeta.</p>
                       <SubmitButton variant="secondary" size="sm" pendingLabel="Abriendo Mercado Pago…">
                         Activar débito automático
                       </SubmitButton>
-                    </form>
+                    </ActionForm>
                   )}
                 </div>
               )}
@@ -178,12 +179,12 @@ export default async function MyPlanPage({
                 <p className="text-caution">Te estás quedando sin mensajes: cuando se terminan, los avisos dejan de salir hasta el mes que viene.</p>
               )}
               {canPayOnline && (
-                <form action={payAction}>
+                <ActionForm action={payAction}>
                   <input type="hidden" name="purpose" value="WA_PACK" />
                   <SubmitButton variant="secondary" size="sm" pendingLabel="Abriendo Mercado Pago…">
                     Sumar {WA_PACK.messages} mensajes por {pesos(WA_PACK_CENTS)}
                   </SubmitButton>
-                </form>
+                </ActionForm>
               )}
               {!s.wa.on && (waTotal > 0 || s.wa.extra > 0) && (
                 <p className="text-xs text-muted">Los avisos automáticos están apagados: los prendés en Ajustes → WhatsApp.</p>
@@ -226,12 +227,12 @@ export default async function MyPlanPage({
                     {problem ? (
                       <p className="text-xs text-muted">{problem}</p>
                     ) : current || chosen ? null : (
-                      <form action={choosePlanAction}>
+                      <ActionForm action={choosePlanAction}>
                         <input type="hidden" name="plan" value={plan} />
                         <SubmitButton variant="secondary" size="sm" className="w-full" pendingLabel="Guardando…">
                           Elegir {p.name}
                         </SubmitButton>
-                      </form>
+                      </ActionForm>
                     )}
                   </div>
                 );
