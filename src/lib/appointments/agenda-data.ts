@@ -41,6 +41,8 @@ type Row = {
   clientNotes: string | null;
   staffNotes: string | null;
   priceCents: number;
+  couponCode?: string | null;
+  discountCents?: number;
   depositCents: number;
   depositStatus: string;
   addOns: { name: string }[];
@@ -72,6 +74,7 @@ export function toAgendaView(a: Row, studio: Studio, locale: string, now: Date):
     clientNotes: a.clientNotes,
     staffNotes: a.staffNotes,
     price: money(a.priceCents),
+    coupon: a.couponCode ? `${a.couponCode} (−${money(a.discountCents ?? 0)})` : null,
     deposit: a.depositCents ? money(a.depositCents) : null,
     depositStatus: a.depositStatus,
     depositDue: a.depositCents > 0 && a.depositStatus === "PENDING",

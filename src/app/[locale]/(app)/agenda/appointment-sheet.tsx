@@ -31,6 +31,8 @@ export type AgendaAppointment = {
   staffName: string;
   /** The sucursal, when the business has several. */
   locationName?: string | null;
+  /** «VERANO20 (−$180)»: the price shown is already after it. */
+  coupon?: string | null;
   clientId: string;
   clientName: string;
   clientPhone: string | null;
@@ -112,6 +114,7 @@ function Details({ appt, staff }: { appt: AgendaAppointment; staff: { id: string
             {appt.timeLabel} · {appt.staffName}
             {appt.locationName && ` · 📍 ${appt.locationName}`}
           </p>
+          {appt.coupon && <p className="text-sm text-ink-soft">🎟️ {appt.coupon}</p>}
         </div>
         <Badge tone={STATUS_TONE[appt.status]}>{t(`status${appt.status}` as "statusCONFIRMED")}</Badge>
       </div>

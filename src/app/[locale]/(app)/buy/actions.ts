@@ -12,6 +12,7 @@ import { generatePaymentCode } from "@/lib/payment-code";
 import { notifyOwners } from "@/lib/notifications";
 import { formatMoney } from "@/lib/money";
 import { localePath } from "@/i18n/routing";
+import { checkCoupon, discountFor } from "@/lib/coupons";
 
 export type BuyState = {
   error?: string;
@@ -32,6 +33,8 @@ async function createPendingPurchase(params: {
   reference?: string | null;
   proofUrl?: string | null;
   shortCode?: string | null;
+  /** A discount code, checked here again for this pack. */
+  couponCode?: string | null;
 }) {
   const pack = await db.classPack.findFirst({
     where: { id: params.packId, studioId: params.studioId, isActive: true },
@@ -39,6 +42,13 @@ async function createPendingPurchase(params: {
   if (!pack) return null;
 
   const now = new Date();
+  let coupon: { code: string; percentOff: number } | null = null;
+  if (params.couponCode) {
+    const checked = await checkCoupon(params.studioId, params.couponCode, { packId: pack.id }, now);
+    if ("problem" in checked) return "coupon" as const;
+    coupon = checked.coupon;
+  }
+  const discountCents = coupon ? discountFor(pack.priceCents, coupon.percentOff) : 0;
 
   return db.$transaction(async (tx) => {
     const studentPack = await tx.studentPack.create({
@@ -60,7 +70,9 @@ async function createPendingPurchase(params: {
         studioId: params.studioId,
         studentId: params.studentId,
         studentPackId: studentPack.id,
-        amountCents: pack.priceCents,
+        amountCents: pack.priceCents - discountCents,
+        couponCode: coupon?.code ?? null,
+        discountCents,
         currency: params.currency,
         method: params.method,
         status: "PENDING",
@@ -77,6 +89,7 @@ async function createPendingPurchase(params: {
 
 const transferSchema = z.object({
   packId: z.string().min(1),
+  coupon: z.string().trim().max(40).optional(),
   reference: z.string().trim().max(160).optional(),
   proofUrl: z.string().trim().max(500).optional(),
 });
@@ -106,7 +119,9 @@ export async function submitTransferAction(
     reference: parsed.data.reference || null,
     proofUrl: proofUrl || null,
     shortCode,
+    couponCode: parsed.data.coupon || null,
   });
+  if (created === "coupon") return { error: "coupon" };
 
   if (!created) return { error: "notFound" };
 
@@ -163,7 +178,10 @@ export async function startCheckoutAction(formData: FormData) {
     packId,
     method: "MERCADO_PAGO",
     currency: user.studio.currency,
+    couponCode: String(formData.get("coupon") ?? "") || null,
   });
+  // The code lapsed since the page showed it: back, where it says why.
+  if (created === "coupon") redirect(`${localePath(user.studio.locale, "/buy")}?cupon=${encodeURIComponent(String(formData.get("coupon")))}`);
   if (!created) return;
 
   const base = process.env.APP_URL || "http://localhost:3000";

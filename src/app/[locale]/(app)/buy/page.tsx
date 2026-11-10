@@ -10,13 +10,18 @@ import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { SheetForm } from "@/components/app/sheet-form";
 import { TransferForm } from "./transfer-form";
 import { startCheckoutAction } from "./actions";
+import { Input } from "@/components/ui/field";
+import { checkCoupon, couponProblemText, discountFor } from "@/lib/coupons";
 
 export default async function BuyPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ cupon?: string }>;
 }) {
   const { locale } = await params;
+  const { cupon } = await searchParams;
   setRequestLocale(locale);
 
   const { user, profile } = await requireStudentProfile();
@@ -37,6 +42,17 @@ export default async function BuyPage({
 
   const onlineEnabled = isOnlinePaymentEnabled();
 
+  // A discount code typed above: what it takes off each pack it applies to.
+  const typed = cupon?.trim().slice(0, 40) ?? "";
+  const checks = typed
+    ? await Promise.all(packs.map(async (pack) => [pack.id, await checkCoupon(studio.id, typed, { packId: pack.id })] as const))
+    : [];
+  const couponFor = new Map(checks.flatMap(([id, r]) => ("coupon" in r ? [[id, r.coupon] as const] : [])));
+  const couponProblem =
+    typed && couponFor.size === 0 && checks[0] && "problem" in checks[0][1]
+      ? couponProblemText(checks.some(([, r]) => "problem" in r && r.problem === "notForThis") ? "notForThis" : checks[0][1].problem, locale === "en")
+      : null;
+
   return (
     <>
       <PageHeader title={t("title")} description={t("subtitle")} />
@@ -51,6 +67,24 @@ export default async function BuyPage({
         <p className="mb-4 rounded-lg bg-sunken px-4 py-2.5 text-sm text-ink-soft">
           {t("onlineUnavailable")}
         </p>
+      )}
+
+      {packs.length > 0 && (
+        <form method="get" className="mb-4 flex flex-wrap items-end gap-2">
+          <label className="min-w-0 flex-1 space-y-1.5">
+            <span className="block text-sm font-medium text-ink-soft">{t("couponLabel")}</span>
+            <Input name="cupon" defaultValue={typed} autoCapitalize="characters" autoComplete="off" className="uppercase" />
+          </label>
+          <Button type="submit" variant="secondary">
+            {t("couponApply")}
+          </Button>
+          {couponProblem && <p className="w-full text-sm text-critical">{couponProblem}</p>}
+          {couponFor.size > 0 && (
+            <p className="w-full text-sm text-positive">
+              🎟️ {t("couponApplied", { code: [...couponFor.values()][0].code, percent: [...couponFor.values()][0].percentOff })}
+            </p>
+          )}
+        </form>
       )}
 
       {packs.length === 0 ? (
@@ -75,14 +109,24 @@ export default async function BuyPage({
                       <p className="mt-1 text-sm text-ink-soft">{pack.description}</p>
                     )}
                   </div>
-                  <Badge tone="accent">
-                    {formatMoney(pack.priceCents, studio.currency, locale)}
-                  </Badge>
+                  <div className="shrink-0 text-right">
+                    {couponFor.has(pack.id) && (
+                      <p className="text-xs text-muted line-through">{formatMoney(pack.priceCents, studio.currency, locale)}</p>
+                    )}
+                    <Badge tone="accent">
+                      {formatMoney(
+                        pack.priceCents - (couponFor.has(pack.id) ? discountFor(pack.priceCents, couponFor.get(pack.id)!.percentOff) : 0),
+                        studio.currency,
+                        locale,
+                      )}
+                    </Badge>
+                  </div>
                 </div>
 
                 {onlineEnabled && (
                   <form action={startCheckoutAction}>
                     <input type="hidden" name="packId" value={pack.id} />
+                    {couponFor.has(pack.id) && <input type="hidden" name="coupon" value={couponFor.get(pack.id)!.code} />}
                     <Button type="submit" className="w-full">
                       {t("payOnline")}
                     </Button>
@@ -103,6 +147,7 @@ export default async function BuyPage({
                     studentName={user.name}
                     currency={studio.currency}
                     locale={locale}
+                    couponCode={couponFor.get(pack.id)?.code ?? null}
                   />
                 </SheetForm>
               </CardBody>

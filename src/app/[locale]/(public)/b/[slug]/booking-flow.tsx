@@ -9,7 +9,8 @@ import { shiftDateKey } from "@/lib/appointments/slots";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Spinner } from "@/components/ui/spinner";
-import { bookPublicAction, getSlotsAction, type BookState, type DayOption } from "./actions";
+import { bookPublicAction, checkCouponAction, getSlotsAction, type BookState, type DayOption } from "./actions";
+import { discountFor } from "@/lib/coupon-math";
 
 export type FlowService = {
   id: string;
@@ -99,7 +100,27 @@ export function BookingFlow({
 
   const service = services.find((s) => s.id === serviceId) ?? null;
   const chosenAddOns = service?.addOns.filter((a) => addOnIds.includes(a.id)) ?? [];
-  const total = (service?.priceCents ?? 0) + chosenAddOns.reduce((s, a) => s + a.priceCents, 0);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; percentOff: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [checkingCoupon, startCheckingCoupon] = useTransition();
+  const listTotal = (service?.priceCents ?? 0) + chosenAddOns.reduce((s, a) => s + a.priceCents, 0);
+  const discount = coupon ? discountFor(listTotal, coupon.percentOff) : 0;
+  // What she pays, after the coupon: the deposit is a share of this.
+  const total = listTotal - discount;
+  const applyCoupon = () => {
+    if (!service || !couponInput.trim()) return;
+    startCheckingCoupon(async () => {
+      const result = await checkCouponAction({ slug, code: couponInput, serviceId: service.id });
+      if (result.ok) {
+        setCoupon({ code: result.code, percentOff: result.percentOff });
+        setCouponError(null);
+      } else {
+        setCoupon(null);
+        setCouponError(result.error);
+      }
+    });
+  };
   const length = (service?.durationMin ?? 0) + chosenAddOns.reduce((s, a) => s + a.durationMin, 0);
   const deposit = service && (methods.mp || methods.transfer) ? depositFor(service.depositType, service.depositValue, total) : 0;
   const surcharge = pay === "mp" ? onlineSurchargeFor(deposit, mpFee) : 0;
@@ -134,6 +155,9 @@ export function BookingFlow({
     const s = services.find((x) => x.id === id)!;
     setServiceId(id);
     setAddOnIds([]);
+    // A coupon can be for some services only: checked again for the new one.
+    setCoupon(null);
+    setCouponError(null);
     setStart(null);
     setDays(null);
     const eligible = staff.filter((x) => s.staffIds.includes(x.id) && worksHere(x.id));
@@ -168,6 +192,7 @@ export function BookingFlow({
         emailForMp: t("errEmailForMp"),
         tooManyHolds: t("errTooManyHolds"),
         location: t("errLocation"),
+        coupon: t("errCoupon"),
       } as Record<string, string>)[state.error] ?? t("errGeneric")
     : null;
 
@@ -248,7 +273,10 @@ export function BookingFlow({
               {service.name}
               {chosenAddOns.length > 0 && <span className="font-normal text-muted"> + {chosenAddOns.map((a) => a.name).join(", ")}</span>}
             </span>
-            <span className="shrink-0 tabular-nums text-ink-soft">{money(total)}</span>
+            <span className="shrink-0 tabular-nums text-ink-soft">
+              {discount > 0 && <span className="mr-1.5 text-muted line-through">{money(listTotal)}</span>}
+              {money(total)}
+            </span>
           </button>
           <p className="text-muted">
             {duration(length)}
@@ -473,6 +501,7 @@ export function BookingFlow({
           ))}
           {staffId && <input type="hidden" name="staffId" value={staffId} />}
           {locationId && <input type="hidden" name="locationId" value={locationId} />}
+          {coupon && <input type="hidden" name="coupon" value={coupon.code} />}
           <input type="hidden" name="startsAt" value={chosenSlot.start} />
           {/* Honeypot, hidden from people. */}
           <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
@@ -491,6 +520,51 @@ export function BookingFlow({
             <Field label={t("notes")}>
               <Textarea name="notes" maxLength={300} placeholder={t("notesPlaceholder")} />
             </Field>
+          </div>
+
+          <div className={cn(card, "space-y-2 p-4")}>
+            {coupon ? (
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-ink">
+                  🎟️ {t("couponApplied", { code: coupon.code, percent: coupon.percentOff })}
+                  <span className="block text-muted">{t("couponNewTotal", { amount: money(total), saved: money(discount) })}</span>
+                </span>
+                <button type="button" onClick={() => setCoupon(null)} className="shrink-0 text-sm text-accent">
+                  {t("couponRemove")}
+                </button>
+              </div>
+            ) : (
+              <>
+                <label htmlFor="coupon-code" className="text-sm font-medium text-ink-soft">
+                  {t("couponLabel")}
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="coupon-code"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyCoupon();
+                      }
+                    }}
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    className="min-w-0 flex-1 uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={!couponInput.trim() || checkingCoupon}
+                    className="shrink-0 rounded-full border border-line-strong px-4 text-sm font-medium text-ink disabled:opacity-50"
+                  >
+                    {checkingCoupon ? "…" : t("couponApply")}
+                  </button>
+                </div>
+                {couponError && <p className="text-sm text-critical">{couponError}</p>}
+              </>
+            )}
           </div>
 
           {deposit > 0 && (

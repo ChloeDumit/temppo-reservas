@@ -61,7 +61,8 @@
     "home": "Inicio",
     "myPlan": "Mi plan",
     "rentals": "Agenda",
-    "spaces": "Canchas"
+    "spaces": "Canchas",
+    "coupons": "Cupones"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -621,7 +622,11 @@
     "pendingNotice": "Tenés un pago esperando aprobación.",
     "onlineUnavailable": "El pago online no está configurado. Usá transferencia.",
     "empty": "El estudio todavía no publicó packs.",
-    "invalidProof": "Ingresá un link válido (https://…)."
+    "invalidProof": "Ingresá un link válido (https://…).",
+    "couponLabel": "¿Tenés un cupón de descuento?",
+    "couponApply": "Aplicar",
+    "couponApplied": "Cupón {code}: {percent}% de descuento en los packs marcados.",
+    "couponLapsed": "El cupón ya no es válido: volvé a cargar la página."
   },
   "trial": {
     "title": "Clase de prueba gratis",
@@ -840,7 +845,7 @@
     },
     "more": {
       "title": "Todo lo demás",
-      "body": "Acá adentro están Alumnos, Clases, Interesados, Packs, Pagos, Reportes y Ajustes. También cerrás sesión desde este menú."
+      "body": "Acá adentro están Alumnos, Clases, Interesados, Packs, Cupones, Pagos, Reportes y Ajustes. También cerrás sesión desde este menú."
     },
     "payments": {
       "title": "Pagos",
@@ -1137,7 +1142,13 @@
     "mpSurcharge": "Con Mercado Pago se suman {fee} de comisión: pagás {total}.",
     "whereLocation": "¿En qué sucursal?",
     "errLocation": "Elegí la sucursal de nuevo.",
-    "change": "Cambiar"
+    "change": "Cambiar",
+    "couponLabel": "¿Tenés un cupón de descuento?",
+    "couponApply": "Aplicar",
+    "couponApplied": "Cupón {code}: {percent}% de descuento",
+    "couponNewTotal": "Total {amount} (ahorrás {saved})",
+    "couponRemove": "Quitar",
+    "errCoupon": "Ese cupón ya no es válido. Quitalo o probá con otro."
   },
   "manage": {
     "title": "Tu turno",

@@ -7,6 +7,7 @@ import { depositFor } from "./deposit";
 
 export { depositFor };
 import { availabilityQuery, liveAppointmentFilter, type AvailabilityStudio } from "./availability";
+import { discountFor } from "@/lib/coupons";
 import { isSlotOpen, pickStaff } from "./slots";
 
 export type AppointmentStudio = AvailabilityStudio & {
@@ -133,6 +134,8 @@ export async function bookAppointment(opts: {
   staffId: string | null;
   /** The sucursal, when the business has more than one. */
   locationId?: string | null;
+  /** A discount code already checked for this service. */
+  coupon?: { code: string; percentOff: number } | null;
   startsAt: Date;
   source: AppointmentSource;
   /** Ask for the service's deposit. Online bookings always do; staff choose. */
@@ -208,8 +211,11 @@ export async function bookAppointment(opts: {
       if (!online && !opts.allowBlocked && (await onTimeOff(tx, studio.id, staffId, opts.startsAt, endsAt))) {
         return { ok: false, code: "BLOCKED_TIME" } as const;
       }
+      // The coupon comes off the price first; the deposit is a share of what is left.
+      const discountCents = opts.coupon ? discountFor(pro.priceCents, opts.coupon.percentOff) : 0;
+      const priceCents = pro.priceCents - discountCents;
       const depositCents = opts.collectDeposit
-        ? depositFor(offer.service.depositType, offer.service.depositValue, pro.priceCents)
+        ? depositFor(offer.service.depositType, offer.service.depositValue, priceCents)
         : 0;
       const pending = depositCents > 0;
 
@@ -226,7 +232,9 @@ export async function bookAppointment(opts: {
           blockedUntil: new Date(endsAt.getTime() + offer.service.bufferAfterMin * MINUTE),
           status: pending ? "PENDING_PAYMENT" : "CONFIRMED",
           source: opts.source,
-          priceCents: pro.priceCents,
+          priceCents,
+          couponCode: opts.coupon?.code ?? null,
+          discountCents,
           depositCents,
           depositStatus: pending ? "PENDING" : "NONE",
           holdExpiresAt: pending ? new Date(now.getTime() + studio.holdMinutes * MINUTE) : null,

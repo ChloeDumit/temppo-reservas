@@ -162,6 +162,7 @@ model Studio {
   spaces            Space[]
   rentals           Rental[]
   subscription      Subscription?
+  coupons           Coupon[]
 
   @@index([slug])
 }
@@ -610,6 +611,10 @@ model Payment {
 
   studentPackId String?
   studentPack   StudentPack? @relation(fields: [studentPackId], references: [id], onDelete: SetNull)
+
+  /// A discount code used on this purchase, and what it took off amountCents.
+  couponCode    String?
+  discountCents Int     @default(0)
 
   /// A deposit (seña) for an appointment rather than a pack purchase.
   appointmentId String?
@@ -1143,6 +1148,11 @@ model Appointment {
   client    StudentProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
   serviceId String?
   service   Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  /// A discount code used when booking, and what it took off priceCents
+  /// (which is already the price after it).
+  couponCode    String?
+  discountCents Int     @default(0)
+
   /// The sucursal she comes to. Null for a business with a single location
   /// (and for appointments made before there were several).
   locationId String?
@@ -1538,4 +1548,31 @@ model Rental {
   @@index([clientId, startsAt])
   @@index([status, holdExpiresAt])
 
+}
+
+/**
+ * A discount code a business gives its clients: a percentage off, on every
+ * service (or pack) or only some, between two dates. Typed when booking a
+ * service in Temppo Beauty, or when buying a pack in TEMPPO Reservas.
+ */
+model Coupon {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  /// Stored in capitals; matched however it is typed.
+  code       String
+  percentOff Int
+  /// Only these services (Beauty) or packs (Reservas). Empty: all of them.
+  serviceIds String[]  @default([])
+  packIds    String[]  @default([])
+  /// Start of the first day and end of the last, studio time. Null: open.
+  validFrom  DateTime?
+  validUntil DateTime?
+  isActive   Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studioId, code])
 }
