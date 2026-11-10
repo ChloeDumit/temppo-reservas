@@ -15,10 +15,13 @@ import { join } from "node:path";
 
 const OUT = "demo";
 /*
-  One encoder, several films. Each cut names the stills it draws from, its own
-  beats and its own opening and closing card; the push-in, the cross-fade, the
-  caption pills and the tap rings are shared. Adding a reel is adding an entry
-  to EDITS, not another copy of this pipeline.
+  The long demo of the classes product, built from stills with a slow push-in.
+
+  The reels used to be made here too. They are recorded now — see
+  scripts/reel-record.mjs, which drives the real app and keeps the frames
+  Chromium composites, because a still with a caption along the bottom reads
+  as a screenshot with a subtitle rather than as somebody using the thing.
+  This is left for the one film that is a tour rather than a story.
 */
 const EDIT = process.env.EDIT || "classes";
 const W = 1080;
@@ -88,90 +91,6 @@ const EDITS = {
     ],
   },
 
-  /** The club promo: the player books, the club watches it land. */
-  padel: {
-    stills: "padel-stills",
-    name: "temppo-canchas",
-    reel: true,
-    intro: () => hook({ line1: "¿Cuántas canchas", line2: "perdés por semana?", sub: "Reservan, no vienen, y no pagaron nada" }),
-    outro: () => card({ title: "Que reserven solos", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }),
-    beats: [
-      { still: "01-what", caption: "Elige qué quiere jugar", hold: 2.0 },
-      { still: "02-duration", caption: "Y por cuánto tiempo", hold: 1.8 },
-      { still: "03-day", caption: "Ve qué día hay lugar", hold: 2.0 },
-      { still: "04-time", caption: "Cada horario con su precio", hold: 2.4 },
-      { still: "05-confirm", caption: "Todo a la vista antes de confirmar", hold: 2.4, lift: 470 },
-      { still: "06-details", caption: "Sin crear una cuenta", hold: 2.0 },
-      { still: "07-booked", caption: "La cancha queda retenida", hold: 2.0 },
-      { still: "12-sena-pay", caption: "Hasta que pague la seña", hold: 2.6 },
-      { still: "08-dashboard", caption: "Y en el club entra sola", hold: 2.6 },
-      { still: "10-agenda-evening", caption: "Tu noche, cancha por cancha", hold: 2.6 },
-      { still: "11-courts", caption: "Tus precios y tus horarios", hold: 2.4 },
-    ],
-  },
-
-  /*
-    «Mientras dormís». The same booking, told as something that happened at
-    23:40 — the point is not the screens but the hour on the clock.
-  */
-  dormis: {
-    stills: "padel-stills",
-    name: "temppo-mientras-dormis",
-    reel: true,
-    intro: () => hook({ line1: "Mientras dormís,", line2: "reservan igual", sub: "Tu agenda no cierra a las 20:00" }),
-    outro: () => card({ title: "Que reserven solos", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }),
-    beats: [
-      { still: "01-what", caption: "23:40, un martes", hold: 2.2 },
-      { still: "02-duration", caption: "Elige cuánto quiere jugar", hold: 1.8 },
-      { still: "03-day", caption: "El día que hay lugar", hold: 2.0 },
-      { still: "04-time", caption: "El horario, con su precio", hold: 2.4 },
-      { still: "06-details", caption: "Sin crear una cuenta", hold: 2.0 },
-      { still: "07-booked", caption: "Queda retenida", hold: 2.0 },
-      { still: "12-sena-pay", caption: "Paga la seña a las 23:43", hold: 2.6 },
-      { still: "08-dashboard", caption: "A la mañana ya está cargado", hold: 3.0 },
-    ],
-  },
-
-  /*
-    «La seña». Opens on the cost of a no-show and spends its middle on the one
-    screen that answers it, instead of touring the booking again.
-  */
-  sena: {
-    stills: "padel-stills",
-    name: "temppo-sena",
-    reel: true,
-    intro: () => hook({ line1: "El que no viene", line2: "te costó la cancha", sub: "Con la seña, no" }),
-    outro: () => card({ title: "Cobrá la seña", subtitle: "Si no la pagan, se libera sola.", cta: "temppo.uy" }),
-    beats: [
-      { still: "04-time", caption: "Elige su horario", hold: 2.0 },
-      { still: "05-confirm", caption: "Y ve lo que sale", hold: 2.2, lift: 470 },
-      { still: "06-details", caption: "Deja su nombre y su teléfono", hold: 2.0 },
-      { still: "07-booked", caption: "La cancha queda retenida, no tomada", hold: 2.6 },
-      { still: "12-sena-pay", caption: "Mercado Pago o transferencia", hold: 3.0 },
-      { still: "10-agenda-evening", caption: "Pagada, queda confirmada en tu agenda", hold: 3.0 },
-    ],
-  },
-
-  /*
-    «De Instagram a tu agenda». The whole path in one cut, for the profile it
-    is published on: there is no shot of Instagram itself, because mocking up
-    somebody else's app to advertise your own is a worse film than saying it.
-  */
-  instagram: {
-    stills: "padel-stills",
-    name: "temppo-de-instagram",
-    reel: true,
-    intro: () => hook({ line1: "Te encuentran", line2: "en Instagram", sub: "y reservan desde el link de tu bio" }),
-    outro: () => card({ title: "Tu link de reservas", subtitle: "Un mes gratis. Sin tarjeta.", cta: "temppo.uy" }),
-    beats: [
-      { still: "01-what", caption: "Tocan tu link", hold: 2.0 },
-      { still: "03-day", caption: "Ven qué día hay lugar", hold: 2.0 },
-      { still: "04-time", caption: "Y a qué hora, con su precio", hold: 2.4 },
-      { still: "06-details", caption: "Reservan sin crear una cuenta", hold: 2.2 },
-      { still: "12-sena-pay", caption: "Pagan la seña", hold: 2.4 },
-      { still: "09-agenda", caption: "Y aparece en tu agenda", hold: 3.0 },
-    ],
-  },
 };
 
 const cut = EDITS[EDIT];
