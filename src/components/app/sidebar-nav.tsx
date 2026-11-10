@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
@@ -46,6 +46,44 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
   );
 }
 
+/** Fields that bring up the phone's keyboard. */
+function opensKeyboard(el: EventTarget | null) {
+  if (!(el instanceof HTMLElement)) return false;
+  if (el.isContentEditable || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) return true;
+  return el instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit", "reset", "range", "color", "file", "hidden"].includes(el.type);
+}
+
+/**
+ * True while she is typing. On an iPhone a fixed bar rides up with the
+ * keyboard and, once it closes, can stay stuck halfway up the page until the
+ * next scroll — so the bar steps aside while a field has the keyboard, which
+ * also leaves the field more room.
+ */
+function useTyping() {
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onIn = (e: FocusEvent) => {
+      clearTimeout(timer);
+      if (opensKeyboard(e.target)) setTyping(true);
+    };
+    // A beat before showing it again: moving from one field to the next
+    // fires focusout and then focusin, and the bar should not flash between.
+    const onOut = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setTyping(opensKeyboard(document.activeElement)), 150);
+    };
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("focusin", onIn);
+      document.removeEventListener("focusout", onOut);
+    };
+  }, []);
+  return typing;
+}
+
 /**
  * Phone navigation: four destinations plus "More".
  *
@@ -64,13 +102,14 @@ export function MobileTabBar({
   const pathname = usePathname();
   const t = useTranslations("nav");
   const [moreOpen, setMoreOpen] = useState(false);
+  const typing = useTyping();
 
   const hasOverflow = overflow.length > 0;
   const overflowActive = overflow.some((item) => isActive(pathname, item.href));
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md md:hidden">
+      <nav className={cn("fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md md:hidden", typing && "hidden")}>
         <div className="flex pb-nav-safe">
           {primary.map((item) => {
             const active = isActive(pathname, item.href);
