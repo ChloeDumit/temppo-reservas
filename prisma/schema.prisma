@@ -130,6 +130,11 @@ model Studio {
   /// live in MercadoPagoAccount, away from a row that is read everywhere.
   mpConnectedAt DateTime?
 
+  /// Where the owner came from when she signed up — the ad's utm_source,
+  /// utm_medium and utm_campaign, as JSON. Null: typed the address, or before
+  /// this was recorded.
+  signupSource String?
+
   onboardingCompletedAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

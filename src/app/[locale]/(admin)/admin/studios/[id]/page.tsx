@@ -24,6 +24,7 @@ import { beautyPlanFor, planLabel, PRODUCT_LABEL } from "@/lib/admin/product";
 import { StudioLogoForm } from "./logo-form";
 import { billingMessage } from "@/lib/billing/beauty-server";
 import { CopyText } from "../../content/copy-text";
+import { signupSourceLabel } from "@/lib/signup-source";
 
 const TIMEZONES = [
   "America/Montevideo",
@@ -137,7 +138,7 @@ export default async function AdminStudioPage({
             {PRODUCT_LABEL[beauty ? "beauty" : "temppo"]}
           </span>
           <p className="mt-1 text-sm text-white/40">
-            /{studio.slug} · {studio.timezone} · desde {date(studio.createdAt)}
+            /{studio.slug} · {studio.timezone} · desde {date(studio.createdAt)} · llegó por {signupSourceLabel(studio.signupSource)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

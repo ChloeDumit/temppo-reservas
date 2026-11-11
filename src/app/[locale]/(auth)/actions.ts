@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { z } from "zod";
@@ -26,6 +26,7 @@ import { brandByKey } from "@/lib/brand/registry";
 import { seedAppointmentStudio } from "@/lib/appointments/seed";
 import { BEAUTY_TRIAL_WA_QUOTA, WA_AUTO_LIVE } from "@/lib/brand/pricing";
 import { preferOpenStudios } from "@/lib/auth/open-studios";
+import { SIGNUP_COOKIE, SOURCE_COOKIE, signupSourceLabel } from "@/lib/signup-source";
 
 export type AuthState = { error?: string; sent?: boolean } | null;
 
@@ -236,6 +237,8 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   */
   const brand = await getBrand();
   const vertical = brand.key === "temppo" ? (parsed.data.vertical ?? "CLASSES") : brand.vertical;
+  // Which ad brought her, when one did: kept so the console can tell.
+  const signupSource = await readSignupSource();
   const appointments = vertical === "APPOINTMENTS";
 
   const user = await db.$transaction(async (tx) => {
@@ -249,6 +252,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
         brand: brand.key,
         vertical,
         accentColor: brand.accent,
+        signupSource,
         // The trial includes a taste of automatic WhatsApp, once it sends.
         ...(appointments && WA_AUTO_LIVE ? { waMode: "CLOUD", waMonthlyQuota: BEAUTY_TRIAL_WA_QUOTA } : {}),
         // Every new studio gets a default location so the schedule works immediately.
@@ -320,6 +324,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
       `Slug: ${slug}`,
       `Idioma: ${locale}`,
       `Prueba hasta: ${trialEndsAt.toISOString().slice(0, 10)}`,
+      `Llegó por: ${signupSourceLabel(signupSource)}`,
       "",
       `${base}${localePath(locale, `/admin/studios/${user.studioId}`)}`,
     ].join("\n"),
@@ -327,6 +332,8 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     relatedId: user.studioId,
   });
 
+  // The pixel counts the sign-up on the next page (see MetaPixel).
+  (await cookies()).set(SIGNUP_COOKIE, "1", { path: "/", maxAge: 600, sameSite: "lax" });
   redirect(localePath(locale, "/dashboard"));
 }
 
@@ -374,5 +381,20 @@ export async function chooseStudioAction(formData: FormData) {
       : localePath(locale, home);
 
   redirect(destination);
+}
+
+/** The ad that brought the visitor, from the first-touch cookie: JSON, or null. */
+async function readSignupSource() {
+  const raw = (await cookies()).get(SOURCE_COOKIE)?.value;
+  if (!raw) return null;
+  try {
+    const value = JSON.parse(decodeURIComponent(raw)) as Record<string, unknown>;
+    const clean = Object.fromEntries(
+      ["source", "medium", "campaign", "at"].map((k) => [k, typeof value[k] === "string" ? String(value[k]).slice(0, 80) : null]),
+    );
+    return clean.source ? JSON.stringify(clean) : null;
+  } catch {
+    return null;
+  }
 }
 

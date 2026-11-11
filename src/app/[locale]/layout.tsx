@@ -7,6 +7,7 @@ import { Cormorant_Garamond, Fraunces, Jost, Karla, Fredoka } from "next/font/go
 import { routing } from "@/i18n/routing";
 import { getBrand } from "@/lib/brand/server";
 import "../globals.css";
+import { MetaPixel } from "@/components/marketing/meta-pixel";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -142,6 +143,8 @@ export default async function LocaleLayout({
     <html lang={locale} data-brand={activeBrand.key} className={`${display.variable} ${body.variable} ${brand.variable} ${beautyDisplay.variable} ${beautyBody.variable}`}>
       <body className="accent-scope min-h-dvh">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        {/* Our own ads' measurement, in production only; see the component for where it runs. */}
+        {process.env.NODE_ENV === "production" && <MetaPixel />}
       </body>
     </html>
   );

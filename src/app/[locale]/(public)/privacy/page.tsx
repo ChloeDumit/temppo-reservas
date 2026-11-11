@@ -12,7 +12,7 @@ import { ProductBrand } from "@/components/brand-footer";
   top has to move with it.
 */
 
-const UPDATED = { es: "27 de octubre de 2026", en: "October 27, 2026" };
+const UPDATED = { es: "11 de noviembre de 2026", en: "November 11, 2026" };
 const CONTACT = "hola@temppo.uy";
 
 type Section = { id?: string; title: string; body: (string | string[])[] };
@@ -55,7 +55,8 @@ function sections(lang: "es" | "en", product: string): Section[] {
             "To process deposits and payments, and to keep the business's records.",
             "To bill businesses for the service, to keep accounts secure and to give support.",
           ],
-          "We do not sell personal data, show advertising, or use it to build marketing profiles. We do not use advertising or tracking cookies.",
+          "We do not sell personal data or use it to build marketing profiles, and we show no advertising inside the app or on businesses' booking pages.",
+          "Only on our own home page and sign-up page we use the Meta pixel, to measure whether our ads bring new businesses: Meta receives that the page was visited and, if the business signs up, that a sign-up happened. It is never loaded on a business's booking page or inside the app, so the people who book appointments are not tracked.",
         ],
       },
       {
@@ -73,6 +74,7 @@ function sections(lang: "es" | "en", product: string): Section[] {
             "Hosting and database: Netlify and our cloud database provider.",
             "Email: Resend.",
             "WhatsApp: Meta Platforms (WhatsApp Business Platform).",
+            "Measuring our ads: Meta Platforms (Meta pixel), only on our home and sign-up pages.",
             "Payments: Mercado Pago, which handles card payments and deposits.",
             "Push notifications: the browser's or phone's own service (Apple, Google, Mozilla).",
           ],
@@ -155,7 +157,8 @@ function sections(lang: "es" | "en", product: string): Section[] {
           "Para procesar señas y pagos, y llevar los registros del negocio.",
           "Para cobrarle el servicio a los negocios, mantener las cuentas seguras y dar soporte.",
         ],
-        "No vendemos datos personales, no mostramos publicidad ni los usamos para armar perfiles de marketing. No usamos cookies de publicidad ni de seguimiento.",
+        "No vendemos datos personales ni los usamos para armar perfiles de marketing, y no mostramos publicidad dentro de la app ni en las páginas de reserva de los negocios.",
+        "Solo en nuestra página principal y en la de registro usamos el píxel de Meta, para medir si nuestros anuncios traen negocios nuevos: Meta recibe que se visitó la página y, si el negocio se registra, que hubo un registro. Nunca se carga en la página de reservas de un negocio ni dentro de la app, así que las personas que reservan turnos no son rastreadas.",
       ],
     },
     {
@@ -173,6 +176,7 @@ function sections(lang: "es" | "en", product: string): Section[] {
           "Alojamiento y base de datos: Netlify y nuestro proveedor de base de datos en la nube.",
           "Email: Resend.",
           "WhatsApp: Meta Platforms (plataforma WhatsApp Business).",
+          "Medición de nuestros anuncios: Meta Platforms (píxel de Meta), solo en nuestra página principal y la de registro.",
           "Pagos: Mercado Pago, que procesa los pagos con tarjeta y las señas.",
           "Notificaciones: el servicio propio del navegador o del celular (Apple, Google, Mozilla).",
         ],
