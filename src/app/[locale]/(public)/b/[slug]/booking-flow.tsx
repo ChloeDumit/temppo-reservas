@@ -11,6 +11,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Spinner } from "@/components/ui/spinner";
 import { bookPublicAction, checkCouponAction, getSlotsAction, type BookState, type DayOption } from "./actions";
 import { discountFor } from "@/lib/coupon-math";
+import { initials } from "@/lib/initials";
 
 export type FlowService = {
   id: string;
@@ -22,10 +23,33 @@ export type FlowService = {
   depositType: "NONE" | "PERCENT" | "FIXED";
   depositValue: number;
   staffIds: string[];
+  /** A professional's own duration or price for it, when it differs. */
+  staffOverrides?: Record<string, { durationMin: number | null; priceCents: number | null }>;
   addOns: { id: string; name: string; durationMin: number; priceCents: number }[];
 };
 
 type Step = "location" | "service" | "extras" | "staff" | "time" | "details";
+
+export type FlowStaff = { id: string; name: string; photoUrl: string | null };
+
+/** A professional's face, or her initials on the studio's colour. */
+function Avatar({ person, size }: { person: FlowStaff; size: "sm" | "lg" }) {
+  return (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent-soft font-semibold text-accent-ink",
+        size === "lg" ? "size-20 text-2xl ring-4 ring-surface shadow-[var(--shadow-soft)]" : "size-7 text-[11px]",
+      )}
+    >
+      {person.photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={person.photoUrl} alt="" className="size-full object-cover" />
+      ) : (
+        initials(person.name)
+      )}
+    </span>
+  );
+}
 
 export type FlowLocation = { id: string; name: string; address: string | null };
 
@@ -37,9 +61,15 @@ function duration(min: number) {
   return h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
 }
 
+/** Her duration and price for a service: the professional's own, if she has one. */
+function forStaff(s: FlowService, staffId: string | null) {
+  const o = staffId ? s.staffOverrides?.[staffId] : undefined;
+  return { durationMin: o?.durationMin ?? s.durationMin, priceCents: o?.priceCents ?? s.priceCents };
+}
+
 /**
- * The client's side of booking, one decision per screen: what, extras, who,
- * when, then her details. Thumb-sized choices, nothing to type until the end,
+ * The client's side of booking, one decision per screen: who (when there is a
+ * choice), what, extras, when, then her details. Thumb-sized choices, nothing to type until the end,
  * and every earlier choice one tap away in the summary.
  */
 export function BookingFlow({
@@ -59,7 +89,7 @@ export function BookingFlow({
 }: {
   slug: string;
   services: FlowService[];
-  staff: { id: string; name: string }[];
+  staff: FlowStaff[];
   currency: string;
   timeZone: string;
   today: string;
@@ -81,12 +111,18 @@ export function BookingFlow({
   const money = (cents: number) => formatMoney(cents, currency, locale);
 
   const multi = locations.length > 1;
-  const [step, setStep] = useState<Step>(multi ? "location" : "service");
+  // Who works at the chosen sucursal: a shift there, or one for any of them.
+  const worksAt = (id: string, at: string | null) =>
+    !multi || !at || (staffLocations[id] ?? []).some((l) => l === null || l === at);
+  // The professionals she can pick from there: someone who does at least one service.
+  const prosAt = (at: string | null) => staff.filter((x) => worksAt(x.id, at) && services.some((s) => s.staffIds.includes(x.id)));
+  const [step, setStep] = useState<Step>(multi ? "location" : prosAt(null).length > 1 ? "staff" : "service");
   const [locationId, setLocationId] = useState<string | null>(null);
   const location = locations.find((l) => l.id === locationId) ?? null;
-  // Who works at the chosen sucursal: a shift there, or one for any of them.
-  const worksHere = (id: string) =>
-    !multi || !locationId || (staffLocations[id] ?? []).some((l) => l === null || l === locationId);
+  const worksHere = (id: string) => worksAt(id, locationId);
+  const pros = prosAt(locationId);
+  // With several, who comes first: the services and times are then hers.
+  const staffFirst = pros.length > 1;
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [addOnIds, setAddOnIds] = useState<string[]>([]);
   const [staffId, setStaffId] = useState<string | null>(null);
@@ -99,12 +135,13 @@ export function BookingFlow({
   const [state, submit] = useActionState<BookState, FormData>(bookPublicAction, null);
 
   const service = services.find((s) => s.id === serviceId) ?? null;
+  const priced = service ? forStaff(service, staffId) : null;
   const chosenAddOns = service?.addOns.filter((a) => addOnIds.includes(a.id)) ?? [];
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; percentOff: number } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [checkingCoupon, startCheckingCoupon] = useTransition();
-  const listTotal = (service?.priceCents ?? 0) + chosenAddOns.reduce((s, a) => s + a.priceCents, 0);
+  const listTotal = (priced?.priceCents ?? 0) + chosenAddOns.reduce((s, a) => s + a.priceCents, 0);
   const discount = coupon ? discountFor(listTotal, coupon.percentOff) : 0;
   // What she pays, after the coupon: the deposit is a share of this.
   const total = listTotal - discount;
@@ -121,7 +158,7 @@ export function BookingFlow({
       }
     });
   };
-  const length = (service?.durationMin ?? 0) + chosenAddOns.reduce((s, a) => s + a.durationMin, 0);
+  const length = (priced?.durationMin ?? 0) + chosenAddOns.reduce((s, a) => s + a.durationMin, 0);
   const deposit = service && (methods.mp || methods.transfer) ? depositFor(service.depositType, service.depositValue, total) : 0;
   const surcharge = pay === "mp" ? onlineSurchargeFor(deposit, mpFee) : 0;
   const offeredStaff = service ? staff.filter((s) => service.staffIds.includes(s.id) && worksHere(s.id)) : [];
@@ -160,15 +197,34 @@ export function BookingFlow({
     setCouponError(null);
     setStart(null);
     setDays(null);
-    const eligible = staff.filter((x) => s.staffIds.includes(x.id) && worksHere(x.id));
-    setStaffId(eligible.length === 1 ? eligible[0].id : null);
-    setStep(s.addOns.length ? "extras" : eligible.length > 1 ? "staff" : "time");
+    // Who she picked first stays; otherwise the only one who does it, if so.
+    if (!staffId) {
+      const eligible = staff.filter((x) => s.staffIds.includes(x.id) && worksHere(x.id));
+      if (eligible.length === 1) setStaffId(eligible[0].id);
+    }
+    setStep(s.addOns.length ? "extras" : "time");
   };
 
-  const afterExtras = () => setStep(offeredStaff.length > 1 ? "staff" : "time");
+  const pickStaff = (id: string | null) => {
+    setStaffId(id);
+    setStart(null);
+    setDays(null);
+    // A service she does not do is let go; one she does is kept.
+    if (id && service && !service.staffIds.includes(id)) {
+      setServiceId(null);
+      setAddOnIds([]);
+      setCoupon(null);
+      setCouponError(null);
+    }
+    setStep(id && service?.staffIds.includes(id) ? "time" : "service");
+  };
 
-  // Only what someone at the chosen sucursal does.
-  const servicesHere = services.filter((s) => !multi || staff.some((x) => s.staffIds.includes(x.id) && worksHere(x.id)));
+  const afterExtras = () => setStep("time");
+
+  // Only what the chosen professional, or someone at the chosen sucursal, does.
+  const servicesHere = services.filter((s) =>
+    staffId ? s.staffIds.includes(staffId) : !multi || staff.some((x) => s.staffIds.includes(x.id) && worksHere(x.id)),
+  );
   const byCategory = servicesHere.reduce<Record<string, FlowService[]>>((acc, s) => {
     const key = s.category ?? "";
     (acc[key] ??= []).push(s);
@@ -178,6 +234,7 @@ export function BookingFlow({
   const day = days?.find((d) => d.date === date);
   const chosenSlot = day?.slots.find((s) => s.start === start);
   const staffName = (id: string | null) => staff.find((s) => s.id === id)?.name;
+  const chosenPro = staff.find((s) => s.id === staffId) ?? null;
 
   const errorText = state?.error
     ? ({
@@ -250,7 +307,7 @@ export function BookingFlow({
                     setStaffId(null);
                     setStart(null);
                     setDays(null);
-                    setStep("service");
+                    setStep(prosAt(l.id).length > 1 ? "staff" : "service");
                   }}
                 >
                   <span className="min-w-0">
@@ -280,7 +337,7 @@ export function BookingFlow({
           </button>
           <p className="text-muted">
             {duration(length)}
-            {(step === "time" || step === "details") && offeredStaff.length > 1 && (
+            {(step === "time" || step === "details" || step === "extras") && (staffFirst || offeredStaff.length > 1) && (
               <>
                 {" · "}
                 <button type="button" onClick={() => setStep("staff")} className="underline-offset-4 hover:underline">
@@ -302,29 +359,41 @@ export function BookingFlow({
 
       {step === "service" && (
         <div className="space-y-5">
-          {multi && back("location")}
+          {staffFirst ? back("staff") : multi && back("location")}
+          {staffFirst && (
+            <button type="button" onClick={() => setStep("staff")} className={cn(card, "flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm")}>
+              <span className="flex min-w-0 items-center gap-2.5">
+                {chosenPro && <Avatar person={chosenPro} size="sm" />}
+                <span className="font-medium text-ink">{chosenPro ? t("withPro", { name: chosenPro.name }) : t("withAnyone")}</span>
+              </span>
+              <span className="shrink-0 text-accent">{t("change")}</span>
+            </button>
+          )}
           <h2 className="px-1 text-lg">{t("whatService")}</h2>
           {Object.entries(byCategory).map(([category, items]) => (
             <section key={category || "none"}>
               {category && <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted">{category}</h3>}
               <ul className={cn(card, "divide-y divide-line overflow-hidden")}>
-                {items.map((s) => (
+                {items.map((s) => {
+                  const p = forStaff(s, staffId);
+                  return (
                   <li key={s.id}>
                     <button type="button" className={choice} onClick={() => pickService(s.id)}>
                       <span className="min-w-0">
                         <span className="block font-medium text-ink">{s.name}</span>
                         <span className="block text-sm text-muted">
-                          {duration(s.durationMin)}
+                          {duration(p.durationMin)}
                           {s.depositType !== "NONE" && (methods.mp || methods.transfer) && (
-                            <> · {t("depositOf", { amount: money(depositFor(s.depositType, s.depositValue, s.priceCents)) })}</>
+                            <> · {t("depositOf", { amount: money(depositFor(s.depositType, s.depositValue, p.priceCents)) })}</>
                           )}
                         </span>
                         {s.description && <span className="mt-0.5 block text-sm text-ink-soft">{s.description}</span>}
                       </span>
-                      <span className="shrink-0 font-medium tabular-nums text-ink">{money(s.priceCents)}</span>
+                      <span className="shrink-0 font-medium tabular-nums text-ink">{money(p.priceCents)}</span>
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </section>
           ))}
@@ -369,35 +438,55 @@ export function BookingFlow({
         </div>
       )}
 
-      {step === "staff" && service && (
+      {step === "staff" && (
         <div className="space-y-3">
-          {back(service.addOns.length ? "extras" : "service")}
+          {multi && back("location")}
           <h2 className="px-1 text-lg">{t("withWhom")}</h2>
-          <ul className={cn(card, "divide-y divide-line overflow-hidden")}>
-            {[{ id: null as string | null, name: t("anyone") }, ...offeredStaff].map((s) => (
-              <li key={s.id ?? "any"}>
+          <ul className="grid grid-cols-2 gap-3">
+            {pros.map((s) => (
+              <li key={s.id}>
                 <button
                   type="button"
-                  className={choice}
-                  onClick={() => {
-                    setStaffId(s.id);
-                    setStart(null);
-                    setDays(null);
-                    setStep("time");
-                  }}
+                  onClick={() => pickStaff(s.id)}
+                  className={cn(
+                    card,
+                    "pressable flex w-full flex-col items-center gap-3 px-3 pb-4 pt-5 text-center transition-colors hover:border-accent",
+                    s.id === staffId && "border-accent ring-1 ring-accent",
+                  )}
                 >
-                  <span className="font-medium text-ink">{s.name}</span>
-                  {s.id === null && <span className="text-sm text-muted">{t("anyoneHint")}</span>}
+                  <Avatar person={s} size="lg" />
+                  <span className="line-clamp-2 font-medium leading-snug text-ink">{s.name}</span>
                 </button>
               </li>
             ))}
           </ul>
+          <button
+            type="button"
+            onClick={() => pickStaff(null)}
+            className={cn(card, choice, "rounded-[var(--radius-lg)]", step === "staff" && staffId === null && service && "border-accent")}
+          >
+            <span className="flex items-center gap-3">
+              {/* The first few faces, overlapping: «any of them». */}
+              <span className="flex -space-x-2">
+                {pros.slice(0, 3).map((p) => (
+                  <span key={p.id} className="rounded-full ring-2 ring-surface">
+                    <Avatar person={p} size="sm" />
+                  </span>
+                ))}
+              </span>
+              <span>
+                <span className="block font-medium text-ink">{t("anyone")}</span>
+                <span className="block text-sm text-muted">{t("anyoneHint")}</span>
+              </span>
+            </span>
+            <span className="text-accent">→</span>
+          </button>
         </div>
       )}
 
       {step === "time" && service && (
         <div className="space-y-3">
-          {back(offeredStaff.length > 1 ? "staff" : service.addOns.length ? "extras" : "service")}
+          {back(service.addOns.length ? "extras" : "service")}
           <div className="flex items-center justify-between px-1">
             <h2 className="text-lg">{t("when")}</h2>
             <div className="flex gap-1">

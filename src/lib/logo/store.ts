@@ -42,3 +42,14 @@ export async function storeLogo(studioId: string, logo: { data: Uint8Array<Array
 export async function deleteLogo(studioId: string) {
   await db.studioLogo.deleteMany({ where: { studioId } });
 }
+
+/** Stores a professional's photo and returns what User.photoUrl should now hold. */
+export async function storeStaffPhoto(userId: string, photo: { data: Uint8Array<ArrayBuffer>; mimeType: string }) {
+  const data = { data: photo.data, mimeType: photo.mimeType };
+  await db.staffPhoto.upsert({ where: { userId }, create: { userId, ...data }, update: data });
+  return `/api/staff-photo/${userId}?v=${Date.now().toString(36)}`;
+}
+
+export async function deleteStaffPhoto(userId: string) {
+  await db.staffPhoto.deleteMany({ where: { userId } });
+}

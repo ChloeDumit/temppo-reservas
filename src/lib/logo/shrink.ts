@@ -33,3 +33,35 @@ export async function shrinkLogo(file: File) {
     URL.revokeObjectURL(url);
   }
 }
+
+/** What the photo pickers offer: photos only, no vectors. */
+export const PHOTO_ACCEPT = "image/png,image/jpeg,image/webp";
+
+/** Side of a stored staff photo: crisp in a round avatar on a phone, a few dozen kB. */
+const PHOTO_SIDE = 400;
+
+/**
+ * Crops the picked photo to its centre square and redraws it as a JPEG of
+ * PHOTO_SIDE, since it is only ever shown in a circle.
+ */
+export async function shrinkPhoto(file: File) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const side = Math.min(image.naturalWidth, image.naturalHeight);
+    if (!side) throw new Error("empty");
+    const out = Math.min(PHOTO_SIDE, side);
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = out;
+    canvas
+      .getContext("2d")
+      ?.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, out, out);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.86));
+    if (!blob) throw new Error("toBlob");
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}

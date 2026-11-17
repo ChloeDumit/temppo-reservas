@@ -1091,7 +1091,13 @@
     "fixedEmpty": "No times yet: pick a time and tap «Add».",
     "removeTime": "Remove {time}",
     "shiftLocation": "Location",
-    "anyLocation": "Any location"
+    "anyLocation": "Any location",
+    "photoAdd": "Add photo",
+    "photoChange": "Change photo",
+    "photoRemove": "Remove photo",
+    "photoHint": "Your photo shows when clients choose who to book with. A smiling, well-lit face works best.",
+    "photoInvalid": "We couldn't read that image. Try a JPG or PNG photo.",
+    "photoTooBig": "That photo is too large. Try another one."
   },
   "bookPublic": {
     "subtitle": "Book your appointment online in a minute.",

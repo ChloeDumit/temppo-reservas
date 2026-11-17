@@ -36,7 +36,7 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
     db.addOn.findMany({ where: { studioId: studio.id, isActive: true }, orderBy: { name: "asc" } }),
     db.user.findMany({
       where: { studioId: studio.id, isActive: true, role: { in: ["OWNER", "ADMIN", "INSTRUCTOR"] }, workingHours: { some: {} } },
-      select: { id: true, name: true },
+      select: { id: true, name: true, photoUrl: true },
       orderBy: { createdAt: "asc" },
     }),
     db.location.findMany({
@@ -62,6 +62,12 @@ export default async function BookPage({ params }: { params: Promise<{ locale: s
     depositType: s.depositType,
     depositValue: s.depositValue,
     staffIds: (s.staff.length ? s.staff.map((x) => x.staffId) : [...staffIds]).filter((id) => staffIds.has(id)),
+    // Her own pace or price, shown once she has picked who.
+    staffOverrides: Object.fromEntries(
+      s.staff
+        .filter((x) => x.durationMin != null || x.priceCents != null)
+        .map((x) => [x.staffId, { durationMin: x.durationMin, priceCents: x.priceCents }]),
+    ),
     addOns: addOns
       .filter((a) => a.serviceId === null || a.serviceId === s.id)
       .map((a) => ({ id: a.id, name: a.name, durationMin: a.durationMin, priceCents: a.priceCents })),

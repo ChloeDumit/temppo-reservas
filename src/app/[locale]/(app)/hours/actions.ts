@@ -8,6 +8,7 @@ import { recordAudit } from "@/lib/audit";
 import { wallTimeToUtc } from "@/lib/dates";
 import { MAX_MP_FEE_BPS } from "@/lib/appointments/deposit";
 import { parseStartTimes } from "@/lib/appointments/fixed-times";
+import { deleteStaffPhoto, readLogo, storeStaffPhoto } from "@/lib/logo/store";
 
 export type ActionState = { error?: string; ok?: boolean; clashes?: number } | null;
 
@@ -76,6 +77,32 @@ export async function saveHoursAction(_prev: ActionState, formData: FormData): P
   });
 
   revalidatePath(PAGE, "page");
+  return { ok: true };
+}
+
+/** A professional's photo for the booking page: a new one, or none. */
+export async function saveStaffPhotoAction(formData: FormData): Promise<ActionState> {
+  const { user, staff } = await staffYouMayEdit(String(formData.get("staffId") ?? ""));
+  const photo = await readLogo(formData.get("photo"));
+  if (photo === "invalid") return { error: "photoInvalid" };
+  if (photo === "tooBig") return { error: "photoTooBig" };
+  if (!photo && formData.get("remove") !== "1") return { error: "generic" };
+
+  const photoUrl = photo ? await storeStaffPhoto(staff.id, photo) : null;
+  if (!photo) await deleteStaffPhoto(staff.id);
+  await db.user.update({ where: { id: staff.id }, data: { photoUrl } });
+
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: photo ? "staff.photo_set" : "staff.photo_remove",
+    entityType: "User",
+    entityId: staff.id,
+  });
+
+  revalidatePath(PAGE, "page");
+  revalidatePath("/[locale]/(public)/b/[slug]", "page");
   return { ok: true };
 }
 

@@ -261,6 +261,9 @@ model User {
   workingHours      WorkingHours[]
   timeOff           TimeOff[]
   staffAppointments Appointment[]  @relation("AppointmentStaff")
+  /// Her face on the public booking page; the bytes live in StaffPhoto.
+  photoUrl          String?
+  photo             StaffPhoto?
 
   // The same person can train at several studios, so identity is scoped to
   // the studio rather than global. One row per person per studio, which is
@@ -1270,6 +1273,16 @@ model InboxItem {
 
 /// The logo a studio uploaded in settings, served from /api/logo/<studioId>.
 /// Kept off Studio so the row loaded on every request never carries the bytes.
+/// A professional's photo, shown when clients pick who to book with.
+model StaffPhoto {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  data      Bytes
+  mimeType  String
+  updatedAt DateTime @updatedAt
+}
+
 model StudioLogo {
   studioId String @id
   studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)

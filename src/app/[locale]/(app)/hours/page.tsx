@@ -10,6 +10,7 @@ import { SheetForm } from "@/components/app/sheet-form";
 import { HoursForm, type DayShifts } from "./hours-form";
 import { TimeOffForm } from "./time-off-form";
 import { RulesForm } from "./rules-form";
+import { StaffPhoto } from "./staff-photo";
 import { deleteTimeOffAction } from "./actions";
 import { formatStartTimes } from "@/lib/appointments/fixed-times";
 import { listLocations } from "@/lib/locations";
@@ -38,7 +39,7 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
         // A professional sees and edits only her own week.
         ...(isAdmin ? {} : { id: user.id }),
       },
-      select: { id: true, name: true },
+      select: { id: true, name: true, photoUrl: true },
       orderBy: { createdAt: "asc" },
     }),
     db.workingHours.findMany({ where: { studioId: studio.id }, orderBy: { startMin: "asc" } }),
@@ -123,6 +124,9 @@ export default async function HoursPage({ params }: { params: Promise<{ locale: 
           <Card key={s.id}>
             <CardHeader title={staff.length > 1 ? s.name : t("yourWeek")} />
             <CardBody>
+              <div className="mb-5 border-b border-line pb-5">
+                <StaffPhoto staffId={s.id} name={s.name} photoUrl={s.photoUrl} />
+              </div>
               <HoursForm staffId={s.id} week={weekFor(s.id)} dayNames={dayNames} locations={locations.length > 1 ? locations : []} />
             </CardBody>
           </Card>

@@ -1091,7 +1091,13 @@
     "fixedEmpty": "Todavía no agregaste horarios: elegí una hora y tocá «Agregar».",
     "removeTime": "Sacar {time}",
     "shiftLocation": "Sucursal",
-    "anyLocation": "Todas las sucursales"
+    "anyLocation": "Todas las sucursales",
+    "photoAdd": "Agregar foto",
+    "photoChange": "Cambiar foto",
+    "photoRemove": "Quitar foto",
+    "photoHint": "Tu foto aparece cuando tus clientas eligen con quién reservar. Una cara sonriente, bien iluminada, funciona mejor.",
+    "photoInvalid": "No pudimos leer esa imagen. Probá con una foto JPG o PNG.",
+    "photoTooBig": "La foto es muy pesada. Probá con otra."
   },
   "bookPublic": {
     "subtitle": "Reservá tu turno online, en un minuto.",
