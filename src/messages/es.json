@@ -440,7 +440,11 @@
     "locationHasClasses": "Tiene clases programadas por delante: movelas o cancelalas antes de eliminarla.",
     "editLocation": "Editar",
     "memberLimitSolo": "Tu plan Independiente incluye 1 profesional. Para sumar a tu equipo, pasate al plan Equipo desde Mi plan.",
-    "memberLimitTeam": "Tu plan incluye hasta 4 profesionales. Para sumar más, pasate al plan Salón desde Mi plan."
+    "memberLimitTeam": "Tu plan incluye hasta 4 profesionales. Para sumar más, pasate al plan Salón desde Mi plan.",
+    "removeMember": "Eliminar",
+    "removeMemberConfirm": "¿Sacar a {name} del equipo? Ya no va a poder entrar ni van a poder reservarle, y se borran sus horarios. Su historial de turnos se mantiene, y si la volvés a invitar con el mismo email, vuelve.",
+    "memberHasAppointments": "Tiene turnos por delante: pasalos a otra profesional o cancelalos desde la Agenda, y después la podés sacar del equipo.",
+    "memberHasClasses": "Tiene clases por delante: asignalas a otra persona y después la podés sacar del equipo."
   },
   "booking": {
     "title": "Reservar clase",

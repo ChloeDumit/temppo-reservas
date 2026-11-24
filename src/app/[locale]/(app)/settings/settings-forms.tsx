@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import {
   createLocationAction,
   archiveLocationAction,
+  removeMemberAction,
   updateLocationAction,
   inviteMemberAction,
   updateRulesAction,
@@ -37,6 +38,8 @@ function useMessage(state: ActionState) {
   if (state.error === "locationLimit") return ts("locationLimit");
   if (state.error === "memberLimitSolo") return ts("memberLimitSolo");
   if (state.error === "memberLimitTeam") return ts("memberLimitTeam");
+  if (state.error === "memberHasAppointments") return ts("memberHasAppointments");
+  if (state.error === "memberHasClasses") return ts("memberHasClasses");
   if (state.error === "locationHasAppointments") return ts("locationHasAppointments");
   if (state.error === "locationHasClasses") return ts("locationHasClasses");
   return te("generic");
@@ -377,6 +380,26 @@ export function ArchiveLocationButton({ id, name }: { id: string; name: string }
     >
       <input type="hidden" name="id" value={id} />
       <button className="text-xs font-medium text-critical underline-offset-4 hover:underline">{t("archiveLocation")}</button>
+      {message && <p className="max-w-56 text-right text-xs text-critical">{message}</p>}
+    </form>
+  );
+}
+
+/** «Eliminar» on a member of the team, after a confirm that says what it does. */
+export function RemoveMemberButton({ id, name }: { id: string; name: string }) {
+  const t = useTranslations("settings");
+  const [state, submit] = useActionState<ActionState, FormData>(removeMemberAction, null);
+  const message = useMessage(state);
+  return (
+    <form
+      action={submit}
+      onSubmit={(e) => {
+        if (!window.confirm(t("removeMemberConfirm", { name }))) e.preventDefault();
+      }}
+      className="flex flex-col items-end gap-1"
+    >
+      <input type="hidden" name="id" value={id} />
+      <button className="text-xs font-medium text-critical underline-offset-4 hover:underline">{t("removeMember")}</button>
       {message && <p className="max-w-56 text-right text-xs text-critical">{message}</p>}
     </form>
   );

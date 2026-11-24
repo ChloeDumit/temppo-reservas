@@ -275,9 +275,10 @@ export async function inviteMemberAction(
   }
 
   // Scoped to the studio: the same person may already be staff somewhere else.
-  if (await db.user.findFirst({ where: { studioId: user.studioId, email: parsed.data.email } })) {
-    return { error: "emailTaken" };
-  }
+  // Someone taken off the team comes back with her history, invited afresh.
+  const existing = await db.user.findFirst({ where: { studioId: user.studioId, email: parsed.data.email } });
+  const returning = existing && !existing.isActive && STAFF_ROLES.includes(existing.role) ? existing : null;
+  if (existing && !returning) return { error: "emailTaken" };
 
   const payPerClassCents = parsed.data.payPerClass
     ? parseMoneyToCents(parsed.data.payPerClass)
@@ -285,19 +286,34 @@ export async function inviteMemberAction(
 
   const tempPassword = generateTempPassword();
 
-  const created = await db.user.create({
-    data: {
-      studioId: user.studioId,
-      email: parsed.data.email,
-      name: parsed.data.name,
-      role: parsed.data.role,
-      passwordHash: await hashPassword(tempPassword),
-      mustChangePassword: true,
-      ...(parsed.data.role === "INSTRUCTOR"
-        ? { instructorProfile: { create: { payPerClassCents } } }
-        : {}),
-    },
-  });
+  const passwordHash = await hashPassword(tempPassword);
+  const created = returning
+    ? await db.user.update({
+        where: { id: returning.id },
+        data: {
+          isActive: true,
+          name: parsed.data.name,
+          role: parsed.data.role,
+          passwordHash,
+          mustChangePassword: true,
+          ...(parsed.data.role === "INSTRUCTOR"
+            ? { instructorProfile: { upsert: { create: { payPerClassCents }, update: { payPerClassCents } } } }
+            : {}),
+        },
+      })
+    : await db.user.create({
+        data: {
+          studioId: user.studioId,
+          email: parsed.data.email,
+          name: parsed.data.name,
+          role: parsed.data.role,
+          passwordHash,
+          mustChangePassword: true,
+          ...(parsed.data.role === "INSTRUCTOR"
+            ? { instructorProfile: { create: { payPerClassCents } } }
+            : {}),
+        },
+      });
 
   /*
     A professional at an appointment business is bookable only with hours and
@@ -352,7 +368,7 @@ export async function inviteMemberAction(
     studioId: user.studioId,
     actorId: user.id,
     actorLabel: user.name,
-    action: "team.invite",
+    action: returning ? "team.reinvite" : "team.invite",
     entityType: "User",
     entityId: created.id,
     metadata: { email: parsed.data.email, role: parsed.data.role },
@@ -364,6 +380,47 @@ export async function inviteMemberAction(
 }
 
 /** Unlinks the studio's Mercado Pago: online deposits go back to the platform's account. */
+/**
+ * «Eliminar» on a member of the team. Not a real delete — that would take her
+ * appointments' history with it — but she can no longer sign in, nor be
+ * booked, and her hours go. Refused while she still has clients or classes
+ * ahead: those must move first, or someone turns up to nobody.
+ */
+export async function removeMemberAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await assertAdmin();
+  const member = await db.user.findFirst({
+    where: { id: String(formData.get("id") ?? ""), studioId: user.studioId, isActive: true, role: { in: STAFF_ROLES } },
+  });
+  // The owner stays, and nobody locks herself out.
+  if (!member || member.role === "OWNER" || member.id === user.id) return { error: "generic" };
+
+  const now = new Date();
+  const [appointments, classes] = await Promise.all([
+    db.appointment.count({ where: { staffId: member.id, startsAt: { gt: now }, status: { in: ["CONFIRMED", "PENDING_PAYMENT"] } } }),
+    db.classInstance.count({ where: { instructor: { userId: member.id }, startsAt: { gt: now }, status: "SCHEDULED" } }),
+  ]);
+  if (appointments) return { error: "memberHasAppointments" };
+  if (classes) return { error: "memberHasClasses" };
+
+  await db.$transaction([
+    db.user.update({ where: { id: member.id }, data: { isActive: false } }),
+    db.workingHours.deleteMany({ where: { staffId: member.id } }),
+  ]);
+
+  await recordAudit({
+    studioId: user.studioId,
+    actorId: user.id,
+    actorLabel: user.name,
+    action: "team.remove",
+    entityType: "User",
+    entityId: member.id,
+    metadata: { email: member.email, role: member.role },
+  });
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function disconnectMercadoPagoAction() {
   const user = await assertAdmin();
   await disconnectMercadoPago(user.studioId);

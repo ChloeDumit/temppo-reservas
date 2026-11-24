@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { LocationRow, InviteForm, LocationForm, RulesForm, StudioForm } from "./settings-forms";
+import { LocationRow, InviteForm, LocationForm, RemoveMemberButton, RulesForm, StudioForm } from "./settings-forms";
 import { PushToggle } from "@/components/app/push-toggle";
 import { MercadoPagoCard } from "./mercadopago-card";
 import { WhatsAppCard } from "./whatsapp-card";
@@ -34,7 +34,8 @@ export default async function SettingsPage({
     // Archived ones are gone from use, and from here.
     db.location.findMany({ where: { studioId: studio.id, isActive: true }, orderBy: { createdAt: "asc" } }),
     db.user.findMany({
-      where: { studioId: studio.id, role: { in: ["OWNER", "ADMIN", "INSTRUCTOR"] } },
+      // Whoever was taken off the team is gone from here; re-inviting brings her back.
+      where: { studioId: studio.id, isActive: true, role: { in: ["OWNER", "ADMIN", "INSTRUCTOR"] } },
       include: { instructorProfile: true },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     }),
@@ -139,6 +140,7 @@ export default async function SettingsPage({
                     <Badge tone={member.role === "OWNER" ? "accent" : "neutral"}>
                       {beauty && member.role === "INSTRUCTOR" ? t("roleProfessional") : t(`role${member.role}`)}
                     </Badge>
+                    {member.role !== "OWNER" && member.id !== user.id && <RemoveMemberButton id={member.id} name={member.name} />}
                   </div>
                 </li>
               ))}

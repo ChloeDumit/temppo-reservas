@@ -440,7 +440,11 @@
     "locationHasClasses": "It has upcoming classes: move or cancel them before removing it.",
     "editLocation": "Edit",
     "memberLimitSolo": "Your Independiente plan includes 1 professional. To add your team, move to the Equipo plan in My plan.",
-    "memberLimitTeam": "Your plan includes up to 4 professionals. To add more, move to the Salón plan in My plan."
+    "memberLimitTeam": "Your plan includes up to 4 professionals. To add more, move to the Salón plan in My plan.",
+    "removeMember": "Remove",
+    "removeMemberConfirm": "Take {name} off the team? She will no longer be able to sign in or be booked, and her hours are deleted. Her appointment history is kept, and inviting the same email again brings her back.",
+    "memberHasAppointments": "She has appointments ahead: move them to someone else or cancel them from the Agenda, then you can remove her.",
+    "memberHasClasses": "She has classes ahead: assign them to someone else, then you can remove her."
   },
   "booking": {
     "title": "Book a class",
