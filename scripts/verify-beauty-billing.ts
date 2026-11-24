@@ -181,7 +181,7 @@ async function main() {
     const withTransfer = await server.billingMessage(studio.id, 2, now);
     check(
       "Mercado Pago with its fee, transfer without",
-      [withTransfer.text.includes(`$${(rules.withMpFee(withTransfer.summary.amountCents) / 100).toLocaleString("es-UY")}, con su comisión`), withTransfer.text.includes("por transferencia, sin recargo")],
+      [withTransfer.text.includes(`suma su comisión de $${((rules.withMpFee(withTransfer.summary.amountCents) - withTransfer.summary.amountCents) / 100).toLocaleString("es-UY")}`), withTransfer.text.includes("por transferencia, sin recargo")],
       [true, true],
     );
     check("the message carries the account and where to send the receipt", [withTransfer.text.includes("Cuenta: 001-123"), withTransfer.text.includes("wa.me/59899000000")], [true, true]);

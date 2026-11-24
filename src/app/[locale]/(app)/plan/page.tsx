@@ -120,8 +120,11 @@ export default async function MyPlanPage({
                   {canPayOnline && (
                     <ActionForm action={payAction}>
                       <input type="hidden" name="purpose" value="PLAN" />
-                      <SubmitButton pendingLabel="Abriendo Mercado Pago…">Pagar {pesos(withMpFee(s.amountCents))} con Mercado Pago</SubmitButton>
-                      <p className="mt-1 text-xs text-muted">Incluye la comisión de Mercado Pago. Por transferencia pagás {pesos(s.amountCents)}.</p>
+                      <SubmitButton pendingLabel="Abriendo Mercado Pago…">Pagar {pesos(s.amountCents)} con Mercado Pago</SubmitButton>
+                      {/* The price stays the one we quote; the fee is the small print. */}
+                      <p className="mt-1 text-xs text-muted">
+                        Mercado Pago suma su comisión de {pesos(withMpFee(s.amountCents) - s.amountCents)}. Por transferencia, sin recargo.
+                      </p>
                     </ActionForm>
                   )}
                   {transfer ? (
@@ -193,8 +196,9 @@ export default async function MyPlanPage({
                 <ActionForm action={payAction}>
                   <input type="hidden" name="purpose" value="WA_PACK" />
                   <SubmitButton variant="secondary" size="sm" pendingLabel="Abriendo Mercado Pago…">
-                    Sumar {WA_PACK.messages} mensajes por {pesos(withMpFee(WA_PACK_CENTS))}
+                    Sumar {WA_PACK.messages} mensajes por {pesos(WA_PACK_CENTS)}
                   </SubmitButton>
+                  <p className="mt-1 text-xs text-muted">Mercado Pago suma su comisión de {pesos(withMpFee(WA_PACK_CENTS) - WA_PACK_CENTS)}.</p>
                 </ActionForm>
               )}
               {!s.wa.on && (waTotal > 0 || s.wa.extra > 0) && (

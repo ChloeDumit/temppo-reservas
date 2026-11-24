@@ -442,7 +442,7 @@ export async function billingMessage(studioId: string, stage: ReminderStage | nu
     "",
     `Para seguir usando tu agenda, el plan ${s.billPlan.name} cuesta ${amount} por mes${s.launch ? " (precio de lanzamiento)" : ""}.`,
     "",
-    `💳 Pagá con Mercado Pago ($${(withMpFee(s.amountCents) / 100).toLocaleString("es-UY")}, con su comisión) o cambiá de plan desde Mi plan: ${page}`,
+    `💳 Pagá con Mercado Pago (suma su comisión de $${((withMpFee(s.amountCents) - s.amountCents) / 100).toLocaleString("es-UY")}) o cambiá de plan desde Mi plan: ${page}`,
   ];
   // About to end on Independiente: what she would stop having.
   const recap = trial && s.billPlan.plan === "ESSENTIAL" ? await trialRecap(s.studio) : null;
