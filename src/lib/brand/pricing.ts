@@ -19,17 +19,22 @@ export type BeautyPlan = {
   /** null = unlimited */
   professionals: number | null;
   locations: number | null;
-  /** Automatic WhatsApp messages a month. 0 = only the manual wa.me button. */
+  /** Automatic WhatsApp messages a month. 0 = only the manual wa.me button, plus WA_PACK if she wants them. */
   waQuota: number;
-  /** Automatic WhatsApp bought on top, for a plan that does not include it. */
-  waAddOn?: { messages: number; priceUyu: number };
 };
 
 export const BEAUTY_PLANS: BeautyPlan[] = [
-  { key: "solo", priceUyu: 790, launchPriceUyu: 490, professionals: 1, locations: 1, waQuota: 0, waAddOn: { messages: 150, priceUyu: 190 } },
-  { key: "team", priceUyu: 1390, launchPriceUyu: 890, professionals: 4, locations: 1, waQuota: 300 },
+  { key: "solo", priceUyu: 790, launchPriceUyu: 490, professionals: 1, locations: 1, waQuota: 0 },
+  { key: "team", priceUyu: 1390, launchPriceUyu: 890, professionals: 4, locations: 1, waQuota: 500 },
   { key: "salon", priceUyu: 2490, launchPriceUyu: 1590, professionals: null, locations: null, waQuota: 800 },
 ];
+
+/**
+ * What Mercado Pago keeps from a payment to us, money available at once:
+ * 5,99 % + IVA (22 %) = 7,31 % in Uruguay. Paid by Mercado Pago, it is added
+ * on top so the plan nets its price; by transfer there is nothing to add.
+ */
+export const PLATFORM_MP_FEE_BPS = 731;
 
 export const LAUNCH_SPOTS = 50;
 export const LAUNCH_LOCK_MONTHS = 12;
@@ -42,7 +47,10 @@ export const LAUNCH_LOCK_MONTHS = 12;
  */
 export const WA_AUTO_LIVE = true;
 
-/** An extra block of automatic WhatsApp messages, on any plan that has them. */
+/**
+ * An extra block of automatic WhatsApp messages, on any plan — Independiente
+ * included, which has none of its own: she tops up as she uses them.
+ */
 export const WA_PACK = { messages: 200, priceUyu: 190 };
 
 /**

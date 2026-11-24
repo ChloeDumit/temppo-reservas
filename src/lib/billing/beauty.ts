@@ -1,5 +1,5 @@
 import type { Plan } from "@/generated/prisma/enums";
-import { BEAUTY_PLANS, WA_PACK, type BeautyPlan } from "@/lib/brand/pricing";
+import { BEAUTY_PLANS, PLATFORM_MP_FEE_BPS, WA_PACK, type BeautyPlan } from "@/lib/brand/pricing";
 import type { PaidPlan } from "./plans";
 
 /*
@@ -38,6 +38,14 @@ export function beautyPriceCents(plan: PaidPlan, launch: boolean) {
 
 export const WA_PACK_CENTS = WA_PACK.priceUyu * 100;
 
+/**
+ * What she pays by Mercado Pago so that, once it takes its fee, the price is
+ * left whole. Rounded up to a whole peso. By transfer she pays the price itself.
+ */
+export function withMpFee(cents: number) {
+  return Math.ceil((cents * 10_000) / (10_000 - PLATFORM_MP_FEE_BPS) / 100) * 100;
+}
+
 /** Without a choice, the trial ends on the plan that fits her team. */
 export function defaultPlanAfterTrial(professionals: number): PaidPlan {
   return professionals > 1 ? "STUDIO" : "ESSENTIAL";
@@ -72,6 +80,16 @@ export type BillingSubscription = {
   provider: string | null;
   currentPeriodEnd: Date | null;
 } | null;
+
+/**
+ * The plan she is actually on for her team: the one she chose, or the
+ * smallest bigger one her professionals and sucursales fit in. A downgrade
+ * chosen with one professional does not hold once she has invited more.
+ */
+export function fitPlan(plan: PaidPlan, usage: { professionals: number; locations: number }): PaidPlan {
+  const from = BEAUTY_PLAN_ORDER.indexOf(plan);
+  return BEAUTY_PLAN_ORDER.slice(from).find((p) => !planLimitProblem(p, usage)) ?? "NETWORK";
+}
 
 /** What she pays for next: the plan the next payment buys. */
 export function planToBill(studio: Pick<BillingStudio, "plan" | "nextPlan">, professionals: number): PaidPlan {

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { ensureInstances } from "@/lib/classes";
-import { assertAdmin } from "@/lib/auth/guards";
+import { assertAdmin, STAFF_ROLES } from "@/lib/auth/guards";
 import { recordAudit } from "@/lib/audit";
 import { normalizeHex } from "@/lib/color";
 import { parseMoneyToCents } from "@/lib/money";
@@ -264,6 +264,14 @@ export async function inviteMemberAction(
   const parsed = memberSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.path[0] === "email" ? "invalidEmail" : "generic" };
+  }
+
+  // Temppo Beauty sells professionals by plan: the trial is Equipo.
+  if (user.studio.brand === "beauty") {
+    const plan = user.studio.plan === "TRIAL" ? "STUDIO" : user.studio.plan;
+    const limit = beautyPlan(plan).professionals;
+    const active = await db.user.count({ where: { studioId: user.studioId, isActive: true, role: { in: STAFF_ROLES } } });
+    if (limit !== null && active >= limit) return { error: plan === "ESSENTIAL" ? "memberLimitSolo" : "memberLimitTeam" };
   }
 
   // Scoped to the studio: the same person may already be staff somewhere else.

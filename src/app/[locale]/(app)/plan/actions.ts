@@ -9,6 +9,7 @@ import { appUrlFor } from "@/lib/brand/url";
 import { brandByKey } from "@/lib/brand/registry";
 import { startAutoDebit, type PaidPlan } from "@/lib/billing";
 import { billingSummary, choosePlan, startPlatformCheckout } from "@/lib/billing/beauty-server";
+import { withMpFee } from "@/lib/billing/beauty";
 
 const PAGE = "/[locale]/(app)/plan";
 
@@ -70,7 +71,8 @@ export async function autoDebitAction(_prev: PlanState): Promise<PlanState> {
     payerEmail: user.email,
     studioName: user.studio.name,
     backUrl: `${appUrlFor(user.studio)}${localePath(user.studio.locale, "/plan")}`,
-    amountCents: summary.amountCents,
+    // A card on Mercado Pago pays its fee every month, as a one-off payment does.
+    amountCents: withMpFee(summary.amountCents),
     productName: brandByKey(user.studio.brand).name,
   });
   if ("error" in result) return back("No pudimos abrir Mercado Pago. Probá de nuevo en un rato o pagá mes a mes.");

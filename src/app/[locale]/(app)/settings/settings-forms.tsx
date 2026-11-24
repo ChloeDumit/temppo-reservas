@@ -35,6 +35,8 @@ function useMessage(state: ActionState) {
   if (state.error === "emailTaken") return ta("emailTaken");
   if (state.error === "invalidEmail") return te("invalidEmail");
   if (state.error === "locationLimit") return ts("locationLimit");
+  if (state.error === "memberLimitSolo") return ts("memberLimitSolo");
+  if (state.error === "memberLimitTeam") return ts("memberLimitTeam");
   if (state.error === "locationHasAppointments") return ts("locationHasAppointments");
   if (state.error === "locationHasClasses") return ts("locationHasClasses");
   return te("generic");

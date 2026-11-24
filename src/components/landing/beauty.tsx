@@ -175,11 +175,11 @@ export async function BeautyLanding({ brand }: { brand: Brand }) {
                         {plan.waQuota > 0 && !WA_AUTO_LIVE && <Soon label={t("soon")} />}
                       </span>
                     </li>
-                    {plan.waAddOn && (
+                    {plan.waQuota === 0 && (
                       <li className="flex gap-2">
                         <Icon name="plus" className="mt-1 size-4 shrink-0 text-accent" />
                         <span>
-                          {t("waAddOn", { count: plan.waAddOn.messages, price: plan.waAddOn.priceUyu })}
+                          {t("waAddOn", { count: WA_PACK.messages, price: WA_PACK.priceUyu })}
                           {!WA_AUTO_LIVE && <Soon label={t("soon")} />}
                         </span>
                       </li>

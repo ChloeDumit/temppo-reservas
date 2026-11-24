@@ -265,11 +265,7 @@ export default async function AdminPaymentsPage({
                           {p.locations === null ? "Varias" : p.locations}
                         </td>
                         <td className="px-3 py-2.5 tabular-nums text-white/60">
-                          {p.waQuota
-                            ? `${p.waQuota}/mes`
-                            : p.waAddOn
-                              ? `add-on ${money(p.waAddOn.priceUyu * 100)}`
-                              : "—"}
+                          {p.waQuota ? `${p.waQuota}/mes` : "Paquetes"}
                         </td>
                         <td className="px-3 py-2.5 tabular-nums">
                           {active.filter((s) => s.plan === plan).length}

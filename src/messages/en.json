@@ -438,7 +438,9 @@
     "locationLimit": "Your plan includes 1 location. To add more, move to the Salón plan in My plan.",
     "locationHasAppointments": "It has upcoming appointments: move or cancel them before removing it.",
     "locationHasClasses": "It has upcoming classes: move or cancel them before removing it.",
-    "editLocation": "Edit"
+    "editLocation": "Edit",
+    "memberLimitSolo": "Your Independiente plan includes 1 professional. To add your team, move to the Equipo plan in My plan.",
+    "memberLimitTeam": "Your plan includes up to 4 professionals. To add more, move to the Salón plan in My plan."
   },
   "booking": {
     "title": "Book a class",
@@ -1412,7 +1414,7 @@
     "perMonth": "/ month",
     "plan_solo_tag": "If you work alone",
     "plan_solo_name": "Solo",
-    "plan_team_tag": "For small teams",
+    "plan_team_tag": "Most popular",
     "plan_team_name": "Team",
     "plan_salon_tag": "For salons",
     "plan_salon_name": "Salon",
@@ -1422,7 +1424,7 @@
     "manyLocations": "Several locations",
     "waAuto": "Automatic WhatsApp: {count} messages a month",
     "waManual": "One-tap WhatsApp reminders",
-    "waAddOn": "Optional automatic WhatsApp: +${price} / month, {count} messages",
+    "waAddOn": "Optional automatic WhatsApp: {count} messages for ${price}, whenever you need them",
     "soon": "Coming soon",
     "everyPlan": "Every plan includes",
     "inc1": "A booking page for your bio",

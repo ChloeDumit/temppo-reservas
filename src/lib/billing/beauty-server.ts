@@ -20,6 +20,8 @@ import {
   onAutoDebit,
   planLimitProblem,
   planToBill,
+  fitPlan,
+  withMpFee,
   reminderDue,
   WA_PACK_CENTS,
   type ReminderStage,
@@ -113,7 +115,7 @@ export async function billingSummary(studioId: string, now = new Date()) {
   const studio = await db.studio.findUniqueOrThrow({ where: { id: studioId }, include: { subscription: true } });
   const usage = await studioUsage(studioId);
   const launch = await launchPriceApplies(studio, now);
-  const billPlan = planToBill(studio, usage.professionals);
+  const billPlan = fitPlan(planToBill(studio, usage.professionals), usage);
   const dueAt = dueDate(studio, studio.subscription);
   const charges = await db.subscriptionCharge.findMany({
     where: { studioId, status: "APPROVED" },
@@ -140,6 +142,34 @@ export async function billingSummary(studioId: string, now = new Date()) {
     },
     charges,
   };
+}
+
+/**
+ * What her trial did for her, for the end of it: losing something she already
+ * uses weighs more than a feature she never tried. Null outside a trial.
+ */
+export async function trialRecap(studio: { id: string; plan: Plan; createdAt: Date; waSentThisPeriod: number }) {
+  if (studio.plan !== "TRIAL") return null;
+  const bookings = await db.appointment.count({
+    where: { studioId: studio.id, source: "CLIENT_PUBLIC", createdAt: { gte: studio.createdAt } },
+  });
+  return { bookings, waSent: studio.waSentThisPeriod };
+}
+
+/** The pitch for staying on Equipo, when her trial would end on Independiente. */
+export function keepTeamText(recap: { bookings: number; waSent: number }, teamCents: number) {
+  const used = [
+    recap.bookings > 0 && `${recap.bookings} ${recap.bookings === 1 ? "reserva" : "reservas"} online`,
+    recap.waSent > 0 && `${recap.waSent} avisos automáticos por WhatsApp a tus clientas`,
+  ].filter(Boolean);
+  const team = beautyPlan("STUDIO");
+  return [
+    used.length ? `En tu prueba tuviste ${used.join(" y ")}.` : null,
+    `El plan Independiente no trae avisos automáticos por WhatsApp (los podés comprar aparte, de a ${WA_PACK.messages}).`,
+    `Si querés seguir como este mes, el plan Equipo incluye ${team.waQuota} por mes, por $${(teamCents / 100).toLocaleString("es-UY")}.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 /* ------------------------------------------------------ choosing a plan */
@@ -204,7 +234,8 @@ export async function startPlatformCheckout(params: {
   const summary = await billingSummary(params.studioId);
   const { studio } = summary;
   const plan = summary.billPlan.plan;
-  const amountCents = params.purpose === "PLAN" ? summary.amountCents : WA_PACK_CENTS;
+  // Mercado Pago's fee is hers to pay; the subscription keeps the price itself.
+  const amountCents = withMpFee(params.purpose === "PLAN" ? summary.amountCents : WA_PACK_CENTS);
 
   const subscription =
     summary.subscription ??
@@ -411,10 +442,13 @@ export async function billingMessage(studioId: string, stage: ReminderStage | nu
     "",
     `Para seguir usando tu agenda, el plan ${s.billPlan.name} cuesta ${amount} por mes${s.launch ? " (precio de lanzamiento)" : ""}.`,
     "",
-    `💳 Pagá con Mercado Pago o cambiá de plan desde Mi plan: ${page}`,
+    `💳 Pagá con Mercado Pago ($${(withMpFee(s.amountCents) / 100).toLocaleString("es-UY")}, con su comisión) o cambiá de plan desde Mi plan: ${page}`,
   ];
+  // About to end on Independiente: what she would stop having.
+  const recap = trial && s.billPlan.plan === "ESSENTIAL" ? await trialRecap(s.studio) : null;
+  if (recap) lines.splice(4, 0, keepTeamText(recap, beautyPriceCents("STUDIO", s.launch)), "");
   if (transfer) {
-    lines.push("", "🏦 O por transferencia:", transferText(transfer));
+    lines.push("", `🏦 O por transferencia, sin recargo (${amount}):`, transferText(transfer));
     const receipt = receiptLink(transfer, s.studio.name);
     if (receipt) lines.push(`Mandanos el comprobante por WhatsApp: ${receipt}`);
   }

@@ -4,8 +4,8 @@ import { requireRole } from "@/lib/auth/guards";
 import { localePath } from "@/i18n/routing";
 import { formatDate } from "@/lib/dates";
 import { isSubscriptionBillingConfigured } from "@/lib/billing";
-import { BEAUTY_PLAN_ORDER, beautyPlan, beautyPriceCents, planLimitProblem, WA_PACK_CENTS } from "@/lib/billing/beauty";
-import { billingSummary, receiptLink, transferDetails } from "@/lib/billing/beauty-server";
+import { BEAUTY_PLAN_ORDER, beautyPlan, beautyPriceCents, planLimitProblem, WA_PACK_CENTS, withMpFee } from "@/lib/billing/beauty";
+import { billingSummary, keepTeamText, receiptLink, transferDetails, trialRecap } from "@/lib/billing/beauty-server";
 import { WA_PACK } from "@/lib/brand/pricing";
 import { paymentProvider } from "@/lib/payments";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,8 @@ export default async function MyPlanPage({
   const { m, pago } = await searchParams;
 
   const [s, transfer] = await Promise.all([billingSummary(user.studioId), transferDetails()]);
+  // Ending on Independiente: what the trial gave her that it does not.
+  const recap = s.billPlan.plan === "ESSENTIAL" ? await trialRecap(s.studio) : null;
   const day = (d: Date) => formatDate(d, user.studio.timezone, locale);
   const trial = s.studio.plan === "TRIAL";
   const overdue = s.daysLeft !== null && s.daysLeft <= 0;
@@ -96,11 +98,19 @@ export default async function MyPlanPage({
               {s.studio.nextPlan && s.studio.nextPlan !== "TRIAL" && (
                 <p className="text-muted">
                   {trial ? "Elegiste el" : "Pasás al"} plan {beautyPlan(s.studio.nextPlan).name} {trial ? "para cuando termine la prueba" : "desde tu próximo pago"}.
+                  {s.billPlan.plan !== s.studio.nextPlan && (
+                    <> Como ahora tenés {s.usage.professionals} profesionales, te corresponde el plan {s.billPlan.name}.</>
+                  )}
                 </p>
               )}
               {trial && !s.studio.nextPlan && (
                 <p className="text-muted">
                   Si no elegís un plan, seguís con el plan {s.billPlan.name}, que es el que corresponde a {s.usage.professionals > 1 ? "tu equipo" : "una profesional"}.
+                </p>
+              )}
+              {recap && (
+                <p className="rounded-[var(--radius-md)] bg-accent-soft px-3 py-2 text-accent-ink">
+                  {keepTeamText(recap, beautyPriceCents("STUDIO", s.launch))}
                 </p>
               )}
 
@@ -110,12 +120,13 @@ export default async function MyPlanPage({
                   {canPayOnline && (
                     <ActionForm action={payAction}>
                       <input type="hidden" name="purpose" value="PLAN" />
-                      <SubmitButton pendingLabel="Abriendo Mercado Pago…">Pagar {pesos(s.amountCents)} con Mercado Pago</SubmitButton>
+                      <SubmitButton pendingLabel="Abriendo Mercado Pago…">Pagar {pesos(withMpFee(s.amountCents))} con Mercado Pago</SubmitButton>
+                      <p className="mt-1 text-xs text-muted">Incluye la comisión de Mercado Pago. Por transferencia pagás {pesos(s.amountCents)}.</p>
                     </ActionForm>
                   )}
                   {transfer ? (
                     <div className="space-y-1">
-                      <p className="text-ink-soft">O por transferencia:</p>
+                      <p className="text-ink-soft">O por transferencia, sin recargo:</p>
                       <p className="whitespace-pre-line rounded-[var(--radius-md)] bg-surface px-3 py-2 font-medium">
                         {[`${transfer.bank}${transfer.accountType ? ` · ${transfer.accountType}` : ""}`, `Cuenta: ${transfer.accountNumber}`, transfer.holder && `A nombre de: ${transfer.holder}`, transfer.note]
                           .filter(Boolean)
@@ -182,7 +193,7 @@ export default async function MyPlanPage({
                 <ActionForm action={payAction}>
                   <input type="hidden" name="purpose" value="WA_PACK" />
                   <SubmitButton variant="secondary" size="sm" pendingLabel="Abriendo Mercado Pago…">
-                    Sumar {WA_PACK.messages} mensajes por {pesos(WA_PACK_CENTS)}
+                    Sumar {WA_PACK.messages} mensajes por {pesos(withMpFee(WA_PACK_CENTS))}
                   </SubmitButton>
                 </ActionForm>
               )}

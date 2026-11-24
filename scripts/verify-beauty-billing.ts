@@ -49,6 +49,18 @@ async function main() {
   check("bigger is an upgrade, smaller is not", [rules.isUpgrade("ESSENTIAL", "STUDIO"), rules.isUpgrade("NETWORK", "STUDIO"), rules.isUpgrade("TRIAL", "NETWORK")], [true, false, false]);
   check("three professionals do not fit Independiente", rules.planLimitProblem("ESSENTIAL", { professionals: 3, locations: 1 })?.startsWith("Tenés 3 profesionales"), true);
   check("but fit Equipo", rules.planLimitProblem("STUDIO", { professionals: 3, locations: 1 }), null);
+  check(
+    "the plan that fits: the one chosen, or the next one up",
+    [
+      rules.fitPlan("ESSENTIAL", { professionals: 1, locations: 1 }),
+      rules.fitPlan("ESSENTIAL", { professionals: 3, locations: 1 }),
+      rules.fitPlan("ESSENTIAL", { professionals: 6, locations: 1 }),
+      rules.fitPlan("STUDIO", { professionals: 1, locations: 2 }),
+    ],
+    ["ESSENTIAL", "STUDIO", "NETWORK", "NETWORK"],
+  );
+  check("by Mercado Pago, its fee on top: Equipo $890 → $961, the pack $190 → $205", [rules.withMpFee(89_000), rules.withMpFee(19_000)], [96_100, 20_500]);
+  check("and what is left after the fee is the whole price", [49_000, 89_000, 159_000, 19_000].every((c) => Math.floor((rules.withMpFee(c) * (10_000 - 731)) / 10_000) >= c), true);
   check("a charge reference is understood", parsePaymentRef("charge:abc"), { kind: "charge", id: "abc" });
 
   const trialEnding = (days: number, sent = 0, remindedFor: Date | null = null) =>
@@ -105,6 +117,10 @@ async function main() {
     const message = await server.billingMessage(studio.id, 1, now);
     check("one professional: the reminder quotes Independiente", message.text.includes(`plan Independiente cuesta $${rules.beautyPriceCents("ESSENTIAL", launch) / 100}`), true);
     check("and links to Mi plan", message.text.includes("/plan"), true);
+    check("ending on Independiente, it says what Equipo keeps", message.text.includes("el plan Equipo incluye 500 por mes"), true);
+    await db.studio.update({ where: { id: studio.id }, data: { waSentThisPeriod: 37 } });
+    check("with what her trial sent", (await server.billingMessage(studio.id, 1, now)).text.includes("37 avisos automáticos"), true);
+    await db.studio.update({ where: { id: studio.id }, data: { waSentThisPeriod: 0 } });
 
     console.log("\nElegir plan");
     check("during the trial, a choice is for afterwards", await server.choosePlan(studio.id, "STUDIO", { id: owner.id, name: owner.name }), { ok: true, applied: "next" });
@@ -119,7 +135,7 @@ async function main() {
     check("a different amount is not credited", await server.settlePlatformCharge({ chargeId: charge.id, providerPaymentId: "mp-1", status: "APPROVED", amountCents: amount + 100, now }), "mismatch");
     check("the right one is", await server.settlePlatformCharge({ chargeId: charge.id, providerPaymentId: "mp-1", status: "APPROVED", amountCents: amount, now }), "paid");
     const paid = await db.studio.findUniqueOrThrow({ where: { id: studio.id }, include: { subscription: true } });
-    check("she is on Equipo, with its WhatsApp", [paid.plan, paid.nextPlan, paid.waMonthlyQuota], ["STUDIO", null, 300]);
+    check("she is on Equipo, with its WhatsApp", [paid.plan, paid.nextPlan, paid.waMonthlyQuota], ["STUDIO", null, 500]);
     check(
       "her month starts when the trial ends, not today",
       paid.subscription?.currentPeriodEnd?.toISOString(),
@@ -134,7 +150,7 @@ async function main() {
     });
     await server.settlePlatformCharge({ chargeId: pack.id, providerPaymentId: "mp-2", status: "APPROVED", amountCents: rules.WA_PACK_CENTS, now });
     check("200 messages added", (await db.studio.findUniqueOrThrow({ where: { id: studio.id } })).waExtraCredits, 200);
-    await db.studio.update({ where: { id: studio.id }, data: { waSentThisPeriod: 300, waPeriodStart: now } });
+    await db.studio.update({ where: { id: studio.id }, data: { waSentThisPeriod: 500, waPeriodStart: now } });
     check("the month spent: the extra ones are used", await claimWhatsAppMessage(studio.id, now), "extra");
     check("one fewer", (await db.studio.findUniqueOrThrow({ where: { id: studio.id } })).waExtraCredits, 199);
     await db.studio.update({ where: { id: studio.id }, data: { waSentThisPeriod: 10 } });
@@ -150,6 +166,7 @@ async function main() {
       data: [1, 2].map((i) => ({ studioId: studio.id, email: `pro${i}@verify-billing.test`, name: `Pro ${i}`, role: "INSTRUCTOR" as const })),
     });
     check("with three professionals, Independiente is refused", "error" in (await server.choosePlan(studio.id, "ESSENTIAL", { id: owner.id, name: owner.name })), true);
+    check("Independiente chosen before inviting them: she is billed Equipo", (await server.billingSummary(studio.id, now)).billPlan.plan, "STUDIO");
 
     console.log("\nPago manual desde la consola");
     const before = (await db.subscription.findUniqueOrThrow({ where: { studioId: studio.id } })).currentPeriodEnd!;
@@ -162,6 +179,11 @@ async function main() {
     const previous = await db.platformSetting.findUnique({ where: { key: "billing.transfer" } });
     await server.saveTransferDetails({ bank: "BROU", accountType: "Caja de ahorro", accountNumber: "001-123", holder: "Temppo", whatsapp: "+59899000000", note: "" }, owner.id);
     const withTransfer = await server.billingMessage(studio.id, 2, now);
+    check(
+      "Mercado Pago with its fee, transfer without",
+      [withTransfer.text.includes(`$${(rules.withMpFee(withTransfer.summary.amountCents) / 100).toLocaleString("es-UY")}, con su comisión`), withTransfer.text.includes("por transferencia, sin recargo")],
+      [true, true],
+    );
     check("the message carries the account and where to send the receipt", [withTransfer.text.includes("Cuenta: 001-123"), withTransfer.text.includes("wa.me/59899000000")], [true, true]);
     if (previous) await db.platformSetting.update({ where: { key: previous.key }, data: { value: previous.value as object } });
     else await db.platformSetting.delete({ where: { key: "billing.transfer" } });

@@ -438,7 +438,9 @@
     "locationLimit": "Tu plan incluye 1 sucursal. Para sumar más, pasate al plan Salón desde Mi plan.",
     "locationHasAppointments": "Tiene turnos por delante: movelos a otra sucursal o cancelalos antes de eliminarla.",
     "locationHasClasses": "Tiene clases programadas por delante: movelas o cancelalas antes de eliminarla.",
-    "editLocation": "Editar"
+    "editLocation": "Editar",
+    "memberLimitSolo": "Tu plan Independiente incluye 1 profesional. Para sumar a tu equipo, pasate al plan Equipo desde Mi plan.",
+    "memberLimitTeam": "Tu plan incluye hasta 4 profesionales. Para sumar más, pasate al plan Salón desde Mi plan."
   },
   "booking": {
     "title": "Reservar clase",
@@ -1412,7 +1414,7 @@
     "perMonth": "/ mes",
     "plan_solo_tag": "Si trabajás sola",
     "plan_solo_name": "Independiente",
-    "plan_team_tag": "Para equipos chicos",
+    "plan_team_tag": "El más elegido",
     "plan_team_name": "Equipo",
     "plan_salon_tag": "Para salones",
     "plan_salon_name": "Salón",
@@ -1422,7 +1424,7 @@
     "manyLocations": "Varias sucursales",
     "waAuto": "WhatsApp automático: {count} mensajes al mes",
     "waManual": "Recordatorios por WhatsApp con un toque",
-    "waAddOn": "WhatsApp automático opcional: +${price} / mes, {count} mensajes",
+    "waAddOn": "WhatsApp automático opcional: {count} mensajes por ${price}, cuando los necesites",
     "soon": "Próximamente",
     "everyPlan": "Todos los planes incluyen",
     "inc1": "Página de reservas para tu bio",
